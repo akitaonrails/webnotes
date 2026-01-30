@@ -89,6 +89,29 @@ class NotesControllerTest < ActionDispatch::IntegrationTest
     assert @test_notes_dir.join("subfolder/nested.md").exist?
   end
 
+  test "create with nested directories creates parent folders" do
+    # Hugo blog post style: YYYY/MM/DD/slug/index.md
+    hugo_path = "2026/01/30/my-blog-post/index.md"
+    hugo_content = <<~FRONTMATTER
+      ---
+      title: "My Blog Post"
+      slug: "my-blog-post"
+      date: 2026-01-30T14:30:00-0300
+      draft: true
+      tags:
+      -
+      ---
+
+    FRONTMATTER
+
+    post create_note_url(path: hugo_path), params: { content: hugo_content }, as: :json
+    assert_response :created
+
+    # Verify the full path was created
+    assert @test_notes_dir.join("2026/01/30/my-blog-post/index.md").exist?
+    assert_equal hugo_content, File.read(@test_notes_dir.join(hugo_path))
+  end
+
   test "create returns error if note exists" do
     create_test_note("existing.md")
 

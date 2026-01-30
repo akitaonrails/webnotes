@@ -97,6 +97,32 @@ class NotesServiceTest < ActiveSupport::TestCase
     assert @test_notes_dir.join("deep/nested/note.md").exist?
   end
 
+  test "write creates Hugo blog post directory structure" do
+    # Hugo blog posts use YYYY/MM/DD/slug/index.md structure
+    hugo_path = "2026/01/30/my-first-post/index.md"
+    hugo_content = <<~FRONTMATTER
+      ---
+      title: "My First Post"
+      slug: "my-first-post"
+      date: 2026-01-30T14:30:00-0300
+      draft: true
+      tags:
+      -
+      ---
+
+      Post content goes here.
+    FRONTMATTER
+
+    @service.write(hugo_path, hugo_content)
+
+    assert @test_notes_dir.join("2026").directory?
+    assert @test_notes_dir.join("2026/01").directory?
+    assert @test_notes_dir.join("2026/01/30").directory?
+    assert @test_notes_dir.join("2026/01/30/my-first-post").directory?
+    assert @test_notes_dir.join(hugo_path).file?
+    assert_equal hugo_content, File.read(@test_notes_dir.join(hugo_path))
+  end
+
   # === delete ===
 
   test "delete removes file" do

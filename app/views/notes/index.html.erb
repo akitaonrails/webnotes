@@ -354,6 +354,53 @@
   </form>
 </dialog>
 
+<!-- Note Type Selector Dialog -->
+<dialog
+  class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700"
+  data-app-target="noteTypeDialog"
+>
+  <div class="p-4 w-72 text-zinc-900 dark:text-zinc-100">
+    <h3 class="text-sm font-semibold mb-3">New Note</h3>
+    <div class="flex flex-col gap-2">
+      <button
+        type="button"
+        data-action="click->app#selectNoteTypeEmpty"
+        class="w-full px-3 py-2.5 text-left text-sm rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center gap-3 border border-zinc-200 dark:border-zinc-600"
+      >
+        <svg class="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <div>
+          <div class="font-medium">Empty Document</div>
+          <div class="text-xs text-zinc-500 dark:text-zinc-400">Plain markdown file</div>
+        </div>
+      </button>
+      <button
+        type="button"
+        data-action="click->app#selectNoteTypeHugo"
+        class="w-full px-3 py-2.5 text-left text-sm rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center gap-3 border border-zinc-200 dark:border-zinc-600"
+      >
+        <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+        </svg>
+        <div>
+          <div class="font-medium">Hugo Blog Post</div>
+          <div class="text-xs text-zinc-500 dark:text-zinc-400">YYYY/MM/DD/slug/index.md</div>
+        </div>
+      </button>
+    </div>
+    <div class="flex justify-end mt-4">
+      <button
+        type="button"
+        data-action="click->app#closeNoteTypeDialog"
+        class="px-3 py-1.5 text-sm rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+</dialog>
+
 <!-- New Item Dialog -->
 <dialog
   class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700"
@@ -782,13 +829,18 @@
           </p>
           <!-- Resize option (only when S3 is checked) -->
           <div class="hidden mt-2 ml-6" data-app-target="resizeOptionLocal">
-            <label class="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                data-app-target="resizeImageLocal"
-                class="rounded border-zinc-300 dark:border-zinc-600 text-blue-500 focus:ring-blue-500"
+            <label class="flex items-center gap-2 text-sm">
+              <span>Resize:</span>
+              <select
+                data-app-target="resizeSelectLocal"
+                class="px-2 py-1 text-sm border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-              <span>Reduce to half size (50% + compress)</span>
+                <option value="">None (original size)</option>
+                <option value="0.25">1/4 size (25%)</option>
+                <option value="0.5" selected>1/2 size (50%)</option>
+                <option value="0.67">2/3 size (67%)</option>
+              </select>
+              <span class="text-zinc-500 dark:text-zinc-400">+ compress</span>
             </label>
           </div>
         </div>
@@ -809,13 +861,18 @@
           </p>
           <!-- Resize option (only when S3 is checked) -->
           <div class="hidden mt-2 ml-6" data-app-target="resizeOptionExternal">
-            <label class="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                data-app-target="resizeImageExternal"
-                class="rounded border-zinc-300 dark:border-zinc-600 text-blue-500 focus:ring-blue-500"
+            <label class="flex items-center gap-2 text-sm">
+              <span>Resize:</span>
+              <select
+                data-app-target="resizeSelectExternal"
+                class="px-2 py-1 text-sm border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-              <span>Reduce to half size (50% + compress)</span>
+                <option value="">None (original size)</option>
+                <option value="0.25">1/4 size (25%)</option>
+                <option value="0.5" selected>1/2 size (50%)</option>
+                <option value="0.67">2/3 size (67%)</option>
+              </select>
+              <span class="text-zinc-500 dark:text-zinc-400">+ compress</span>
             </label>
           </div>
         </div>

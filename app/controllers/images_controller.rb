@@ -43,8 +43,8 @@ class ImagesController < ApplicationController
     end
 
     path = params[:path]
-    resize = params[:resize] == true || params[:resize] == "true"
-    s3_url = ImagesService.upload_to_s3(path, resize: resize)
+    resize_ratio = parse_resize_ratio(params[:resize])
+    s3_url = ImagesService.upload_to_s3(path, resize: resize_ratio)
 
     if s3_url
       render json: { url: s3_url }
@@ -68,8 +68,8 @@ class ImagesController < ApplicationController
       return render json: { error: "URL is required" }, status: :bad_request
     end
 
-    resize = params[:resize] == true || params[:resize] == "true"
-    s3_url = ImagesService.download_and_upload_to_s3(url, resize: resize)
+    resize_ratio = parse_resize_ratio(params[:resize])
+    s3_url = ImagesService.download_and_upload_to_s3(url, resize: resize_ratio)
     if s3_url
       render json: { url: s3_url }
     else
@@ -142,6 +142,16 @@ class ImagesController < ApplicationController
 
   def google_api_configured?
     ENV["GOOGLE_API_KEY"].present? && ENV["GOOGLE_CSE_ID"].present?
+  end
+
+  def parse_resize_ratio(value)
+    # Handle legacy boolean values for backwards compatibility
+    return 0.5 if value == true || value == "true"
+    return nil if value.blank? || value == "" || value == "false" || value == false
+
+    # Parse ratio as float (e.g., "0.25", "0.5", "0.67")
+    ratio = value.to_f
+    ratio > 0 && ratio <= 1 ? ratio : nil
   end
 
   def search_google_images(query, start = 0)

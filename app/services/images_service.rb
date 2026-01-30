@@ -69,7 +69,7 @@ class ImagesService
       full_path
     end
 
-    def upload_to_s3(path, resize: false)
+    def upload_to_s3(path, resize: nil)
       return nil unless s3_enabled?
 
       full_path = find_image(path)
@@ -83,9 +83,9 @@ class ImagesService
         region: config.aws_region
       )
 
-      # Process image if resize requested
+      # Process image if resize ratio provided
       if resize
-        file_content, content_type, filename = resize_and_compress(full_path)
+        file_content, content_type, filename = resize_and_compress(full_path, nil, resize)
       else
         file_content = full_path.binread
         content_type = content_type_for(full_path)
@@ -110,7 +110,7 @@ class ImagesService
       "https://#{config.aws_s3_bucket}.s3.#{config.aws_region}.amazonaws.com/#{key}"
     end
 
-    def download_and_upload_to_s3(url, resize: false)
+    def download_and_upload_to_s3(url, resize: nil)
       return nil unless s3_enabled?
 
       require "aws-sdk-s3"
@@ -145,7 +145,7 @@ class ImagesService
         original_name = "#{SecureRandom.hex(8)}#{extension}"
       end
 
-      # Process image if resize requested
+      # Process image if resize ratio provided
       if resize
         # Write to temp file for ImageMagick processing
         temp_file = Tempfile.new([ "webnotes", extension ])
@@ -154,7 +154,7 @@ class ImagesService
           temp_file.write(file_content)
           temp_file.close
 
-          file_content, content_type, original_name = resize_and_compress(Pathname.new(temp_file.path), original_name)
+          file_content, content_type, original_name = resize_and_compress(Pathname.new(temp_file.path), original_name, resize)
         ensure
           temp_file.unlink
         end
@@ -237,11 +237,12 @@ class ImagesService
       end
     end
 
-    def resize_and_compress(source_path, original_name = nil)
+    def resize_and_compress(source_path, original_name = nil, ratio = 0.5)
       require "tempfile"
       require "open3"
 
       original_name ||= source_path.basename.to_s
+      ratio ||= 0.5  # Default to 50% if nil
 
       # Change extension to .jpg for compressed output
       base_name = File.basename(original_name, ".*")
@@ -252,14 +253,17 @@ class ImagesService
       begin
         output_file.close
 
-        # Use ImageMagick to resize to 50% and compress to 70% quality
-        # -resize 50% reduces dimensions by half
+        # Calculate resize percentage from ratio (e.g., 0.5 -> "50%")
+        resize_percent = "#{(ratio * 100).to_i}%"
+
+        # Use ImageMagick to resize and compress to 70% quality
+        # -resize X% reduces dimensions by the specified percentage
         # -quality 70 sets JPEG compression quality
         # -strip removes metadata
         cmd = [
           "convert",
           source_path.to_s,
-          "-resize", "50%",
+          "-resize", resize_percent,
           "-quality", "70",
           "-strip",
           output_file.path

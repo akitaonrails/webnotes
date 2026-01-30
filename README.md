@@ -24,6 +24,7 @@ A simple, feature-rich, self-hosted markdown note-taking app built with Ruby on 
 - Drag and drop files and folders
 - Quick file finder (`Ctrl+P`)
 - Full-text search with regex support (`Ctrl+Shift+F`)
+- **Hugo blog post support** - Create posts with proper directory structure
 
 ### Preview
 - Live markdown preview panel
@@ -137,6 +138,44 @@ Note: Google Custom Search has a free tier of 100 queries/day.
 | `Ctrl+B` | Toggle typewriter mode |
 | `Ctrl+Shift+P` | Toggle preview panel |
 | `F1` | Markdown help |
+
+## Hugo Blog Post Support
+
+WebNotes includes built-in support for creating Hugo-compatible blog posts. When you click the "New Note" button (or press `Ctrl+N`), you can choose between:
+
+- **Empty Document** - A plain markdown file
+- **Hugo Blog Post** - A properly structured Hugo post
+
+### Hugo Post Structure
+
+When you create a Hugo blog post with a title like "My Amazing Post Title", WebNotes will:
+
+1. Create the directory structure: `YYYY/MM/DD/my-amazing-post-title/`
+2. Create `index.md` inside with Hugo frontmatter:
+
+```yaml
+---
+title: "My Amazing Post Title"
+slug: "my-amazing-post-title"
+date: 2026-01-30T14:30:00-0300
+draft: true
+tags:
+-
+---
+```
+
+### Slug Generation
+
+The slug is automatically generated from the title:
+- Converts to lowercase
+- Replaces accented characters (á→a, é→e, ç→c, ñ→n, etc.)
+- Removes special characters
+- Replaces spaces with hyphens
+
+Examples:
+- "Conexão à Internet" → `conexao-a-internet`
+- "What's New in 2026?" → `whats-new-in-2026`
+- "Código & Programação" → `codigo-programacao`
 
 ## Self-Hosting
 

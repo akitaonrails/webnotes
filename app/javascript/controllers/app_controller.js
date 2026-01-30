@@ -17,6 +17,7 @@ export default class extends Controller {
     "newNoteBtn",
     "renameDialog",
     "renameInput",
+    "noteTypeDialog",
     "newItemDialog",
     "newItemTitle",
     "newItemInput",
@@ -69,9 +70,9 @@ export default class extends Controller {
     "s3ExternalOption",
     "reuploadToS3",
     "resizeOptionLocal",
-    "resizeImageLocal",
+    "resizeSelectLocal",
     "resizeOptionExternal",
-    "resizeImageExternal",
+    "resizeSelectExternal",
     "codeDialog",
     "codeLanguage",
     "codeContent",
@@ -1669,12 +1670,12 @@ export default class extends Controller {
     if (this.selectedImage.type === "local") {
       // Local image
       const uploadToS3 = this.s3Enabled && this.hasUploadToS3Target && this.uploadToS3Target.checked
-      const resizeImage = uploadToS3 && this.hasResizeImageLocalTarget && this.resizeImageLocalTarget.checked
+      const resizeRatio = uploadToS3 && this.hasResizeSelectLocalTarget ? this.resizeSelectLocalTarget.value : ""
       imageUrl = `/images/preview/${this.encodePath(this.selectedImage.path)}`
 
       if (uploadToS3) {
         // Show loading state
-        this.showImageLoading(resizeImage ? "Resizing and uploading to S3..." : "Uploading to S3...")
+        this.showImageLoading(resizeRatio ? "Resizing and uploading to S3..." : "Uploading to S3...")
         this.insertImageBtnTarget.disabled = true
 
         try {
@@ -1684,7 +1685,7 @@ export default class extends Controller {
               "Content-Type": "application/json",
               "X-CSRF-Token": this.csrfToken
             },
-            body: JSON.stringify({ path: this.selectedImage.path, resize: resizeImage })
+            body: JSON.stringify({ path: this.selectedImage.path, resize: resizeRatio })
           })
 
           if (!response.ok) {
@@ -1707,12 +1708,12 @@ export default class extends Controller {
     } else {
       // External image (Google/Pinterest)
       const reuploadToS3 = this.s3Enabled && this.hasReuploadToS3Target && this.reuploadToS3Target.checked
-      const resizeImage = reuploadToS3 && this.hasResizeImageExternalTarget && this.resizeImageExternalTarget.checked
+      const resizeRatio = reuploadToS3 && this.hasResizeSelectExternalTarget ? this.resizeSelectExternalTarget.value : ""
       imageUrl = this.selectedImage.url
 
       if (reuploadToS3) {
         // Show loading state
-        this.showImageLoading(resizeImage ? "Downloading, resizing and uploading to S3..." : "Downloading and uploading to S3...")
+        this.showImageLoading(resizeRatio ? "Downloading, resizing and uploading to S3..." : "Downloading and uploading to S3...")
         this.insertImageBtnTarget.disabled = true
 
         try {
@@ -1722,7 +1723,7 @@ export default class extends Controller {
               "Content-Type": "application/json",
               "X-CSRF-Token": this.csrfToken
             },
-            body: JSON.stringify({ url: this.selectedImage.url, resize: resizeImage })
+            body: JSON.stringify({ url: this.selectedImage.url, resize: resizeRatio })
           })
 
           if (!response.ok) {
@@ -1779,8 +1780,8 @@ export default class extends Controller {
   onS3CheckboxChange(event) {
     if (this.hasResizeOptionLocalTarget) {
       this.resizeOptionLocalTarget.classList.toggle("hidden", !event.target.checked)
-      if (!event.target.checked && this.hasResizeImageLocalTarget) {
-        this.resizeImageLocalTarget.checked = false
+      if (!event.target.checked && this.hasResizeSelectLocalTarget) {
+        this.resizeSelectLocalTarget.value = "0.5"  // Reset to default
       }
     }
   }
@@ -1788,8 +1789,8 @@ export default class extends Controller {
   onS3ExternalCheckboxChange(event) {
     if (this.hasResizeOptionExternalTarget) {
       this.resizeOptionExternalTarget.classList.toggle("hidden", !event.target.checked)
-      if (!event.target.checked && this.hasResizeImageExternalTarget) {
-        this.resizeImageExternalTarget.checked = false
+      if (!event.target.checked && this.hasResizeSelectExternalTarget) {
+        this.resizeSelectExternalTarget.value = "0.5"  // Reset to default
       }
     }
   }
@@ -3103,13 +3104,44 @@ export default class extends Controller {
 
   // New Note/Folder
   newNote() {
-    this.newItemType = "note"
+    // Show the note type selector dialog
     this.newItemParent = ""
+    this.showDialogCentered(this.noteTypeDialogTarget)
+  }
+
+  closeNoteTypeDialog() {
+    this.noteTypeDialogTarget.close()
+  }
+
+  selectNoteTypeEmpty() {
+    this.noteTypeDialogTarget.close()
+    this.newItemType = "note"
     this.newItemTitleTarget.textContent = "New Note"
     this.newItemInputTarget.value = ""
     this.newItemInputTarget.placeholder = "Note name"
-    this.showDialogCentered(this.newItemDialogTarget)
+    this.showNewItemDialogAtPosition()
     this.newItemInputTarget.focus()
+  }
+
+  selectNoteTypeHugo() {
+    this.noteTypeDialogTarget.close()
+    this.newItemType = "hugo"
+    this.newItemTitleTarget.textContent = "New Hugo Blog Post"
+    this.newItemInputTarget.value = ""
+    this.newItemInputTarget.placeholder = "Post title"
+    this.showNewItemDialogAtPosition()
+    this.newItemInputTarget.focus()
+  }
+
+  showNewItemDialogAtPosition() {
+    // If coming from context menu, position near the click point
+    if (this.contextMenuContextX && this.contextMenuContextY) {
+      this.positionDialogNearPoint(this.newItemDialogTarget, this.contextMenuContextX, this.contextMenuContextY)
+      this.contextMenuContextX = null
+      this.contextMenuContextY = null
+    } else {
+      this.showDialogCentered(this.newItemDialogTarget)
+    }
   }
 
   newFolder() {
@@ -3131,11 +3163,39 @@ export default class extends Controller {
     const name = this.newItemInputTarget.value.trim()
     if (!name) return
 
-    const path = this.newItemParent ? `${this.newItemParent}/${name}` : name
+    const basePath = this.newItemParent ? `${this.newItemParent}/${name}` : name
 
     try {
-      if (this.newItemType === "note") {
-        const notePath = path.endsWith(".md") ? path : `${path}.md`
+      if (this.newItemType === "hugo") {
+        // Create Hugo blog post with directory structure YYYY/MM/DD/slug/index.md
+        const { notePath, content } = this.generateHugoBlogPost(name)
+
+        const response = await fetch(`/notes/${this.encodePath(notePath)}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": this.csrfToken
+          },
+          body: JSON.stringify({ content, create_directories: true })
+        })
+
+        if (!response.ok) {
+          const data = await response.json()
+          throw new Error(data.error || "Failed to create Hugo post")
+        }
+
+        // Expand the parent folders
+        const pathParts = notePath.split("/")
+        let expandPath = ""
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          expandPath = expandPath ? `${expandPath}/${pathParts[i]}` : pathParts[i]
+          this.expandedFolders.add(expandPath)
+        }
+
+        await this.refreshTree()
+        await this.loadFile(notePath)
+      } else if (this.newItemType === "note") {
+        const notePath = basePath.endsWith(".md") ? basePath : `${basePath}.md`
         const response = await fetch(`/notes/${this.encodePath(notePath)}`, {
           method: "POST",
           headers: {
@@ -3153,7 +3213,8 @@ export default class extends Controller {
         await this.refreshTree()
         await this.loadFile(notePath)
       } else {
-        const response = await fetch(`/folders/${this.encodePath(path)}`, {
+        // Folder
+        const response = await fetch(`/folders/${this.encodePath(basePath)}`, {
           method: "POST",
           headers: {
             "X-CSRF-Token": this.csrfToken
@@ -3165,7 +3226,7 @@ export default class extends Controller {
           throw new Error(data.error || "Failed to create folder")
         }
 
-        this.expandedFolders.add(path)
+        this.expandedFolders.add(basePath)
         await this.refreshTree()
       }
 
@@ -3174,6 +3235,89 @@ export default class extends Controller {
       console.error("Error creating item:", error)
       alert(error.message)
     }
+  }
+
+  // Generate Hugo blog post path and content
+  generateHugoBlogPost(title) {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, "0")
+    const day = String(now.getDate()).padStart(2, "0")
+
+    // Generate slug from title
+    const slug = this.slugify(title)
+
+    // Build path: YYYY/MM/DD/slug/index.md
+    const dirPath = `${year}/${month}/${day}/${slug}`
+    const notePath = `${dirPath}/index.md`
+
+    // Generate ISO date with timezone offset
+    const tzOffset = -now.getTimezoneOffset()
+    const tzHours = String(Math.floor(Math.abs(tzOffset) / 60)).padStart(2, "0")
+    const tzMins = String(Math.abs(tzOffset) % 60).padStart(2, "0")
+    const tzSign = tzOffset >= 0 ? "+" : "-"
+    const isoDate = `${year}-${month}-${day}T${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}${tzSign}${tzHours}${tzMins}`
+
+    // Generate Hugo frontmatter
+    const content = `---
+title: "${title.replace(/"/g, '\\"')}"
+slug: "${slug}"
+date: ${isoDate}
+draft: true
+tags:
+-
+---
+
+`
+
+    return { notePath, content }
+  }
+
+  // Slugify text for URLs - handles accented characters
+  slugify(text) {
+    // Map of accented characters to their ASCII equivalents
+    const accentMap = {
+      "à": "a", "á": "a", "â": "a", "ã": "a", "ä": "a", "å": "a", "æ": "ae",
+      "ç": "c", "č": "c", "ć": "c",
+      "è": "e", "é": "e", "ê": "e", "ë": "e", "ě": "e",
+      "ì": "i", "í": "i", "î": "i", "ï": "i",
+      "ð": "d", "ď": "d",
+      "ñ": "n", "ň": "n",
+      "ò": "o", "ó": "o", "ô": "o", "õ": "o", "ö": "o", "ø": "o",
+      "ù": "u", "ú": "u", "û": "u", "ü": "u", "ů": "u",
+      "ý": "y", "ÿ": "y",
+      "ž": "z", "ź": "z", "ż": "z",
+      "ß": "ss", "þ": "th",
+      "š": "s", "ś": "s",
+      "ř": "r",
+      "ł": "l",
+      "À": "A", "Á": "A", "Â": "A", "Ã": "A", "Ä": "A", "Å": "A", "Æ": "AE",
+      "Ç": "C", "Č": "C", "Ć": "C",
+      "È": "E", "É": "E", "Ê": "E", "Ë": "E", "Ě": "E",
+      "Ì": "I", "Í": "I", "Î": "I", "Ï": "I",
+      "Ð": "D", "Ď": "D",
+      "Ñ": "N", "Ň": "N",
+      "Ò": "O", "Ó": "O", "Ô": "O", "Õ": "O", "Ö": "O", "Ø": "O",
+      "Ù": "U", "Ú": "U", "Û": "U", "Ü": "U", "Ů": "U",
+      "Ý": "Y",
+      "Ž": "Z", "Ź": "Z", "Ż": "Z",
+      "Š": "S", "Ś": "S",
+      "Ř": "R",
+      "Ł": "L"
+    }
+
+    return text
+      .toLowerCase()
+      // Replace accented characters
+      .split("")
+      .map(char => accentMap[char] || char)
+      .join("")
+      // Replace any non-alphanumeric characters with hyphens
+      .replace(/[^a-z0-9]+/g, "-")
+      // Remove leading/trailing hyphens
+      .replace(/^-+|-+$/g, "")
+      // Collapse multiple hyphens
+      .replace(/-+/g, "-")
   }
 
   // Context Menu
@@ -3215,17 +3359,16 @@ export default class extends Controller {
   newNoteInFolder() {
     if (!this.contextItem || this.contextItem.type !== "folder") return
 
-    this.newItemType = "note"
     this.newItemParent = this.contextItem.path
-    this.newItemTitleTarget.textContent = "New Note"
-    this.newItemInputTarget.value = ""
-    this.newItemInputTarget.placeholder = "Note name"
-    this.positionDialogNearPoint(this.newItemDialogTarget, this.contextClickX, this.contextClickY)
-    this.newItemInputTarget.focus()
+    this.contextMenuContextX = this.contextClickX
+    this.contextMenuContextY = this.contextClickY
 
     // Expand the folder
     this.expandedFolders.add(this.contextItem.path)
     this.renderTree()
+
+    // Show note type selector
+    this.positionDialogNearPoint(this.noteTypeDialogTarget, this.contextClickX, this.contextClickY)
   }
 
   setupContextMenuClose() {
