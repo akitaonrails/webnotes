@@ -52,7 +52,8 @@ export default class extends Controller {
     "customizeDialog",
     "fontSelect",
     "fontSizeSelect",
-    "fontPreview"
+    "fontPreview",
+    "previewZoomLevel"
   ]
 
   static values = {
@@ -106,6 +107,10 @@ export default class extends Controller {
     this.currentFont = localStorage.getItem("editorFont") || "cascadia-code"
     this.currentFontSize = parseInt(localStorage.getItem("editorFontSize")) || 14
 
+    // Preview zoom state
+    this.previewZoomLevels = [50, 75, 90, 100, 110, 125, 150, 175, 200]
+    this.previewZoom = parseInt(localStorage.getItem("previewZoom")) || 100
+
     this.codeLanguages = [
       "javascript", "typescript", "python", "ruby", "go", "rust", "java", "c", "cpp", "csharp",
       "php", "swift", "kotlin", "scala", "haskell", "elixir", "erlang", "clojure", "lua", "perl",
@@ -120,6 +125,7 @@ export default class extends Controller {
     this.setupDialogClickOutside()
     this.loadImagesConfig()
     this.applyEditorSettings()
+    this.applyPreviewZoom()
 
     // Configure marked
     marked.setOptions({
@@ -1204,6 +1210,34 @@ export default class extends Controller {
     if (font && this.hasTextareaTarget) {
       this.textareaTarget.style.fontFamily = font.family
       this.textareaTarget.style.fontSize = `${this.currentFontSize}px`
+    }
+  }
+
+  // Preview Zoom
+  zoomPreviewIn() {
+    const currentIndex = this.previewZoomLevels.indexOf(this.previewZoom)
+    if (currentIndex < this.previewZoomLevels.length - 1) {
+      this.previewZoom = this.previewZoomLevels[currentIndex + 1]
+      this.applyPreviewZoom()
+      localStorage.setItem("previewZoom", this.previewZoom.toString())
+    }
+  }
+
+  zoomPreviewOut() {
+    const currentIndex = this.previewZoomLevels.indexOf(this.previewZoom)
+    if (currentIndex > 0) {
+      this.previewZoom = this.previewZoomLevels[currentIndex - 1]
+      this.applyPreviewZoom()
+      localStorage.setItem("previewZoom", this.previewZoom.toString())
+    }
+  }
+
+  applyPreviewZoom() {
+    if (this.hasPreviewContentTarget) {
+      this.previewContentTarget.style.fontSize = `${this.previewZoom}%`
+    }
+    if (this.hasPreviewZoomLevelTarget) {
+      this.previewZoomLevelTarget.textContent = `${this.previewZoom}%`
     }
   }
 
