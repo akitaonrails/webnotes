@@ -746,9 +746,10 @@
 
     <!-- Code Content -->
     <div class="mb-4">
-      <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">Code (optional)</label>
+      <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">Code (optional) &mdash; Ctrl+Enter to insert</label>
       <textarea
         data-app-target="codeContent"
+        data-action="keydown->app#onCodeContentKeydown"
         class="w-full h-48 px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono resize-none"
         placeholder="Paste or type your code here..."
         spellcheck="false"
