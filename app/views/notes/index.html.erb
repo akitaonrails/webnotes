@@ -1,0 +1,222 @@
+<div class="h-screen w-full flex flex-col" data-controller="app" data-app-tree-value="<%= @tree.to_json %>">
+  <!-- Header -->
+  <header class="flex-none h-12 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between px-4 bg-zinc-50 dark:bg-zinc-800">
+    <div class="flex items-center gap-2">
+      <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      <span class="font-semibold text-sm">WebNotes</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        data-action="click->app#togglePreview"
+        data-app-target="previewToggle"
+        class="p-1.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
+        title="Toggle Preview (Ctrl+Shift+P)"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        data-controller="theme"
+        data-action="click->theme#toggle"
+        class="p-1.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
+        title="Toggle Theme"
+      >
+        <svg data-theme-target="lightIcon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+        <svg data-theme-target="darkIcon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="flex-none w-64 border-r border-zinc-200 dark:border-zinc-700 flex flex-col bg-zinc-50 dark:bg-zinc-800/50">
+      <!-- Sidebar Header -->
+      <div class="flex-none h-10 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between px-3">
+        <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">Explorer</span>
+        <div class="flex items-center gap-1">
+          <button
+            type="button"
+            data-action="click->app#newNote"
+            class="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
+            title="New Note (Ctrl+N)"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            data-action="click->app#newFolder"
+            class="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
+            title="New Folder"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- File Tree -->
+      <div class="flex-1 overflow-y-auto p-2" data-app-target="fileTree">
+        <!-- Tree will be rendered by JavaScript -->
+      </div>
+    </aside>
+
+    <!-- Editor Panel -->
+    <main class="flex-1 flex flex-col min-w-0" data-app-target="editorPanel">
+      <!-- Editor Header -->
+      <div class="flex-none h-10 border-b border-zinc-200 dark:border-zinc-700 flex items-center px-4 bg-white dark:bg-zinc-900">
+        <span class="text-sm text-zinc-500 dark:text-zinc-400 truncate" data-app-target="currentPath">
+          Select or create a note
+        </span>
+        <span class="ml-2 text-xs text-zinc-400 dark:text-zinc-500 hidden" data-app-target="saveStatus"></span>
+      </div>
+
+      <!-- Editor Container -->
+      <div class="flex-1 overflow-hidden" data-app-target="editorContainer">
+        <div class="h-full flex items-center justify-center text-zinc-400 dark:text-zinc-600" data-app-target="editorPlaceholder">
+          <div class="text-center">
+            <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p class="text-sm">Select a note to edit</p>
+            <p class="text-xs mt-1">or press Ctrl+N to create a new one</p>
+          </div>
+        </div>
+        <div class="h-full hidden" data-app-target="editor">
+          <textarea
+            data-app-target="textarea"
+            data-action="input->app#onTextareaInput"
+            class="w-full h-full p-4 resize-none bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-mono text-sm leading-relaxed focus:outline-none"
+            placeholder="Start writing..."
+            spellcheck="false"
+          ></textarea>
+        </div>
+      </div>
+    </main>
+
+    <!-- Preview Panel -->
+    <aside class="flex-none w-[40%] border-l border-zinc-200 dark:border-zinc-700 flex-col bg-white dark:bg-zinc-900 hidden" data-app-target="previewPanel">
+      <!-- Preview Header -->
+      <div class="flex-none h-10 border-b border-zinc-200 dark:border-zinc-700 flex items-center px-4">
+        <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">Preview</span>
+      </div>
+
+      <!-- Preview Content -->
+      <div class="flex-1 overflow-y-auto p-6 prose prose-zinc dark:prose-invert prose-sm max-w-none" data-app-target="previewContent">
+      </div>
+    </aside>
+  </div>
+
+  <!-- Context Menu -->
+  <div
+    class="fixed hidden bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg py-1 min-w-[160px] z-50 text-zinc-900 dark:text-zinc-100"
+    data-app-target="contextMenu"
+  >
+    <button
+      type="button"
+      data-action="click->app#newNoteInFolder"
+      data-app-target="newNoteBtn"
+      class="hidden w-full px-3 py-1.5 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center gap-2"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      New Note
+    </button>
+    <button
+      type="button"
+      data-action="click->app#renameItem"
+      class="w-full px-3 py-1.5 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center gap-2"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+      </svg>
+      Rename
+    </button>
+    <button
+      type="button"
+      data-action="click->app#deleteItem"
+      class="w-full px-3 py-1.5 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center gap-2 text-red-600 dark:text-red-400"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+      Delete
+    </button>
+  </div>
+
+<!-- Rename Dialog -->
+<dialog
+  class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700"
+  data-app-target="renameDialog"
+>
+  <form method="dialog" class="p-4 w-80 text-zinc-900 dark:text-zinc-100" data-action="submit->app#submitRename">
+    <h3 class="text-sm font-semibold mb-3">Rename</h3>
+    <input
+      type="text"
+      data-app-target="renameInput"
+      class="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      placeholder="New name"
+    >
+    <div class="flex justify-end gap-2 mt-4">
+      <button
+        type="button"
+        data-action="click->app#closeRenameDialog"
+        class="px-3 py-1.5 text-sm rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        class="px-3 py-1.5 text-sm rounded-md bg-blue-500 text-white hover:bg-blue-600"
+      >
+        Rename
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<!-- New Item Dialog -->
+<dialog
+  class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700"
+  data-app-target="newItemDialog"
+>
+  <form method="dialog" class="p-4 w-80 text-zinc-900 dark:text-zinc-100" data-action="submit->app#submitNewItem">
+    <h3 class="text-sm font-semibold mb-3" data-app-target="newItemTitle">New Note</h3>
+    <input
+      type="text"
+      data-app-target="newItemInput"
+      class="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      placeholder="Name"
+    >
+    <div class="flex justify-end gap-2 mt-4">
+      <button
+        type="button"
+        data-action="click->app#closeNewItemDialog"
+        class="px-3 py-1.5 text-sm rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        class="px-3 py-1.5 text-sm rounded-md bg-blue-500 text-white hover:bg-blue-600"
+      >
+        Create
+      </button>
+    </div>
+  </form>
+</dialog>
+</div>
