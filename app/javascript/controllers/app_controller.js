@@ -94,7 +94,13 @@ export default class extends Controller {
     "youtubeSearchInput",
     "youtubeSearchBtn",
     "youtubeSearchStatus",
-    "youtubeSearchResults"
+    "youtubeSearchResults",
+    "youtubeConfigNotice",
+    "youtubeSearchForm",
+    "localImagesConfigNotice",
+    "localImagesForm",
+    "googleImagesConfigNotice",
+    "googleImagesForm"
   ]
 
   static values = {
@@ -352,7 +358,7 @@ export default class extends Controller {
   buildTreeHTML(items, depth = 0) {
     if (!items || items.length === 0) {
       if (depth === 0) {
-        return `<div class="text-sm text-zinc-400 dark:text-zinc-500 p-2">No notes yet</div>`
+        return `<div class="text-sm text-[var(--theme-text-muted)] p-2">No notes yet</div>`
       }
       return ""
     }
@@ -386,7 +392,7 @@ export default class extends Controller {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>`
-          : `<svg class="tree-icon text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          : `<svg class="tree-icon text-[var(--theme-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>`
         // Config files should not be draggable or have context menu
@@ -1090,21 +1096,21 @@ export default class extends Controller {
         this.webSearchEnabled = config.web_search_enabled
         this.googleImagesEnabled = config.google_enabled
         this.pinterestEnabled = config.pinterest_enabled
-
-        // Show image button if any image source is enabled
-        if ((this.imagesEnabled || this.webSearchEnabled || this.googleImagesEnabled || this.pinterestEnabled) && this.hasImageBtnTarget) {
-          this.imageBtnTarget.classList.remove("hidden")
-        }
+      }
+      // Always show image button - web search and Pinterest are always available
+      if (this.hasImageBtnTarget) {
+        this.imageBtnTarget.classList.remove("hidden")
       }
     } catch (error) {
       console.error("Error loading images config:", error)
+      // Still show the button even on error - web search and Pinterest work without config
+      if (this.hasImageBtnTarget) {
+        this.imageBtnTarget.classList.remove("hidden")
+      }
     }
   }
 
   async openImagePicker() {
-    // Allow opening if any image source is enabled
-    if (!this.imagesEnabled && !this.webSearchEnabled && !this.googleImagesEnabled && !this.pinterestEnabled) return
-
     this.selectedImage = null
     this.currentImageTab = "local"
 
@@ -1147,29 +1153,20 @@ export default class extends Controller {
     if (this.hasUploadToS3Target) this.uploadToS3Target.checked = false
     if (this.hasReuploadToS3Target) this.reuploadToS3Target.checked = false
 
-    // Show/hide tabs based on enabled features
-    if (this.hasImageTabLocalTarget) {
-      this.imageTabLocalTarget.classList.toggle("hidden", !this.imagesEnabled)
+    // Show/hide config notices based on feature availability
+    if (this.hasLocalImagesConfigNoticeTarget && this.hasLocalImagesFormTarget) {
+      this.localImagesConfigNoticeTarget.classList.toggle("hidden", this.imagesEnabled)
+      this.localImagesFormTarget.classList.toggle("hidden", !this.imagesEnabled)
     }
-    if (this.hasImageTabWebTarget) {
-      this.imageTabWebTarget.classList.toggle("hidden", !this.webSearchEnabled)
+    if (this.hasGoogleImagesConfigNoticeTarget && this.hasGoogleImagesFormTarget) {
+      this.googleImagesConfigNoticeTarget.classList.toggle("hidden", this.googleImagesEnabled)
+      this.googleImagesFormTarget.classList.toggle("hidden", !this.googleImagesEnabled)
     }
-    if (this.hasImageTabGoogleTarget) {
-      this.imageTabGoogleTarget.classList.toggle("hidden", !this.googleImagesEnabled)
-    }
-    // Pinterest is always shown
 
-    // Set initial tab to first available
-    let initialTab = "local"
-    if (!this.imagesEnabled) {
-      if (this.webSearchEnabled) {
-        initialTab = "web"
-      } else if (this.googleImagesEnabled) {
-        initialTab = "google"
-      } else {
-        initialTab = "pinterest"
-      }
-    }
+    // All tabs are always visible now - config notices shown inside panels when not configured
+
+    // Set initial tab - prefer local if configured, otherwise web
+    let initialTab = this.imagesEnabled ? "local" : "web"
 
     // Switch to initial tab
     this.switchImageTab({ currentTarget: { dataset: { tab: initialTab } } })
@@ -1335,17 +1332,17 @@ export default class extends Controller {
     const tab = event.currentTarget.dataset.tab
     this.currentImageTab = tab
 
-    const activeClasses = "border-blue-500 text-blue-600 dark:text-blue-400"
-    const inactiveClasses = "border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+    const activeClasses = "border-[var(--theme-accent)] text-[var(--theme-accent)]"
+    const inactiveClasses = "border-transparent text-[var(--theme-text-muted)] hover:text-[var(--theme-text-secondary)]"
 
     // Update tab button styles
-    if (this.hasImageTabLocalTarget && !this.imageTabLocalTarget.classList.contains("hidden")) {
+    if (this.hasImageTabLocalTarget) {
       this.imageTabLocalTarget.className = `px-4 py-2 text-sm font-medium border-b-2 ${tab === "local" ? activeClasses : inactiveClasses}`
     }
-    if (this.hasImageTabWebTarget && !this.imageTabWebTarget.classList.contains("hidden")) {
+    if (this.hasImageTabWebTarget) {
       this.imageTabWebTarget.className = `px-4 py-2 text-sm font-medium border-b-2 ${tab === "web" ? activeClasses : inactiveClasses}`
     }
-    if (this.hasImageTabGoogleTarget && !this.imageTabGoogleTarget.classList.contains("hidden")) {
+    if (this.hasImageTabGoogleTarget) {
       this.imageTabGoogleTarget.className = `px-4 py-2 text-sm font-medium border-b-2 ${tab === "google" ? activeClasses : inactiveClasses}`
     }
     if (this.hasImageTabPinterestTarget) {
@@ -1366,12 +1363,12 @@ export default class extends Controller {
       this.imagePinterestPanelTarget.classList.toggle("hidden", tab !== "pinterest")
     }
 
-    // Focus appropriate input
-    if (tab === "local" && this.hasImageSearchTarget) {
+    // Focus appropriate input (only if the feature is configured)
+    if (tab === "local" && this.hasImageSearchTarget && this.imagesEnabled) {
       this.imageSearchTarget.focus()
     } else if (tab === "web" && this.hasWebImageSearchTarget) {
       this.webImageSearchTarget.focus()
-    } else if (tab === "google" && this.hasGoogleImageSearchTarget) {
+    } else if (tab === "google" && this.hasGoogleImageSearchTarget && this.googleImagesEnabled) {
       this.googleImageSearchTarget.focus()
     } else if (tab === "pinterest" && this.hasPinterestImageSearchTarget) {
       this.pinterestImageSearchTarget.focus()
@@ -1542,7 +1539,7 @@ export default class extends Controller {
 
   renderExternalImageGrid(images, container) {
     if (!images || images.length === 0) {
-      container.innerHTML = '<div class="col-span-4 text-center text-zinc-500 py-8">No images found</div>'
+      container.innerHTML = '<div class="col-span-4 text-center text-[var(--theme-text-muted)] py-8">No images found</div>'
       return
     }
 
@@ -1557,7 +1554,7 @@ export default class extends Controller {
           data-title="${this.escapeHtml(image.title || '')}"
           data-source="${this.escapeHtml(image.source || '')}"
           data-action="click->app#selectExternalImage"
-          class="external-image-item relative aspect-square rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-900 hover:ring-2 hover:ring-blue-400 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="external-image-item relative aspect-square rounded-lg overflow-hidden bg-[var(--theme-bg-tertiary)] hover:ring-2 hover:ring-[var(--theme-accent)] transition-all focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
           title="${this.escapeHtml(image.title || 'Image')}${dimensions ? ` (${dimensions})` : ''}"
         >
           <img
@@ -2669,7 +2666,7 @@ export default class extends Controller {
     container.innerHTML = matches.map(lang => `
       <button
         type="button"
-        class="w-full px-3 py-1.5 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700 focus:bg-zinc-100 dark:focus:bg-zinc-700 focus:outline-none"
+        class="w-full px-3 py-1.5 text-left text-sm hover:bg-[var(--theme-bg-hover)] focus:bg-[var(--theme-bg-hover)] focus:outline-none text-[var(--theme-text-primary)]"
         data-language="${lang}"
         data-action="click->app#selectLanguage keydown->app#onSuggestionKeydown"
       >
@@ -2788,7 +2785,7 @@ export default class extends Controller {
   openVideoDialog() {
     // Reset URL tab
     this.videoUrlTarget.value = ""
-    this.videoPreviewTarget.innerHTML = '<span class="text-zinc-500 dark:text-zinc-400">Enter a URL to see preview</span>'
+    this.videoPreviewTarget.innerHTML = '<span class="text-[var(--theme-text-muted)]">Enter a URL to see preview</span>'
     this.insertVideoBtnTarget.disabled = true
     this.detectedVideoType = null
     this.detectedVideoData = null
@@ -2801,14 +2798,17 @@ export default class extends Controller {
       this.youtubeSearchResultsTarget.innerHTML = ""
     }
     if (this.hasYoutubeSearchStatusTarget) {
-      if (this.youtubeApiEnabled) {
-        this.youtubeSearchStatusTarget.textContent = "Enter keywords and click Search or press Enter"
-      } else {
-        this.youtubeSearchStatusTarget.innerHTML = '<span class="text-amber-500">YouTube API not configured. Set YOUTUBE_API_KEY env variable.</span>'
-      }
+      this.youtubeSearchStatusTarget.textContent = "Enter keywords and click Search or press Enter"
     }
     this.youtubeSearchResults = []
     this.selectedYoutubeIndex = -1
+
+    // Show/hide YouTube config notice based on feature availability
+    if (this.hasYoutubeConfigNoticeTarget && this.hasYoutubeSearchFormTarget) {
+      const youtubeConfigured = this.youtubeApiEnabled
+      this.youtubeConfigNoticeTarget.classList.toggle("hidden", youtubeConfigured)
+      this.youtubeSearchFormTarget.classList.toggle("hidden", !youtubeConfigured)
+    }
 
     // Reset to URL tab
     this.switchVideoTab({ currentTarget: { dataset: { tab: "url" } } })
@@ -2834,11 +2834,11 @@ export default class extends Controller {
 
     // Update tab buttons
     const urlTabClasses = tab === "url"
-      ? "border-blue-500 text-blue-600 dark:text-blue-400"
-      : "border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+      ? "border-[var(--theme-accent)] text-[var(--theme-accent)]"
+      : "border-transparent text-[var(--theme-text-muted)] hover:text-[var(--theme-text-secondary)]"
     const searchTabClasses = tab === "search"
-      ? "border-blue-500 text-blue-600 dark:text-blue-400"
-      : "border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+      ? "border-[var(--theme-accent)] text-[var(--theme-accent)]"
+      : "border-transparent text-[var(--theme-text-muted)] hover:text-[var(--theme-text-secondary)]"
 
     this.videoTabUrlTarget.className = `px-4 py-2 text-sm font-medium border-b-2 ${urlTabClasses}`
     this.videoTabSearchTarget.className = `px-4 py-2 text-sm font-medium border-b-2 ${searchTabClasses}`
@@ -2850,7 +2850,7 @@ export default class extends Controller {
     // Focus appropriate input
     if (tab === "url") {
       this.videoUrlTarget.focus()
-    } else if (tab === "search" && this.hasYoutubeSearchInputTarget) {
+    } else if (tab === "search" && this.hasYoutubeSearchInputTarget && this.youtubeApiEnabled) {
       this.youtubeSearchInputTarget.focus()
     }
   }
@@ -2863,7 +2863,7 @@ export default class extends Controller {
     const url = this.videoUrlTarget.value.trim()
 
     if (!url) {
-      this.videoPreviewTarget.innerHTML = '<span class="text-zinc-500 dark:text-zinc-400">Enter a URL to see preview</span>'
+      this.videoPreviewTarget.innerHTML = '<span class="text-[var(--theme-text-muted)]">Enter a URL to see preview</span>'
       this.insertVideoBtnTarget.disabled = true
       this.detectedVideoType = null
       return
@@ -2877,7 +2877,7 @@ export default class extends Controller {
       const thumbnailUrl = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
       this.videoPreviewTarget.innerHTML = `
         <div class="flex gap-3">
-          <div class="relative flex-shrink-0 w-32 h-18 rounded overflow-hidden bg-zinc-200 dark:bg-zinc-700">
+          <div class="relative flex-shrink-0 w-32 h-18 rounded overflow-hidden bg-[var(--theme-bg-tertiary)]">
             <img
               src="${thumbnailUrl}"
               alt="Video thumbnail"
@@ -2891,8 +2891,8 @@ export default class extends Controller {
             </div>
           </div>
           <div class="flex flex-col justify-center">
-            <div class="font-medium text-zinc-900 dark:text-zinc-100">YouTube Video</div>
-            <div class="text-xs text-zinc-500 dark:text-zinc-400">ID: ${youtubeId}</div>
+            <div class="font-medium text-[var(--theme-text-primary)]">YouTube Video</div>
+            <div class="text-xs text-[var(--theme-text-muted)]">ID: ${youtubeId}</div>
           </div>
         </div>
       `
@@ -2910,13 +2910,13 @@ export default class extends Controller {
       const filename = url.split("/").pop()
       this.videoPreviewTarget.innerHTML = `
         <div class="flex items-center gap-3">
-          <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-8 h-8 text-[var(--theme-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div>
-            <div class="font-medium text-zinc-900 dark:text-zinc-100">Video File</div>
-            <div class="text-xs text-zinc-500 dark:text-zinc-400 truncate max-w-[350px]">${this.escapeHtml(filename)}</div>
+            <div class="font-medium text-[var(--theme-text-primary)]">Video File</div>
+            <div class="text-xs text-[var(--theme-text-muted)] truncate max-w-[350px]">${this.escapeHtml(filename)}</div>
           </div>
         </div>
       `
@@ -2927,7 +2927,7 @@ export default class extends Controller {
     // Unknown format
     this.detectedVideoType = null
     this.detectedVideoData = null
-    this.videoPreviewTarget.innerHTML = '<span class="text-amber-500">Unknown format. Enter a YouTube URL or video file path.</span>'
+    this.videoPreviewTarget.innerHTML = '<span class="text-[var(--theme-warning)]">Unknown format. Enter a YouTube URL or video file path.</span>'
     this.insertVideoBtnTarget.disabled = true
   }
 
@@ -3077,7 +3077,7 @@ export default class extends Controller {
 
     this.youtubeSearchResultsTarget.innerHTML = this.youtubeSearchResults.map((video, index) => {
       const isSelected = index === this.selectedYoutubeIndex
-      const selectedClass = isSelected ? "ring-2 ring-blue-500" : ""
+      const selectedClass = isSelected ? "ring-2 ring-[var(--theme-accent)]" : ""
 
       return `
         <button
@@ -3086,9 +3086,9 @@ export default class extends Controller {
           data-video-id="${video.id}"
           data-video-title="${this.escapeHtml(video.title)}"
           data-action="click->app#selectYoutubeVideo keydown->app#onYoutubeResultKeydown"
-          class="flex flex-col rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors ${selectedClass} focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="flex flex-col rounded-lg overflow-hidden bg-[var(--theme-bg-tertiary)] hover:bg-[var(--theme-bg-hover)] transition-colors ${selectedClass} focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
         >
-          <div class="relative aspect-video bg-zinc-200 dark:bg-zinc-700">
+          <div class="relative aspect-video bg-[var(--theme-bg-tertiary)]">
             <img
               src="${video.thumbnail}"
               alt="${this.escapeHtml(video.title)}"
@@ -3102,8 +3102,8 @@ export default class extends Controller {
             </div>
           </div>
           <div class="p-2">
-            <div class="text-xs font-medium text-zinc-900 dark:text-zinc-100 line-clamp-2">${this.escapeHtml(video.title)}</div>
-            <div class="text-xs text-zinc-500 dark:text-zinc-400 truncate mt-0.5">${this.escapeHtml(video.channel)}</div>
+            <div class="text-xs font-medium text-[var(--theme-text-primary)] line-clamp-2">${this.escapeHtml(video.title)}</div>
+            <div class="text-xs text-[var(--theme-text-muted)] truncate mt-0.5">${this.escapeHtml(video.channel)}</div>
           </div>
         </button>
       `

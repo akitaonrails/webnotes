@@ -2,6 +2,8 @@
 
 A simple, feature-rich, self-hosted markdown note-taking app built with Ruby on Rails 8. Designed for blog writers and anyone who wants a clean, distraction-free writing environment with their notes stored locally.
 
+[![GitHub](https://img.shields.io/badge/GitHub-akitaonrails%2Fwebnotes-blue?logo=github)](https://github.com/akitaonrails/webnotes)
+
 ## Why WebNotes?
 
 - **No database** - Notes are plain markdown files on your filesystem
@@ -15,7 +17,7 @@ A simple, feature-rich, self-hosted markdown note-taking app built with Ruby on 
 - Clean, distraction-free writing interface
 - Syntax highlighting for markdown
 - Auto-save with visual feedback
-- Typewriter mode (keeps cursor centered)
+- Typewriter mode for focused writing (cursor stays centered)
 - Customizable fonts and sizes
 - Multiple color themes (light/dark variants)
 
@@ -28,14 +30,14 @@ A simple, feature-rich, self-hosted markdown note-taking app built with Ruby on 
 
 ### Preview
 - Live markdown preview panel
-- Synchronized scrolling
+- Synchronized scrolling (including typewriter mode)
 - Zoom controls
 - GitHub-flavored markdown support
 
 ### Media
-- **Images**: Browse local images, search web (Bing), Google Images, or Pinterest
+- **Images**: Browse local images, search web (DuckDuckGo), Google Images, or Pinterest
 - **Videos**: Embed YouTube videos with search, or local video files
-- **Tables**: Visual table editor
+- **Tables**: Visual table editor with drag-and-drop rows/columns
 - **Code blocks**: Language selection with autocomplete
 
 ### Integrations
@@ -156,7 +158,73 @@ docker compose up -d
 
 ## Configuration
 
+WebNotes uses a `.webnotes` configuration file in your notes directory. This file is automatically created on first run with all options commented out as documentation.
+
+### The .webnotes File
+
+When you open a notes directory for the first time, WebNotes creates a `.webnotes` configuration file with all available options commented out. You can uncomment and modify any setting:
+
+```ini
+# UI Settings
+theme = gruvbox
+editor_font = fira-code
+editor_font_size = 16
+preview_zoom = 100
+sidebar_visible = true
+typewriter_mode = false
+
+# Local images path
+images_path = /home/user/Pictures
+
+# AWS S3 (overrides environment variables)
+aws_access_key_id = your-key
+aws_secret_access_key = your-secret
+aws_s3_bucket = your-bucket
+aws_region = us-east-1
+
+# API Keys
+youtube_api_key = your-youtube-key
+google_api_key = your-google-key
+google_cse_id = your-cse-id
+```
+
+**Priority order:** File settings override environment variables, which override defaults.
+
+This means you can:
+- Set global defaults via environment variables
+- Override per-folder using `.webnotes` (e.g., different AWS bucket for different projects)
+- UI changes (theme, font) are automatically saved to the file
+
+### Editing .webnotes in the App
+
+The `.webnotes` file appears in the explorer panel with a gear icon. You can click it to edit directly in WebNotes:
+
+- The toolbar and preview panel are hidden when editing config files (they only appear for markdown files)
+- Changes are auto-saved like any other file
+- **Live reload**: When you save `.webnotes`, the UI immediately applies your changes (theme, font, etc.)
+
+### Available Settings
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `theme` | string | (system) | Color theme: light, dark, gruvbox, tokyo-night, etc. |
+| `editor_font` | string | cascadia-code | Editor font family |
+| `editor_font_size` | integer | 14 | Font size in pixels (8-32) |
+| `preview_zoom` | integer | 100 | Preview zoom percentage (50-200) |
+| `sidebar_visible` | boolean | true | Show explorer panel on startup |
+| `typewriter_mode` | boolean | false | Enable typewriter mode on startup |
+| `images_path` | string | - | Local images directory path |
+| `aws_access_key_id` | string | - | AWS access key for S3 |
+| `aws_secret_access_key` | string | - | AWS secret key for S3 |
+| `aws_s3_bucket` | string | - | S3 bucket name |
+| `aws_region` | string | - | AWS region |
+| `youtube_api_key` | string | - | YouTube Data API key |
+| `google_api_key` | string | - | Google API key |
+| `google_cse_id` | string | - | Google Custom Search Engine ID |
+
 ### Environment Variables
+
+Environment variables serve as global defaults. They're useful for Docker deployments or when you want the same configuration across all notes directories.
 
 | Variable | Description | Default |
 |----------|-------------|---------|
@@ -187,9 +255,16 @@ To enable YouTube video search in the video dialog:
 |----------|-------------|
 | `YOUTUBE_API_KEY` | Your YouTube Data API key |
 
+**In-app setup:** You can also configure this directly in the `.webnotes` file:
+```ini
+youtube_api_key = your-youtube-api-key
+```
+
+When not configured, the YouTube Search tab shows setup instructions with a link to this documentation.
+
 ### Optional: Google Image Search
 
-To enable Google Images tab (in addition to the free Bing/web search):
+To enable Google Images tab (in addition to the free web search):
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a project and enable "Custom Search API"
@@ -203,6 +278,14 @@ To enable Google Images tab (in addition to the free Bing/web search):
 |----------|-------------|
 | `GOOGLE_API_KEY` | Your Google API key |
 | `GOOGLE_CSE_ID` | Your Custom Search Engine ID |
+
+**In-app setup:** You can also configure this directly in the `.webnotes` file:
+```ini
+google_api_key = your-google-api-key
+google_cse_id = your-custom-search-engine-id
+```
+
+When not configured, the Google Images tab shows setup instructions with a link to this documentation.
 
 Note: Google Custom Search has a free tier of 100 queries/day.
 
@@ -218,6 +301,24 @@ Note: Google Custom Search has a free tier of 100 queries/day.
 | `Ctrl+B` | Toggle typewriter mode |
 | `Ctrl+Shift+P` | Toggle preview panel |
 | `F1` | Markdown help |
+
+## Typewriter Mode
+
+Typewriter mode (`Ctrl+B`) is designed for focused, distraction-free writing:
+
+**Normal mode (default):**
+- Explorer panel visible on the left
+- Preview panel hidden
+- Editor uses normal scrolling
+
+**Typewriter mode:**
+- Explorer panel hidden
+- Preview panel opens automatically
+- Cursor stays centered in the middle of the editor
+- As you type, the text scrolls to keep your writing position fixed
+- Preview panel syncs with typewriter position
+
+This mimics the experience of a typewriter where your typing position stays constant on the page, reducing eye movement and helping maintain focus during long writing sessions.
 
 ## Hugo Blog Post Support
 
@@ -248,14 +349,30 @@ tags:
 
 The slug is automatically generated from the title:
 - Converts to lowercase
-- Replaces accented characters (á→a, é→e, ç→c, ñ→n, etc.)
+- Replaces accented characters (a→a, e→e, c→c, n→n, etc.)
 - Removes special characters
 - Replaces spaces with hyphens
 
 Examples:
-- "Conexão à Internet" → `conexao-a-internet`
+- "Conexao a Internet" → `conexao-a-internet`
 - "What's New in 2026?" → `whats-new-in-2026`
-- "Código & Programação" → `codigo-programacao`
+- "Codigo & Programacao" → `codigo-programacao`
+
+## Themes
+
+WebNotes supports multiple color themes:
+
+- **Light** - Clean light theme
+- **Dark** - Standard dark theme
+- **Gruvbox** - Retro groove color scheme
+- **Tokyo Night** - Vibrant night theme
+- **Solarized Light/Dark** - Classic color schemes
+- **Nord** - Arctic, north-bluish color palette
+- **Cappuccino** - Warm coffee tones
+- **Osaka** - Japanese-inspired colors
+- **Hackerman** - Matrix-style green on black
+
+Change themes from the dropdown in the top-right corner. Your preference is saved to the `.webnotes` file.
 
 ## Remote Access with Cloudflare Tunnel
 
@@ -346,17 +463,28 @@ app/
 │   ├── notes_controller.rb    # Note CRUD operations
 │   ├── folders_controller.rb  # Folder management
 │   ├── images_controller.rb   # Image browsing & S3 upload
-│   └── youtube_controller.rb  # YouTube search API
+│   ├── youtube_controller.rb  # YouTube search API
+│   └── config_controller.rb   # .webnotes configuration
+├── models/
+│   ├── note.rb                # Note ActiveModel
+│   ├── folder.rb              # Folder ActiveModel
+│   └── config.rb              # Configuration management
 ├── services/
 │   ├── notes_service.rb       # File system operations
 │   └── images_service.rb      # Image handling & S3
 ├── javascript/
 │   └── controllers/
-│       ├── app_controller.js  # Main Stimulus controller
-│       └── theme_controller.js # Theme management
+│       ├── app_controller.js          # Main Stimulus controller
+│       ├── theme_controller.js        # Theme management
+│       └── table_editor_controller.js # Table editing
 └── views/
     └── notes/
-        └── index.html.erb     # Single-page app
+        ├── index.html.erb     # Single-page app
+        ├── _header.html.erb   # Top bar with GitHub link
+        ├── _sidebar.html.erb  # File explorer
+        ├── _editor_panel.html.erb
+        ├── _preview_panel.html.erb
+        └── dialogs/           # Modal dialogs
 ```
 
 ### Building Docker Image
