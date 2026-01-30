@@ -121,8 +121,8 @@ export default class extends Controller {
     // Sidebar/Explorer visibility
     this.sidebarVisible = localStorage.getItem("sidebarVisible") !== "false"
 
-    // Focus/typewriter mode - keeps cursor in middle-bottom area
-    this.focusModeEnabled = localStorage.getItem("focusMode") === "true"
+    // Typewriter mode - keeps cursor in upper-middle area
+    this.typewriterModeEnabled = localStorage.getItem("typewriterMode") === "true"
 
     // File finder state
     this.allFiles = []
@@ -150,7 +150,7 @@ export default class extends Controller {
     this.applyEditorSettings()
     this.applyPreviewZoom()
     this.applySidebarVisibility()
-    this.applyFocusMode()
+    this.applyTypewriterMode()
 
     // Configure marked
     marked.setOptions({
@@ -448,7 +448,7 @@ export default class extends Controller {
     this.scheduleAutoSave()
     this.updatePreview()
     this.checkTableAtCursor()
-    this.maintainFocusModeScroll()
+    this.maintainTypewriterScroll()
   }
 
   // Check if cursor is in a markdown table
@@ -666,12 +666,12 @@ export default class extends Controller {
     this.previewContentTarget.innerHTML = marked.parse(content)
 
     // Sync scroll after updating preview content
-    if (this.focusModeEnabled) {
-      // In focus mode, sync preview to cursor position
+    if (this.typewriterModeEnabled) {
+      // In typewriter mode, sync preview to cursor position
       const textBeforeCursor = content.substring(0, this.textareaTarget.selectionStart)
       const linesBefore = textBeforeCursor.split("\n").length
       const totalLines = content.split("\n").length
-      this.syncPreviewToFocusMode(linesBefore, totalLines)
+      this.syncPreviewToTypewriter(linesBefore, totalLines)
     } else {
       this.syncPreviewScroll()
     }
@@ -680,17 +680,17 @@ export default class extends Controller {
   setupSyncScroll() {
     if (!this.hasTextareaTarget) return
 
-    // Listen for scroll events on the textarea (only sync preview if not in focus mode)
+    // Listen for scroll events on the textarea (only sync preview if not in typewriter mode)
     this.textareaTarget.addEventListener("scroll", () => {
-      if (!this.focusModeEnabled) {
+      if (!this.typewriterModeEnabled) {
         this.syncPreviewScroll()
       }
     })
 
     // Also sync on cursor position changes (selection change)
     this.textareaTarget.addEventListener("click", () => {
-      if (this.focusModeEnabled) {
-        this.maintainFocusModeScroll()
+      if (this.typewriterModeEnabled) {
+        this.maintainTypewriterScroll()
       } else {
         this.syncPreviewScrollToCursor()
       }
@@ -699,8 +699,8 @@ export default class extends Controller {
     this.textareaTarget.addEventListener("keyup", (event) => {
       // Sync on arrow keys, page up/down, home/end
       if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"].includes(event.key)) {
-        if (this.focusModeEnabled) {
-          this.maintainFocusModeScroll()
+        if (this.typewriterModeEnabled) {
+          this.maintainTypewriterScroll()
         } else {
           this.syncPreviewScrollToCursor()
         }
@@ -1395,33 +1395,33 @@ export default class extends Controller {
     }
   }
 
-  // Focus/Typewriter Mode - keeps cursor at a fixed position on screen
-  toggleFocusMode() {
-    this.focusModeEnabled = !this.focusModeEnabled
-    localStorage.setItem("focusMode", this.focusModeEnabled.toString())
-    this.applyFocusMode()
+  // Typewriter Mode - keeps cursor at a fixed position on screen
+  toggleTypewriterMode() {
+    this.typewriterModeEnabled = !this.typewriterModeEnabled
+    localStorage.setItem("typewriterMode", this.typewriterModeEnabled.toString())
+    this.applyTypewriterMode()
 
-    // Immediately apply focus scroll if enabling
-    if (this.focusModeEnabled) {
-      this.maintainFocusModeScroll()
+    // Immediately apply typewriter scroll if enabling
+    if (this.typewriterModeEnabled) {
+      this.maintainTypewriterScroll()
     }
   }
 
-  applyFocusMode() {
+  applyTypewriterMode() {
     if (this.hasTextareaTarget) {
-      this.textareaTarget.classList.toggle("focus-mode", this.focusModeEnabled)
+      this.textareaTarget.classList.toggle("typewriter-mode", this.typewriterModeEnabled)
     }
     // Update toggle button state if exists
-    const focusBtn = this.element.querySelector("[data-focus-mode-btn]")
-    if (focusBtn) {
-      focusBtn.classList.toggle("bg-[var(--theme-bg-hover)]", this.focusModeEnabled)
-      focusBtn.setAttribute("aria-pressed", this.focusModeEnabled.toString())
+    const typewriterBtn = this.element.querySelector("[data-typewriter-mode-btn]")
+    if (typewriterBtn) {
+      typewriterBtn.classList.toggle("bg-[var(--theme-bg-hover)]", this.typewriterModeEnabled)
+      typewriterBtn.setAttribute("aria-pressed", this.typewriterModeEnabled.toString())
     }
   }
 
-  // Keep cursor at ~40% from top of the editor in focus mode
-  maintainFocusModeScroll() {
-    if (!this.focusModeEnabled) return
+  // Keep cursor at ~35% from top of the editor in typewriter mode
+  maintainTypewriterScroll() {
+    if (!this.typewriterModeEnabled) return
     if (!this.hasTextareaTarget) return
 
     const textarea = this.textareaTarget
@@ -1440,8 +1440,8 @@ export default class extends Controller {
     // Calculate cursor's vertical position (in pixels from top of content)
     const cursorY = (linesBefore - 1) * lineHeight
 
-    // Target position: 50% from top of visible area (middle of screen)
-    const targetY = textarea.clientHeight * 0.5
+    // Target position: 35% from top of visible area (upper-middle)
+    const targetY = textarea.clientHeight * 0.35
 
     // Calculate desired scroll position to put cursor at target
     const desiredScrollTop = cursorY - targetY
@@ -1454,20 +1454,20 @@ export default class extends Controller {
 
     // Also sync preview if visible
     if (!this.previewPanelTarget.classList.contains("hidden")) {
-      this.syncPreviewToFocusMode(linesBefore, text.split("\n").length)
+      this.syncPreviewToTypewriter(linesBefore, text.split("\n").length)
     }
   }
 
-  // Sync preview scroll in focus mode
-  syncPreviewToFocusMode(currentLine, totalLines) {
+  // Sync preview scroll in typewriter mode
+  syncPreviewToTypewriter(currentLine, totalLines) {
     if (!this.hasPreviewContentTarget) return
     if (totalLines <= 1) return
 
     const preview = this.previewContentTarget
     const lineRatio = (currentLine - 1) / (totalLines - 1)
 
-    // Target: same 50% from top position (middle of screen)
-    const targetY = preview.clientHeight * 0.5
+    // Target: same 35% from top position (upper-middle)
+    const targetY = preview.clientHeight * 0.35
     const contentHeight = preview.scrollHeight - preview.clientHeight
 
     if (contentHeight > 0) {
@@ -2262,10 +2262,10 @@ export default class extends Controller {
         this.toggleSidebar()
       }
 
-      // Ctrl/Cmd + B: Toggle focus/typewriter mode
+      // Ctrl/Cmd + B: Toggle typewriter mode
       if ((event.ctrlKey || event.metaKey) && event.key === "b") {
         event.preventDefault()
-        this.toggleFocusMode()
+        this.toggleTypewriterMode()
       }
 
       // Escape: Close menus and dialogs
