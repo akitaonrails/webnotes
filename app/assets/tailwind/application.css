@@ -243,9 +243,20 @@
     overflow-x: auto;
   }
 
+  .dark .prose pre {
+    background: #27272a;
+    color: #fafafa;
+  }
+
   .prose pre code {
     background: transparent;
     padding: 0;
+    color: inherit;
+  }
+
+  .dark .prose code {
+    background: #27272a;
+    color: #fafafa;
   }
 
   .prose img {

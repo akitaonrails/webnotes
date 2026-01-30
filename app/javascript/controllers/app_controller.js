@@ -1324,15 +1324,16 @@ export default class extends Controller {
       codeBlock = "```" + language + "\n\n```"
     }
 
+    let newCursorPos
+
     if (this.codeEditMode) {
       // Replace existing code block
       const before = text.substring(0, this.codeStartPos)
       const after = text.substring(this.codeEndPos)
       textarea.value = before + codeBlock + after
 
-      // Position cursor at first line of content
-      const cursorPos = this.codeStartPos + 3 + language.length + 1
-      textarea.setSelectionRange(cursorPos, cursorPos)
+      // Position cursor at first line of content (after ```language\n)
+      newCursorPos = this.codeStartPos + 3 + language.length + 1
     } else {
       // Insert at cursor
       const cursorPos = textarea.selectionStart
@@ -1346,11 +1347,15 @@ export default class extends Controller {
       textarea.value = before + prefix + codeBlock + suffix + after
 
       // Position cursor at first line inside the fence (after ```language\n)
-      const newCursorPos = before.length + prefix.length + 3 + language.length + 1
-      textarea.setSelectionRange(newCursorPos, newCursorPos)
+      newCursorPos = before.length + prefix.length + 3 + language.length + 1
     }
 
+    // Focus first, then set cursor position
     textarea.focus()
+    // Use setTimeout to ensure the cursor positioning happens after focus
+    setTimeout(() => {
+      textarea.setSelectionRange(newCursorPos, newCursorPos)
+    }, 0)
     this.scheduleAutoSave()
     this.updatePreview()
     this.codeDialogTarget.close()
