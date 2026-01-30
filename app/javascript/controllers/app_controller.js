@@ -44,7 +44,11 @@ export default class extends Controller {
     "s3Option",
     "uploadToS3",
     "imageLoading",
-    "insertImageBtn"
+    "insertImageBtn",
+    "codeDialog",
+    "codeLanguage",
+    "codeContent",
+    "codeSuggestions"
   ]
 
   static values = {
@@ -76,6 +80,18 @@ export default class extends Controller {
     this.s3Enabled = false
     this.selectedImage = null
     this.imageSearchTimeout = null
+
+    // Code snippet state
+    this.codeEditMode = false
+    this.codeStartPos = 0
+    this.codeEndPos = 0
+    this.codeLanguages = [
+      "javascript", "typescript", "python", "ruby", "go", "rust", "java", "c", "cpp", "csharp",
+      "php", "swift", "kotlin", "scala", "haskell", "elixir", "erlang", "clojure", "lua", "perl",
+      "html", "css", "scss", "sass", "less", "json", "yaml", "toml", "xml", "markdown",
+      "sql", "graphql", "bash", "shell", "powershell", "dockerfile", "makefile",
+      "nginx", "apache", "vim", "regex", "diff", "git", "plaintext"
+    ]
 
     this.renderTree()
     this.setupKeyboardShortcuts()
@@ -1121,6 +1137,234 @@ export default class extends Controller {
     this.helpDialogTarget.close()
   }
 
+  // Code Snippet Editor
+  openCodeEditor() {
+    if (this.hasTextareaTarget) {
+      const text = this.textareaTarget.value
+      const cursorPos = this.textareaTarget.selectionStart
+      const codeBlock = this.findCodeBlockAtPosition(text, cursorPos)
+
+      if (codeBlock) {
+        // Edit existing code block
+        this.codeEditMode = true
+        this.codeStartPos = codeBlock.startPos
+        this.codeEndPos = codeBlock.endPos
+        this.codeLanguageTarget.value = codeBlock.language || ""
+        this.codeContentTarget.value = codeBlock.content || ""
+      } else {
+        // New code block
+        this.codeEditMode = false
+        this.codeLanguageTarget.value = ""
+        this.codeContentTarget.value = ""
+      }
+    } else {
+      this.codeEditMode = false
+      this.codeLanguageTarget.value = ""
+      this.codeContentTarget.value = ""
+    }
+
+    this.hideSuggestions()
+    this.showDialogCentered(this.codeDialogTarget)
+    this.codeLanguageTarget.focus()
+  }
+
+  closeCodeDialog() {
+    this.codeDialogTarget.close()
+  }
+
+  findCodeBlockAtPosition(text, pos) {
+    // Find fenced code blocks using regex
+    const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g
+    let match
+
+    while ((match = codeBlockRegex.exec(text)) !== null) {
+      const startPos = match.index
+      const endPos = match.index + match[0].length
+
+      if (pos >= startPos && pos <= endPos) {
+        return {
+          startPos,
+          endPos,
+          language: match[1],
+          content: match[2]
+        }
+      }
+    }
+
+    return null
+  }
+
+  onCodeLanguageInput() {
+    const value = this.codeLanguageTarget.value.toLowerCase().trim()
+
+    if (!value) {
+      this.hideSuggestions()
+      return
+    }
+
+    // Filter languages that start with or contain the input
+    const matches = this.codeLanguages.filter(lang =>
+      lang.startsWith(value) || lang.includes(value)
+    ).slice(0, 6)
+
+    if (matches.length > 0 && matches[0] !== value) {
+      this.showSuggestions(matches)
+    } else {
+      this.hideSuggestions()
+    }
+  }
+
+  onCodeLanguageKeydown(event) {
+    if (event.key === "Tab") {
+      const suggestions = this.codeSuggestionsTarget
+      if (!suggestions.classList.contains("hidden")) {
+        event.preventDefault()
+        const firstSuggestion = suggestions.querySelector("button")
+        if (firstSuggestion) {
+          this.codeLanguageTarget.value = firstSuggestion.dataset.language
+          this.hideSuggestions()
+        }
+      }
+    } else if (event.key === "Escape") {
+      this.hideSuggestions()
+    } else if (event.key === "ArrowDown") {
+      const suggestions = this.codeSuggestionsTarget
+      if (!suggestions.classList.contains("hidden")) {
+        event.preventDefault()
+        const firstBtn = suggestions.querySelector("button")
+        if (firstBtn) firstBtn.focus()
+      }
+    }
+  }
+
+  onSuggestionKeydown(event) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault()
+      const next = event.target.nextElementSibling
+      if (next) next.focus()
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault()
+      const prev = event.target.previousElementSibling
+      if (prev) {
+        prev.focus()
+      } else {
+        this.codeLanguageTarget.focus()
+      }
+    } else if (event.key === "Escape") {
+      this.hideSuggestions()
+      this.codeLanguageTarget.focus()
+    }
+  }
+
+  showSuggestions(matches) {
+    const container = this.codeSuggestionsTarget
+    container.innerHTML = matches.map(lang => `
+      <button
+        type="button"
+        class="w-full px-3 py-1.5 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700 focus:bg-zinc-100 dark:focus:bg-zinc-700 focus:outline-none"
+        data-language="${lang}"
+        data-action="click->app#selectLanguage keydown->app#onSuggestionKeydown"
+      >
+        ${lang}
+      </button>
+    `).join("")
+    container.classList.remove("hidden")
+  }
+
+  hideSuggestions() {
+    this.codeSuggestionsTarget.classList.add("hidden")
+  }
+
+  selectLanguage(event) {
+    this.codeLanguageTarget.value = event.currentTarget.dataset.language
+    this.hideSuggestions()
+    this.codeContentTarget.focus()
+  }
+
+  insertCode() {
+    if (!this.hasTextareaTarget) {
+      this.codeDialogTarget.close()
+      return
+    }
+
+    const language = this.codeLanguageTarget.value.trim()
+    const content = this.codeContentTarget.value
+
+    // Validate language if provided
+    if (language && !this.codeLanguages.includes(language.toLowerCase())) {
+      const isClose = this.codeLanguages.some(lang =>
+        lang.startsWith(language.toLowerCase()) ||
+        this.levenshteinDistance(lang, language.toLowerCase()) <= 2
+      )
+      if (!isClose) {
+        const proceed = confirm(`"${language}" is not a recognized language. Insert anyway?`)
+        if (!proceed) return
+      }
+    }
+
+    const textarea = this.textareaTarget
+    const text = textarea.value
+
+    // Build the code fence
+    const codeBlock = "```" + language + "\n" + content + (content && !content.endsWith("\n") ? "\n" : "") + "```"
+
+    if (this.codeEditMode) {
+      // Replace existing code block
+      const before = text.substring(0, this.codeStartPos)
+      const after = text.substring(this.codeEndPos)
+      textarea.value = before + codeBlock + after
+
+      // Position cursor at first line of content
+      const cursorPos = this.codeStartPos + 3 + language.length + 1
+      textarea.setSelectionRange(cursorPos, cursorPos)
+    } else {
+      // Insert at cursor
+      const cursorPos = textarea.selectionStart
+      const before = text.substring(0, cursorPos)
+      const after = text.substring(cursorPos)
+
+      // Add newlines if needed
+      const prefix = before.length > 0 && !before.endsWith("\n\n") ? (before.endsWith("\n") ? "\n" : "\n\n") : ""
+      const suffix = after.length > 0 && !after.startsWith("\n\n") ? (after.startsWith("\n") ? "\n" : "\n\n") : ""
+
+      textarea.value = before + prefix + codeBlock + suffix + after
+
+      // Position cursor at first line inside the fence (after ```language\n)
+      const newCursorPos = before.length + prefix.length + 3 + language.length + 1
+      textarea.setSelectionRange(newCursorPos, newCursorPos)
+    }
+
+    textarea.focus()
+    this.scheduleAutoSave()
+    this.updatePreview()
+    this.codeDialogTarget.close()
+  }
+
+  // Simple Levenshtein distance for typo detection
+  levenshteinDistance(a, b) {
+    const matrix = []
+    for (let i = 0; i <= b.length; i++) {
+      matrix[i] = [i]
+    }
+    for (let j = 0; j <= a.length; j++) {
+      matrix[0][j] = j
+    }
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1]
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          )
+        }
+      }
+    }
+    return matrix[b.length][a.length]
+  }
+
   // New Note/Folder
   newNote() {
     this.newItemType = "note"
@@ -1261,7 +1505,8 @@ export default class extends Controller {
       this.newItemDialogTarget,
       this.tableDialogTarget,
       this.imageDialogTarget,
-      this.helpDialogTarget
+      this.helpDialogTarget,
+      this.codeDialogTarget
     ]
 
     dialogs.forEach(dialog => {
@@ -1434,6 +1679,9 @@ export default class extends Controller {
         }
         if (this.hasHelpDialogTarget && this.helpDialogTarget.open) {
           this.helpDialogTarget.close()
+        }
+        if (this.hasCodeDialogTarget && this.codeDialogTarget.open) {
+          this.codeDialogTarget.close()
         }
       }
 

@@ -125,6 +125,17 @@
           </svg>
           Image
         </button>
+        <button
+          type="button"
+          data-action="click->app#openCodeEditor"
+          class="px-2 py-1 text-xs rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 flex items-center gap-1"
+          title="Insert/Edit Code Block"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+          </svg>
+          Code
+        </button>
         <div class="h-5 w-px bg-zinc-300 dark:bg-zinc-600 mx-1"></div>
         <span class="text-xs text-zinc-400 dark:text-zinc-500 hidden" data-app-target="tableHint">
           Cursor in table - click to edit
@@ -689,6 +700,77 @@
     <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400 text-center">
       <span class="font-semibold">Keyboard Shortcuts:</span>
       Ctrl+S save &bull; Ctrl+N new note &bull; Ctrl+Shift+P preview &bull; F1 help
+    </div>
+  </div>
+</dialog>
+
+<!-- Code Snippet Dialog -->
+<dialog
+  class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 w-[500px]"
+  data-app-target="codeDialog"
+>
+  <div class="p-4 text-zinc-900 dark:text-zinc-100">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-sm font-semibold">Code Block</h3>
+      <button
+        type="button"
+        data-action="click->app#closeCodeDialog"
+        class="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Language Input with Autocomplete -->
+    <div class="mb-4 relative">
+      <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">Language (Tab to autocomplete)</label>
+      <input
+        type="text"
+        data-app-target="codeLanguage"
+        data-action="input->app#onCodeLanguageInput keydown->app#onCodeLanguageKeydown"
+        class="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+        placeholder="javascript, python, ruby..."
+        autocomplete="off"
+        spellcheck="false"
+      >
+      <!-- Suggestions dropdown -->
+      <div
+        class="hidden absolute z-10 w-full mt-1 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md shadow-lg max-h-48 overflow-y-auto"
+        data-app-target="codeSuggestions"
+      >
+        <!-- Suggestions will be populated by JavaScript -->
+      </div>
+    </div>
+
+    <!-- Code Content -->
+    <div class="mb-4">
+      <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">Code (optional)</label>
+      <textarea
+        data-app-target="codeContent"
+        class="w-full h-48 px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono resize-none"
+        placeholder="Paste or type your code here..."
+        spellcheck="false"
+      ></textarea>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex justify-end gap-2">
+      <button
+        type="button"
+        data-action="click->app#closeCodeDialog"
+        class="px-3 py-1.5 text-sm rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        data-action="click->app#insertCode"
+        class="px-3 py-1.5 text-sm rounded-md bg-blue-500 text-white hover:bg-blue-600"
+      >
+        Insert Code
+      </button>
     </div>
   </div>
 </dialog>
