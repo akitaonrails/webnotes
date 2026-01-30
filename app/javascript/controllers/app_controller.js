@@ -126,6 +126,10 @@ export default class extends Controller {
     this.fileFinderResults = []
     this.selectedFileIndex = 0
 
+    // Sync scroll state
+    this.syncScrollEnabled = true
+    this.syncScrollTimeout = null
+
     this.codeLanguages = [
       "javascript", "typescript", "python", "ruby", "go", "rust", "java", "c", "cpp", "csharp",
       "php", "swift", "kotlin", "scala", "haskell", "elixir", "erlang", "clojure", "lua", "perl",
@@ -138,6 +142,7 @@ export default class extends Controller {
     this.setupKeyboardShortcuts()
     this.setupContextMenuClose()
     this.setupDialogClickOutside()
+    this.setupSyncScroll()
     this.loadImagesConfig()
     this.applyEditorSettings()
     this.applyPreviewZoom()
@@ -643,6 +648,8 @@ export default class extends Controller {
 
     if (isHidden) {
       this.updatePreview()
+      // Sync scroll position after a brief delay for DOM to settle
+      setTimeout(() => this.syncPreviewScrollToCursor(), 50)
     }
   }
 
@@ -652,6 +659,94 @@ export default class extends Controller {
 
     const content = this.textareaTarget.value
     this.previewContentTarget.innerHTML = marked.parse(content)
+
+    // Sync scroll after updating preview content
+    this.syncPreviewScroll()
+  }
+
+  setupSyncScroll() {
+    if (!this.hasTextareaTarget) return
+
+    // Listen for scroll events on the textarea
+    this.textareaTarget.addEventListener("scroll", () => {
+      this.syncPreviewScroll()
+    })
+
+    // Also sync on cursor position changes (selection change)
+    this.textareaTarget.addEventListener("click", () => {
+      this.syncPreviewScrollToCursor()
+    })
+
+    this.textareaTarget.addEventListener("keyup", (event) => {
+      // Sync on arrow keys, page up/down, home/end
+      if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"].includes(event.key)) {
+        this.syncPreviewScrollToCursor()
+      }
+    })
+  }
+
+  syncPreviewScroll() {
+    if (!this.syncScrollEnabled) return
+    if (this.previewPanelTarget.classList.contains("hidden")) return
+    if (!this.hasTextareaTarget || !this.hasPreviewContentTarget) return
+
+    // Debounce to avoid excessive updates
+    if (this.syncScrollTimeout) {
+      cancelAnimationFrame(this.syncScrollTimeout)
+    }
+
+    this.syncScrollTimeout = requestAnimationFrame(() => {
+      const textarea = this.textareaTarget
+      const preview = this.previewContentTarget
+
+      // Calculate scroll percentage in textarea
+      const scrollTop = textarea.scrollTop
+      const scrollHeight = textarea.scrollHeight - textarea.clientHeight
+
+      if (scrollHeight <= 0) return
+
+      const scrollRatio = scrollTop / scrollHeight
+
+      // Apply same ratio to preview
+      const previewScrollHeight = preview.scrollHeight - preview.clientHeight
+      if (previewScrollHeight > 0) {
+        preview.scrollTop = scrollRatio * previewScrollHeight
+      }
+    })
+  }
+
+  syncPreviewScrollToCursor() {
+    if (!this.syncScrollEnabled) return
+    if (this.previewPanelTarget.classList.contains("hidden")) return
+    if (!this.hasTextareaTarget || !this.hasPreviewContentTarget) return
+
+    const textarea = this.textareaTarget
+    const content = textarea.value
+    const cursorPos = textarea.selectionStart
+
+    // Find which line the cursor is on
+    const textBeforeCursor = content.substring(0, cursorPos)
+    const linesBefore = textBeforeCursor.split("\n").length
+    const totalLines = content.split("\n").length
+
+    if (totalLines <= 1) return
+
+    // Calculate position ratio based on line number
+    const lineRatio = (linesBefore - 1) / (totalLines - 1)
+
+    // Apply to preview with smooth behavior
+    const preview = this.previewContentTarget
+    const previewScrollHeight = preview.scrollHeight - preview.clientHeight
+
+    if (previewScrollHeight > 0) {
+      const targetScroll = lineRatio * previewScrollHeight
+
+      // Smooth scroll for cursor-based sync
+      preview.scrollTo({
+        top: targetScroll,
+        behavior: "smooth"
+      })
+    }
   }
 
   // Table Editor
