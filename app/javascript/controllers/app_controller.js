@@ -137,6 +137,7 @@ export default class extends Controller {
     this.searchResultsData = []
     this.selectedSearchIndex = 0
     this.contentSearchTimeout = null
+    this.searchUsingKeyboard = false
 
     // Sync scroll state
     this.syncScrollEnabled = true
@@ -1830,6 +1831,7 @@ export default class extends Controller {
   onContentSearchKeydown(event) {
     if (event.key === "ArrowDown") {
       event.preventDefault()
+      this.searchUsingKeyboard = true
       if (this.selectedSearchIndex < this.searchResultsData.length - 1) {
         this.selectedSearchIndex++
         this.renderContentSearchResults()
@@ -1837,6 +1839,7 @@ export default class extends Controller {
       }
     } else if (event.key === "ArrowUp") {
       event.preventDefault()
+      this.searchUsingKeyboard = true
       if (this.selectedSearchIndex > 0) {
         this.selectedSearchIndex--
         this.renderContentSearchResults()
@@ -1856,11 +1859,19 @@ export default class extends Controller {
   }
 
   hoverContentSearchResult(event) {
+    // Ignore hover events when navigating with keyboard
+    if (this.searchUsingKeyboard) return
+
     const index = parseInt(event.currentTarget.dataset.index)
     if (index !== this.selectedSearchIndex) {
       this.selectedSearchIndex = index
       this.renderContentSearchResults()
     }
+  }
+
+  onContentSearchMouseMove() {
+    // Re-enable mouse selection when mouse moves
+    this.searchUsingKeyboard = false
   }
 
   selectContentSearchResult(event) {
