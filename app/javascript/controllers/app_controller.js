@@ -121,6 +121,9 @@ export default class extends Controller {
     // Sidebar/Explorer visibility
     this.sidebarVisible = localStorage.getItem("sidebarVisible") !== "false"
 
+    // Focus/typewriter mode - keeps cursor in middle-bottom area
+    this.focusModeEnabled = localStorage.getItem("focusMode") === "true"
+
     // File finder state
     this.allFiles = []
     this.fileFinderResults = []
@@ -147,6 +150,7 @@ export default class extends Controller {
     this.applyEditorSettings()
     this.applyPreviewZoom()
     this.applySidebarVisibility()
+    this.applyFocusMode()
 
     // Configure marked
     marked.setOptions({
@@ -1372,6 +1376,25 @@ export default class extends Controller {
     }
   }
 
+  // Focus/Typewriter Mode - keeps cursor in middle-bottom area
+  toggleFocusMode() {
+    this.focusModeEnabled = !this.focusModeEnabled
+    localStorage.setItem("focusMode", this.focusModeEnabled.toString())
+    this.applyFocusMode()
+  }
+
+  applyFocusMode() {
+    if (this.hasTextareaTarget) {
+      this.textareaTarget.classList.toggle("focus-mode", this.focusModeEnabled)
+    }
+    // Update toggle button state if exists
+    const focusBtn = this.element.querySelector("[data-focus-mode-btn]")
+    if (focusBtn) {
+      focusBtn.classList.toggle("bg-[var(--theme-bg-hover)]", this.focusModeEnabled)
+      focusBtn.setAttribute("aria-pressed", this.focusModeEnabled.toString())
+    }
+  }
+
   // File Finder (Ctrl+P)
   openFileFinder() {
     // Build flat list of all files from tree
@@ -2156,6 +2179,12 @@ export default class extends Controller {
       if ((event.ctrlKey || event.metaKey) && event.key === "e") {
         event.preventDefault()
         this.toggleSidebar()
+      }
+
+      // Ctrl/Cmd + T: Toggle focus/typewriter mode
+      if ((event.ctrlKey || event.metaKey) && event.key === "t") {
+        event.preventDefault()
+        this.toggleFocusMode()
       }
 
       // Escape: Close menus and dialogs
