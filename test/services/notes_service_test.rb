@@ -200,4 +200,77 @@ class NotesServiceTest < ActiveSupport::TestCase
       @service.read("folder/../../../etc/passwd")
     end
   end
+
+  # === search_content ===
+
+  test "search_content returns empty array for blank query" do
+    create_test_note("note.md", "Some content")
+    assert_equal [], @service.search_content("")
+    assert_equal [], @service.search_content(nil)
+  end
+
+  test "search_content finds text in files" do
+    create_test_note("note1.md", "Hello world\nThis is a test")
+    create_test_note("note2.md", "Another file\nWith different content")
+
+    results = @service.search_content("world")
+    assert_equal 1, results.length
+    assert_equal "note1.md", results.first[:path]
+    assert_equal 1, results.first[:line_number]
+    assert_includes results.first[:match_text], "world"
+  end
+
+  test "search_content is case insensitive" do
+    create_test_note("note.md", "Hello World")
+
+    results = @service.search_content("WORLD")
+    assert_equal 1, results.length
+  end
+
+  test "search_content supports regex patterns" do
+    create_test_note("note.md", "foo123bar\nfoo456bar\nhello world")
+
+    results = @service.search_content("foo\\d+bar")
+    assert_equal 2, results.length
+  end
+
+  test "search_content includes context lines" do
+    content = "line1\nline2\nMATCH HERE\nline4\nline5"
+    create_test_note("note.md", content)
+
+    results = @service.search_content("MATCH", context_lines: 2)
+    assert_equal 1, results.length
+
+    context = results.first[:context]
+    assert_equal 5, context.length
+    assert_equal 1, context.first[:line_number]
+    assert_equal 5, context.last[:line_number]
+    assert context.find { |c| c[:is_match] }[:content].include?("MATCH")
+  end
+
+  test "search_content respects max_results" do
+    5.times do |i|
+      create_test_note("note#{i}.md", "findme")
+    end
+
+    results = @service.search_content("findme", max_results: 3)
+    assert_equal 3, results.length
+  end
+
+  test "search_content searches nested folders" do
+    create_test_folder("folder")
+    create_test_note("folder/nested.md", "find this text")
+
+    results = @service.search_content("find this")
+    assert_equal 1, results.length
+    assert_equal "folder/nested.md", results.first[:path]
+  end
+
+  test "search_content handles invalid regex by escaping" do
+    create_test_note("note.md", "test [brackets]")
+
+    # Invalid regex should be escaped and treated as literal
+    results = @service.search_content("[brackets")
+    assert_equal 1, results.length
+  end
 end

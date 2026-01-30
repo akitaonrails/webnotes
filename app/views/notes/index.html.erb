@@ -773,7 +773,7 @@
 
     <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400 text-center">
       <span class="font-semibold">Keyboard Shortcuts:</span>
-      Ctrl+S save &bull; Ctrl+N new note &bull; Ctrl+P find file &bull; Ctrl+E explorer &bull; Ctrl+B typewriter &bull; Ctrl+Shift+P preview &bull; F1 help
+      Ctrl+S save &bull; Ctrl+N new note &bull; Ctrl+P find file &bull; Ctrl+Shift+F search content &bull; Ctrl+E explorer &bull; Ctrl+B typewriter &bull; Ctrl+Shift+P preview &bull; F1 help
     </div>
   </div>
 </dialog>
@@ -811,6 +811,41 @@
     <!-- Preview Panel -->
     <div class="border-t border-[var(--theme-border)] p-3 bg-[var(--theme-bg-tertiary)] max-h-[200px] overflow-y-auto" data-app-target="fileFinderPreview">
       <!-- Preview rendered by JavaScript -->
+    </div>
+  </div>
+</dialog>
+
+<!-- Content Search Dialog (Ctrl+Shift+F) -->
+<dialog
+  class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 w-[700px] max-h-[80vh]"
+  data-app-target="contentSearchDialog"
+>
+  <div class="flex flex-col max-h-[80vh]">
+    <!-- Search Input -->
+    <div class="p-3 border-b border-[var(--theme-border)]">
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 text-[var(--theme-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <input
+          type="text"
+          data-app-target="contentSearchInput"
+          data-action="input->app#onContentSearchInput keydown->app#onContentSearchKeydown"
+          class="flex-1 bg-transparent border-0 text-[var(--theme-text-primary)] placeholder-[var(--theme-text-muted)] focus:outline-none text-sm font-mono"
+          placeholder="Search in files (supports regex)..."
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <span class="text-xs text-[var(--theme-text-faint)]">esc to close</span>
+      </div>
+      <div class="mt-1 text-xs text-[var(--theme-text-muted)]" data-app-target="contentSearchStatus">
+        Type to search in file contents (supports regex)
+      </div>
+    </div>
+
+    <!-- Results List -->
+    <div class="flex-1 overflow-y-auto min-h-[200px] max-h-[60vh]" data-app-target="contentSearchResults">
+      <!-- Results rendered by JavaScript -->
     </div>
   </div>
 </dialog>

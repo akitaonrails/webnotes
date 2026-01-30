@@ -157,4 +157,48 @@ class NotesControllerTest < ActionDispatch::IntegrationTest
     post rename_note_url(path: "nonexistent.md"), params: { new_path: "new.md" }, as: :json
     assert_response :not_found
   end
+
+  # === search ===
+
+  test "search returns matching results" do
+    create_test_note("test.md", "Hello world\nThis is searchable content")
+
+    get "/notes/search", params: { q: "searchable" }, as: :json
+    assert_response :success
+
+    results = JSON.parse(response.body)
+    assert_equal 1, results.length
+    assert_equal "test.md", results.first["path"]
+  end
+
+  test "search returns empty array for no matches" do
+    create_test_note("test.md", "Hello world")
+
+    get "/notes/search", params: { q: "nonexistent" }, as: :json
+    assert_response :success
+
+    results = JSON.parse(response.body)
+    assert_equal [], results
+  end
+
+  test "search supports regex patterns" do
+    create_test_note("test.md", "foo123bar")
+
+    get "/notes/search", params: { q: "foo\\d+bar" }, as: :json
+    assert_response :success
+
+    results = JSON.parse(response.body)
+    assert_equal 1, results.length
+  end
+
+  test "search returns context lines" do
+    create_test_note("test.md", "line1\nline2\nmatch\nline4\nline5")
+
+    get "/notes/search", params: { q: "match" }, as: :json
+    assert_response :success
+
+    results = JSON.parse(response.body)
+    assert results.first["context"].is_a?(Array)
+    assert results.first["context"].length > 1
+  end
 end

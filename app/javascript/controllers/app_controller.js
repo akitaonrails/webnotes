@@ -60,7 +60,11 @@ export default class extends Controller {
     "fileFinderDialog",
     "fileFinderInput",
     "fileFinderResults",
-    "fileFinderPreview"
+    "fileFinderPreview",
+    "contentSearchDialog",
+    "contentSearchInput",
+    "contentSearchResults",
+    "contentSearchStatus"
   ]
 
   static values = {
@@ -128,6 +132,11 @@ export default class extends Controller {
     this.allFiles = []
     this.fileFinderResults = []
     this.selectedFileIndex = 0
+
+    // Content search state
+    this.contentSearchResults = []
+    this.selectedSearchIndex = 0
+    this.contentSearchTimeout = null
 
     // Sync scroll state
     this.syncScrollEnabled = true
@@ -1699,6 +1708,221 @@ export default class extends Controller {
     await this.loadFile(path)
   }
 
+  // Content Search (Ctrl+Shift+F)
+  openContentSearch() {
+    this.contentSearchResults = []
+    this.selectedSearchIndex = 0
+    this.contentSearchInputTarget.value = ""
+    this.contentSearchResultsTarget.innerHTML = ""
+    this.contentSearchStatusTarget.textContent = "Type to search in file contents (supports regex)"
+    this.showDialogCentered(this.contentSearchDialogTarget)
+    this.contentSearchInputTarget.focus()
+  }
+
+  closeContentSearch() {
+    this.contentSearchDialogTarget.close()
+  }
+
+  onContentSearchInput() {
+    const query = this.contentSearchInputTarget.value.trim()
+
+    // Debounce search
+    if (this.contentSearchTimeout) {
+      clearTimeout(this.contentSearchTimeout)
+    }
+
+    if (!query) {
+      this.contentSearchResults = []
+      this.contentSearchResultsTarget.innerHTML = ""
+      this.contentSearchStatusTarget.textContent = "Type to search in file contents (supports regex)"
+      return
+    }
+
+    this.contentSearchStatusTarget.textContent = "Searching..."
+
+    this.contentSearchTimeout = setTimeout(async () => {
+      await this.performContentSearch(query)
+    }, 300)
+  }
+
+  async performContentSearch(query) {
+    try {
+      const response = await fetch(`/notes/search?q=${encodeURIComponent(query)}`, {
+        headers: { "Accept": "application/json" }
+      })
+
+      if (!response.ok) {
+        throw new Error("Search failed")
+      }
+
+      this.contentSearchResults = await response.json()
+      this.selectedSearchIndex = 0
+      this.renderContentSearchResults()
+
+      const count = this.contentSearchResults.length
+      this.contentSearchStatusTarget.textContent = count === 0
+        ? "No matches found"
+        : `${count} match${count === 1 ? "" : "es"} found`
+    } catch (error) {
+      console.error("Search error:", error)
+      this.contentSearchStatusTarget.textContent = "Search error"
+      this.contentSearchResultsTarget.innerHTML = ""
+    }
+  }
+
+  renderContentSearchResults() {
+    if (this.contentSearchResults.length === 0) {
+      this.contentSearchResultsTarget.innerHTML = `
+        <div class="px-4 py-8 text-center text-[var(--theme-text-muted)] text-sm">
+          No matches found
+        </div>
+      `
+      return
+    }
+
+    this.contentSearchResultsTarget.innerHTML = this.contentSearchResults
+      .map((result, index) => {
+        const isSelected = index === this.selectedSearchIndex
+        const contextHtml = result.context.map(line => {
+          const lineClass = line.is_match
+            ? "bg-[var(--theme-selection)] text-[var(--theme-selection-text)]"
+            : ""
+          const escapedContent = this.escapeHtml(line.content)
+          return `<div class="flex ${lineClass}">
+            <span class="w-10 flex-shrink-0 text-right pr-2 text-[var(--theme-text-faint)] select-none">${line.line_number}</span>
+            <span class="flex-1 overflow-hidden text-ellipsis">${escapedContent}</span>
+          </div>`
+        }).join("")
+
+        return `
+          <button
+            type="button"
+            class="w-full text-left border-b border-[var(--theme-border)] last:border-b-0 ${isSelected ? 'bg-[var(--theme-bg-hover)]' : 'hover:bg-[var(--theme-bg-hover)]'}"
+            data-index="${index}"
+            data-path="${this.escapeHtml(result.path)}"
+            data-line="${result.line_number}"
+            data-action="click->app#selectContentSearchResult mouseenter->app#hoverContentSearchResult"
+          >
+            <div class="px-3 py-2">
+              <div class="flex items-center gap-2 mb-1">
+                <svg class="w-4 h-4 flex-shrink-0 text-[var(--theme-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span class="font-medium truncate">${this.escapeHtml(result.name)}</span>
+                <span class="text-xs text-[var(--theme-text-muted)]">:${result.line_number}</span>
+                <span class="text-xs text-[var(--theme-text-faint)] truncate ml-auto">${this.escapeHtml(result.path.replace(/\.md$/, ""))}</span>
+              </div>
+              <div class="font-mono text-xs leading-relaxed overflow-hidden bg-[var(--theme-bg-tertiary)] rounded p-2">
+                ${contextHtml}
+              </div>
+            </div>
+          </button>
+        `
+      })
+      .join("")
+  }
+
+  onContentSearchKeydown(event) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault()
+      if (this.selectedSearchIndex < this.contentSearchResults.length - 1) {
+        this.selectedSearchIndex++
+        this.renderContentSearchResults()
+        this.scrollSearchResultIntoView()
+      }
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault()
+      if (this.selectedSearchIndex > 0) {
+        this.selectedSearchIndex--
+        this.renderContentSearchResults()
+        this.scrollSearchResultIntoView()
+      }
+    } else if (event.key === "Enter") {
+      event.preventDefault()
+      this.openSelectedSearchResult()
+    }
+  }
+
+  scrollSearchResultIntoView() {
+    const selected = this.contentSearchResultsTarget.querySelector(`[data-index="${this.selectedSearchIndex}"]`)
+    if (selected) {
+      selected.scrollIntoView({ block: "nearest" })
+    }
+  }
+
+  hoverContentSearchResult(event) {
+    const index = parseInt(event.currentTarget.dataset.index)
+    if (index !== this.selectedSearchIndex) {
+      this.selectedSearchIndex = index
+      this.renderContentSearchResults()
+    }
+  }
+
+  selectContentSearchResult(event) {
+    const path = event.currentTarget.dataset.path
+    const line = parseInt(event.currentTarget.dataset.line)
+    this.openSearchResultFile(path, line)
+  }
+
+  openSelectedSearchResult() {
+    if (this.contentSearchResults.length === 0) return
+    const result = this.contentSearchResults[this.selectedSearchIndex]
+    if (result) {
+      this.openSearchResultFile(result.path, result.line_number)
+    }
+  }
+
+  async openSearchResultFile(path, lineNumber) {
+    // Close the search dialog
+    this.contentSearchDialogTarget.close()
+
+    // Expand all parent folders in the tree
+    const parts = path.split("/")
+    let currentPath = ""
+    for (let i = 0; i < parts.length - 1; i++) {
+      currentPath = currentPath ? `${currentPath}/${parts[i]}` : parts[i]
+      this.expandedFolders.add(currentPath)
+    }
+
+    // Show sidebar if hidden
+    if (!this.sidebarVisible) {
+      this.sidebarVisible = true
+      localStorage.setItem("sidebarVisible", "true")
+      this.applySidebarVisibility()
+    }
+
+    // Load the file
+    await this.loadFile(path)
+
+    // Jump to line after file loads
+    this.jumpToLine(lineNumber)
+  }
+
+  jumpToLine(lineNumber) {
+    if (!this.hasTextareaTarget) return
+
+    const textarea = this.textareaTarget
+    const lines = textarea.value.split("\n")
+
+    // Calculate character position of the line
+    let charPos = 0
+    for (let i = 0; i < lineNumber - 1 && i < lines.length; i++) {
+      charPos += lines[i].length + 1 // +1 for newline
+    }
+
+    // Set cursor position
+    textarea.focus()
+    textarea.setSelectionRange(charPos, charPos)
+
+    // Scroll to make the line visible
+    const style = window.getComputedStyle(textarea)
+    const fontSize = parseFloat(style.fontSize) || 14
+    const lineHeight = parseFloat(style.lineHeight) || fontSize * 1.6
+    const targetScroll = (lineNumber - 1) * lineHeight - textarea.clientHeight * 0.35
+
+    textarea.scrollTop = Math.max(0, targetScroll)
+  }
+
   // Help Dialog
   openHelp() {
     this.showDialogCentered(this.helpDialogTarget)
@@ -2100,7 +2324,8 @@ export default class extends Controller {
       this.helpDialogTarget,
       this.codeDialogTarget,
       this.customizeDialogTarget,
-      this.fileFinderDialogTarget
+      this.fileFinderDialogTarget,
+      this.contentSearchDialogTarget
     ]
 
     dialogs.forEach(dialog => {
@@ -2250,6 +2475,12 @@ export default class extends Controller {
         this.togglePreview()
       }
 
+      // Ctrl/Cmd + Shift + F: Content search
+      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === "F") {
+        event.preventDefault()
+        this.openContentSearch()
+      }
+
       // Ctrl/Cmd + P: Open file finder
       if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key === "p") {
         event.preventDefault()
@@ -2300,6 +2531,9 @@ export default class extends Controller {
         }
         if (this.hasFileFinderDialogTarget && this.fileFinderDialogTarget.open) {
           this.fileFinderDialogTarget.close()
+        }
+        if (this.hasContentSearchDialogTarget && this.contentSearchDialogTarget.open) {
+          this.contentSearchDialogTarget.close()
         }
       }
 

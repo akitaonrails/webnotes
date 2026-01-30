@@ -64,6 +64,12 @@ class NotesController < ApplicationController
     render json: { error: e.message }, status: :unprocessable_entity
   end
 
+  def search
+    query = params[:q].to_s
+    results = @service.search_content(query, context_lines: 3, max_results: 50)
+    render json: results
+  end
+
   private
 
   def set_service

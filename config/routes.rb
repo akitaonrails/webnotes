@@ -3,6 +3,7 @@ Rails.application.routes.draw do
 
   # Notes API
   get "notes/tree", to: "notes#tree"
+  get "notes/search", to: "notes#search"
   post "notes/*path/rename", to: "notes#rename", as: :rename_note
   get "notes/*path", to: "notes#show", as: :note
   post "notes/*path", to: "notes#create", as: :create_note

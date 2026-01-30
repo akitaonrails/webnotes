@@ -79,7 +79,80 @@ class NotesService
     full_path.directory?
   end
 
+  # Search file contents for a pattern (text or regex)
+  # Returns an array of matches with context
+  def search_content(query, context_lines: 3, max_results: 50)
+    return [] if query.blank?
+
+    # Try to compile as regex, fall back to escaped literal
+    regex = begin
+      Regexp.new(query, Regexp::IGNORECASE)
+    rescue RegexpError
+      Regexp.new(Regexp.escape(query), Regexp::IGNORECASE)
+    end
+
+    results = []
+    all_files = collect_markdown_files(@base_path)
+
+    all_files.each do |file_path|
+      break if results.size >= max_results
+
+      relative_path = file_path.relative_path_from(@base_path).to_s
+      file_matches = search_file(file_path, regex, context_lines, max_results - results.size)
+
+      file_matches.each do |match|
+        results << match.merge(path: relative_path, name: file_path.basename(".md").to_s)
+      end
+    end
+
+    results
+  end
+
   private
+
+  def collect_markdown_files(dir)
+    files = []
+    return files unless dir.directory?
+
+    dir.children.sort_by { |p| p.basename.to_s.downcase }.each do |entry|
+      next if entry.basename.to_s.start_with?(".")
+
+      if entry.directory?
+        files.concat(collect_markdown_files(entry))
+      elsif entry.extname == ".md"
+        files << entry
+      end
+    end
+
+    files
+  end
+
+  def search_file(file_path, regex, context_lines, max_matches)
+    matches = []
+    lines = file_path.readlines(chomp: true)
+
+    lines.each_with_index do |line, index|
+      next unless line.match?(regex)
+      break if matches.size >= max_matches
+
+      # Calculate context range
+      start_line = [0, index - context_lines].max
+      end_line = [lines.size - 1, index + context_lines].min
+
+      # Extract context with line numbers
+      context = (start_line..end_line).map do |i|
+        { line_number: i + 1, content: lines[i], is_match: i == index }
+      end
+
+      matches << {
+        line_number: index + 1,
+        match_text: line,
+        context: context
+      }
+    end
+
+    matches
+  end
 
   def safe_path(path, must_exist: true)
     normalized = Pathname.new(path.to_s.gsub(/\.\./, "")).cleanpath
