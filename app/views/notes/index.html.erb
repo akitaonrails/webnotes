@@ -862,6 +862,16 @@
       <div class="mt-1 text-xs text-[var(--theme-text-muted)]" data-app-target="contentSearchStatus">
         Type to search in file contents (supports regex)
       </div>
+      <div class="mt-2 text-xs text-[var(--theme-text-faint)] flex flex-wrap gap-x-4 gap-y-1">
+        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hello</code> literal text</span>
+        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hello|world</code> OR</span>
+        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hel+o</code> one or more</span>
+        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hel.*o</code> any chars</span>
+        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">^hello</code> start of line</span>
+        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hello$</code> end of line</span>
+        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">\d+</code> digits</span>
+        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">\bword\b</code> whole word</span>
+      </div>
     </div>
 
     <!-- Results List -->
