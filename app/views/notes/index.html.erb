@@ -1065,11 +1065,12 @@
 
 <!-- Video Dialog -->
 <dialog
-  class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 w-[500px]"
+  class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 w-[550px]"
   data-app-target="videoDialog"
 >
-  <div class="p-4 text-zinc-900 dark:text-zinc-100">
-    <div class="flex items-center justify-between mb-4">
+  <div class="text-zinc-900 dark:text-zinc-100">
+    <!-- Header with close button -->
+    <div class="flex items-center justify-between px-4 pt-4">
       <h3 class="text-sm font-semibold">Insert Video</h3>
       <button
         type="button"
@@ -1082,47 +1083,118 @@
       </button>
     </div>
 
-    <!-- Video URL Input -->
-    <div class="mb-4">
-      <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">Video URL or Path</label>
-      <input
-        type="text"
-        data-app-target="videoUrl"
-        data-action="input->app#onVideoUrlInput keydown->app#onVideoUrlKeydown"
-        class="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        placeholder="YouTube URL or video file path..."
-        autocomplete="off"
-        spellcheck="false"
+    <!-- Tabs -->
+    <div class="flex border-b border-zinc-200 dark:border-zinc-700 px-4 mt-2">
+      <button
+        type="button"
+        data-action="click->app#switchVideoTab"
+        data-tab="url"
+        data-app-target="videoTabUrl"
+        class="px-4 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
       >
-      <div class="mt-2 text-xs text-zinc-500 dark:text-zinc-400 space-y-1">
-        <p><strong>YouTube:</strong> https://youtube.com/watch?v=... or https://youtu.be/...</p>
-        <p><strong>Video file:</strong> /path/to/video.mp4, .webm, .mkv, .mov, .avi</p>
+        URL / File
+      </button>
+      <button
+        type="button"
+        data-action="click->app#switchVideoTab"
+        data-tab="search"
+        data-app-target="videoTabSearch"
+        class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+      >
+        YouTube Search
+      </button>
+    </div>
+
+    <!-- Tab Content: URL -->
+    <div class="p-4" data-app-target="videoUrlPanel">
+      <div class="mb-4">
+        <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">Video URL or Path</label>
+        <input
+          type="text"
+          data-app-target="videoUrl"
+          data-action="input->app#onVideoUrlInput keydown->app#onVideoUrlKeydown"
+          class="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="YouTube URL or video file path..."
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <div class="mt-2 text-xs text-zinc-500 dark:text-zinc-400 space-y-1">
+          <p><strong>YouTube:</strong> https://youtube.com/watch?v=... or https://youtu.be/...</p>
+          <p><strong>Video file:</strong> /path/to/video.mp4, .webm, .mkv, .mov, .avi</p>
+        </div>
+      </div>
+
+      <div class="mb-4 p-3 bg-zinc-100 dark:bg-zinc-900 rounded-md text-sm" data-app-target="videoPreview">
+        <span class="text-zinc-500 dark:text-zinc-400">Enter a URL to see preview</span>
+      </div>
+
+      <div class="flex justify-end gap-2">
+        <button
+          type="button"
+          data-action="click->app#closeVideoDialog"
+          class="px-3 py-1.5 text-sm rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          data-action="click->app#insertVideo"
+          data-app-target="insertVideoBtn"
+          class="px-3 py-1.5 text-sm rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled
+        >
+          Insert Video
+        </button>
       </div>
     </div>
 
-    <!-- Preview/Detection -->
-    <div class="mb-4 p-3 bg-zinc-100 dark:bg-zinc-900 rounded-md text-sm" data-app-target="videoPreview">
-      <span class="text-zinc-500 dark:text-zinc-400">Enter a URL to see preview</span>
-    </div>
+    <!-- Tab Content: YouTube Search -->
+    <div class="p-4 hidden" data-app-target="videoSearchPanel">
+      <div class="mb-4">
+        <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">Search YouTube</label>
+        <div class="flex gap-2">
+          <input
+            type="text"
+            data-app-target="youtubeSearchInput"
+            data-action="keydown->app#onYoutubeSearchKeydown"
+            class="flex-1 px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter keywords..."
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <button
+            type="button"
+            data-action="click->app#searchYoutube"
+            data-app-target="youtubeSearchBtn"
+            class="px-4 py-2 text-sm rounded-md bg-red-500 text-white hover:bg-red-600 flex items-center gap-1"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Search
+          </button>
+        </div>
+      </div>
 
-    <!-- Footer -->
-    <div class="flex justify-end gap-2">
-      <button
-        type="button"
-        data-action="click->app#closeVideoDialog"
-        class="px-3 py-1.5 text-sm rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300"
-      >
-        Cancel
-      </button>
-      <button
-        type="button"
-        data-action="click->app#insertVideo"
-        data-app-target="insertVideoBtn"
-        class="px-3 py-1.5 text-sm rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled
-      >
-        Insert Video
-      </button>
+      <!-- Search Status -->
+      <div class="mb-3 text-xs text-zinc-500 dark:text-zinc-400" data-app-target="youtubeSearchStatus">
+        Enter keywords and click Search or press Enter
+      </div>
+
+      <!-- Search Results Grid -->
+      <div class="grid grid-cols-2 gap-3 mb-4 min-h-[200px]" data-app-target="youtubeSearchResults">
+        <!-- Results will be rendered by JavaScript -->
+      </div>
+
+      <div class="flex justify-end gap-2">
+        <button
+          type="button"
+          data-action="click->app#closeVideoDialog"
+          class="px-3 py-1.5 text-sm rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300"
+        >
+          Cancel
+        </button>
+      </div>
     </div>
   </div>
 </dialog>

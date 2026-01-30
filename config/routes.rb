@@ -21,6 +21,10 @@ Rails.application.routes.draw do
   get "images/preview/*path", to: "images#preview", as: :image_preview, format: false
   post "images/upload_to_s3", to: "images#upload_to_s3"
 
+  # YouTube API
+  get "youtube/config", to: "youtube#config"
+  get "youtube/search", to: "youtube#search"
+
   # Health check
   get "up" => "rails/health#show", as: :rails_health_check
 end

@@ -68,7 +68,15 @@ export default class extends Controller {
     "videoDialog",
     "videoUrl",
     "videoPreview",
-    "insertVideoBtn"
+    "insertVideoBtn",
+    "videoTabUrl",
+    "videoTabSearch",
+    "videoUrlPanel",
+    "videoSearchPanel",
+    "youtubeSearchInput",
+    "youtubeSearchBtn",
+    "youtubeSearchStatus",
+    "youtubeSearchResults"
   ]
 
   static values = {
@@ -142,6 +150,12 @@ export default class extends Controller {
     this.selectedSearchIndex = 0
     this.contentSearchTimeout = null
     this.searchUsingKeyboard = false
+
+    // YouTube search state
+    this.youtubeSearchResults = []
+    this.selectedYoutubeIndex = -1
+    this.youtubeApiEnabled = false
+    this.checkYoutubeApiEnabled()
 
     // Sync scroll state
     this.syncScrollEnabled = true
@@ -2203,13 +2217,73 @@ export default class extends Controller {
 
   // Video Dialog
   openVideoDialog() {
+    // Reset URL tab
     this.videoUrlTarget.value = ""
     this.videoPreviewTarget.innerHTML = '<span class="text-zinc-500 dark:text-zinc-400">Enter a URL to see preview</span>'
     this.insertVideoBtnTarget.disabled = true
     this.detectedVideoType = null
     this.detectedVideoData = null
+
+    // Reset search tab
+    if (this.hasYoutubeSearchInputTarget) {
+      this.youtubeSearchInputTarget.value = ""
+    }
+    if (this.hasYoutubeSearchResultsTarget) {
+      this.youtubeSearchResultsTarget.innerHTML = ""
+    }
+    if (this.hasYoutubeSearchStatusTarget) {
+      if (this.youtubeApiEnabled) {
+        this.youtubeSearchStatusTarget.textContent = "Enter keywords and click Search or press Enter"
+      } else {
+        this.youtubeSearchStatusTarget.innerHTML = '<span class="text-amber-500">YouTube API not configured. Set YOUTUBE_API_KEY env variable.</span>'
+      }
+    }
+    this.youtubeSearchResults = []
+    this.selectedYoutubeIndex = -1
+
+    // Reset to URL tab
+    this.switchVideoTab({ currentTarget: { dataset: { tab: "url" } } })
+
     this.showDialogCentered(this.videoDialogTarget)
     this.videoUrlTarget.focus()
+  }
+
+  async checkYoutubeApiEnabled() {
+    try {
+      const response = await fetch("/youtube/config")
+      if (response.ok) {
+        const data = await response.json()
+        this.youtubeApiEnabled = data.enabled
+      }
+    } catch (error) {
+      this.youtubeApiEnabled = false
+    }
+  }
+
+  switchVideoTab(event) {
+    const tab = event.currentTarget.dataset.tab
+
+    // Update tab buttons
+    const urlTabClasses = tab === "url"
+      ? "border-blue-500 text-blue-600 dark:text-blue-400"
+      : "border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+    const searchTabClasses = tab === "search"
+      ? "border-blue-500 text-blue-600 dark:text-blue-400"
+      : "border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+
+    this.videoTabUrlTarget.className = `px-4 py-2 text-sm font-medium border-b-2 ${urlTabClasses}`
+    this.videoTabSearchTarget.className = `px-4 py-2 text-sm font-medium border-b-2 ${searchTabClasses}`
+
+    // Show/hide panels
+    this.videoUrlPanelTarget.classList.toggle("hidden", tab !== "url")
+    this.videoSearchPanelTarget.classList.toggle("hidden", tab !== "search")
+
+    // Focus appropriate input
+    if (tab === "url") {
+      this.videoUrlTarget.focus()
+    } else if (tab === "search" && this.hasYoutubeSearchInputTarget) {
+      this.youtubeSearchInputTarget.focus()
+    }
   }
 
   closeVideoDialog() {
@@ -2356,6 +2430,171 @@ export default class extends Controller {
     const after = text.substring(cursorPos)
 
     // Add newlines if needed
+    const prefix = before.length > 0 && !before.endsWith("\n\n") ? (before.endsWith("\n") ? "\n" : "\n\n") : ""
+    const suffix = after.length > 0 && !after.startsWith("\n\n") ? (after.startsWith("\n") ? "\n" : "\n\n") : ""
+
+    textarea.value = before + prefix + embedCode + suffix + after
+
+    const newCursorPos = before.length + prefix.length + embedCode.length
+    textarea.focus()
+    textarea.setSelectionRange(newCursorPos, newCursorPos)
+
+    this.scheduleAutoSave()
+    this.updatePreview()
+    this.videoDialogTarget.close()
+  }
+
+  // YouTube Search
+  onYoutubeSearchKeydown(event) {
+    if (event.key === "Enter") {
+      event.preventDefault()
+      this.searchYoutube()
+    } else if (event.key === "ArrowDown" && this.youtubeSearchResults.length > 0) {
+      event.preventDefault()
+      this.selectedYoutubeIndex = 0
+      this.renderYoutubeResults()
+      this.youtubeSearchResultsTarget.querySelector("[data-index='0']")?.focus()
+    }
+  }
+
+  async searchYoutube() {
+    const query = this.youtubeSearchInputTarget.value.trim()
+
+    if (!query) {
+      this.youtubeSearchStatusTarget.textContent = "Please enter search keywords"
+      return
+    }
+
+    if (!this.youtubeApiEnabled) {
+      this.youtubeSearchStatusTarget.innerHTML = '<span class="text-amber-500">YouTube API not configured. Set YOUTUBE_API_KEY env variable.</span>'
+      return
+    }
+
+    this.youtubeSearchStatusTarget.textContent = "Searching..."
+    this.youtubeSearchBtnTarget.disabled = true
+    this.youtubeSearchResultsTarget.innerHTML = ""
+
+    try {
+      const response = await fetch(`/youtube/search?q=${encodeURIComponent(query)}`)
+      const data = await response.json()
+
+      if (data.error) {
+        this.youtubeSearchStatusTarget.innerHTML = `<span class="text-red-500">${data.error}</span>`
+        this.youtubeSearchResults = []
+      } else {
+        this.youtubeSearchResults = data.videos || []
+        if (this.youtubeSearchResults.length === 0) {
+          this.youtubeSearchStatusTarget.textContent = "No videos found"
+        } else {
+          this.youtubeSearchStatusTarget.textContent = `Found ${this.youtubeSearchResults.length} videos - click to insert or use arrow keys`
+        }
+        this.selectedYoutubeIndex = -1
+        this.renderYoutubeResults()
+      }
+    } catch (error) {
+      console.error("YouTube search error:", error)
+      this.youtubeSearchStatusTarget.innerHTML = '<span class="text-red-500">Search failed. Please try again.</span>'
+      this.youtubeSearchResults = []
+    } finally {
+      this.youtubeSearchBtnTarget.disabled = false
+    }
+  }
+
+  renderYoutubeResults() {
+    if (this.youtubeSearchResults.length === 0) {
+      this.youtubeSearchResultsTarget.innerHTML = ""
+      return
+    }
+
+    this.youtubeSearchResultsTarget.innerHTML = this.youtubeSearchResults.map((video, index) => {
+      const isSelected = index === this.selectedYoutubeIndex
+      const selectedClass = isSelected ? "ring-2 ring-blue-500" : ""
+
+      return `
+        <button
+          type="button"
+          data-index="${index}"
+          data-video-id="${video.id}"
+          data-action="click->app#selectYoutubeVideo keydown->app#onYoutubeResultKeydown"
+          class="flex flex-col rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors ${selectedClass} focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <div class="relative aspect-video bg-zinc-200 dark:bg-zinc-700">
+            <img
+              src="${video.thumbnail}"
+              alt="${this.escapeHtml(video.title)}"
+              class="w-full h-full object-cover"
+              onerror="this.style.display='none'"
+            >
+            <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/30">
+              <svg class="w-12 h-12 text-white drop-shadow-lg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="p-2">
+            <div class="text-xs font-medium text-zinc-900 dark:text-zinc-100 line-clamp-2">${this.escapeHtml(video.title)}</div>
+            <div class="text-xs text-zinc-500 dark:text-zinc-400 truncate mt-0.5">${this.escapeHtml(video.channel)}</div>
+          </div>
+        </button>
+      `
+    }).join("")
+  }
+
+  onYoutubeResultKeydown(event) {
+    const currentIndex = parseInt(event.currentTarget.dataset.index)
+
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+      event.preventDefault()
+      const nextIndex = Math.min(currentIndex + (event.key === "ArrowDown" ? 2 : 1), this.youtubeSearchResults.length - 1)
+      this.selectedYoutubeIndex = nextIndex
+      this.renderYoutubeResults()
+      this.youtubeSearchResultsTarget.querySelector(`[data-index='${nextIndex}']`)?.focus()
+    } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+      event.preventDefault()
+      const prevIndex = Math.max(currentIndex - (event.key === "ArrowUp" ? 2 : 1), 0)
+      if (event.key === "ArrowUp" && currentIndex < 2) {
+        this.youtubeSearchInputTarget.focus()
+        this.selectedYoutubeIndex = -1
+        this.renderYoutubeResults()
+      } else {
+        this.selectedYoutubeIndex = prevIndex
+        this.renderYoutubeResults()
+        this.youtubeSearchResultsTarget.querySelector(`[data-index='${prevIndex}']`)?.focus()
+      }
+    } else if (event.key === "Enter") {
+      event.preventDefault()
+      this.selectYoutubeVideo(event)
+    } else if (event.key === "Escape") {
+      this.youtubeSearchInputTarget.focus()
+      this.selectedYoutubeIndex = -1
+      this.renderYoutubeResults()
+    }
+  }
+
+  selectYoutubeVideo(event) {
+    const videoId = event.currentTarget.dataset.videoId
+
+    if (!videoId || !this.hasTextareaTarget) {
+      return
+    }
+
+    const embedCode = `<div class="embed-container">
+  <iframe
+    src="https://www.youtube.com/embed/${videoId}"
+    title="YouTube video player"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen>
+  </iframe>
+</div>`
+
+    const textarea = this.textareaTarget
+    const cursorPos = textarea.selectionStart
+    const text = textarea.value
+    const before = text.substring(0, cursorPos)
+    const after = text.substring(cursorPos)
+
     const prefix = before.length > 0 && !before.endsWith("\n\n") ? (before.endsWith("\n") ? "\n" : "\n\n") : ""
     const suffix = after.length > 0 && !after.startsWith("\n\n") ? (after.startsWith("\n") ? "\n" : "\n\n") : ""
 
