@@ -748,6 +748,38 @@
   .prose em {
     font-style: italic;
   }
+
+  /* Video embeds */
+  .prose .embed-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+    border-radius: 0.5rem;
+    background: var(--theme-bg-tertiary);
+  }
+
+  .prose .embed-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0.5rem;
+  }
+
+  .prose .video-player {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+    border-radius: 0.5rem;
+    background: var(--theme-bg-tertiary);
+  }
 }
 
 /* File tree styles */

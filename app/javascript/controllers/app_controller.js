@@ -64,7 +64,11 @@ export default class extends Controller {
     "contentSearchDialog",
     "contentSearchInput",
     "contentSearchResults",
-    "contentSearchStatus"
+    "contentSearchStatus",
+    "videoDialog",
+    "videoUrl",
+    "videoPreview",
+    "insertVideoBtn"
   ]
 
   static values = {
@@ -2197,6 +2201,164 @@ export default class extends Controller {
     return matrix[b.length][a.length]
   }
 
+  // Video Dialog
+  openVideoDialog() {
+    this.videoUrlTarget.value = ""
+    this.videoPreviewTarget.innerHTML = '<span class="text-zinc-500 dark:text-zinc-400">Enter a URL to see preview</span>'
+    this.insertVideoBtnTarget.disabled = true
+    this.detectedVideoType = null
+    this.detectedVideoData = null
+    this.showDialogCentered(this.videoDialogTarget)
+    this.videoUrlTarget.focus()
+  }
+
+  closeVideoDialog() {
+    this.videoDialogTarget.close()
+  }
+
+  onVideoUrlInput() {
+    const url = this.videoUrlTarget.value.trim()
+
+    if (!url) {
+      this.videoPreviewTarget.innerHTML = '<span class="text-zinc-500 dark:text-zinc-400">Enter a URL to see preview</span>'
+      this.insertVideoBtnTarget.disabled = true
+      this.detectedVideoType = null
+      return
+    }
+
+    // Check for YouTube
+    const youtubeId = this.extractYouTubeId(url)
+    if (youtubeId) {
+      this.detectedVideoType = "youtube"
+      this.detectedVideoData = { id: youtubeId }
+      this.videoPreviewTarget.innerHTML = `
+        <div class="flex items-center gap-3">
+          <svg class="w-8 h-8 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          </svg>
+          <div>
+            <div class="font-medium text-zinc-900 dark:text-zinc-100">YouTube Video</div>
+            <div class="text-xs text-zinc-500 dark:text-zinc-400">ID: ${youtubeId}</div>
+          </div>
+        </div>
+      `
+      this.insertVideoBtnTarget.disabled = false
+      return
+    }
+
+    // Check for video file
+    const videoExtensions = [".mp4", ".webm", ".mkv", ".mov", ".avi", ".m4v", ".ogv"]
+    const isVideoFile = videoExtensions.some(ext => url.toLowerCase().endsWith(ext))
+
+    if (isVideoFile) {
+      this.detectedVideoType = "file"
+      this.detectedVideoData = { url: url }
+      const filename = url.split("/").pop()
+      this.videoPreviewTarget.innerHTML = `
+        <div class="flex items-center gap-3">
+          <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <div class="font-medium text-zinc-900 dark:text-zinc-100">Video File</div>
+            <div class="text-xs text-zinc-500 dark:text-zinc-400 truncate max-w-[350px]">${this.escapeHtml(filename)}</div>
+          </div>
+        </div>
+      `
+      this.insertVideoBtnTarget.disabled = false
+      return
+    }
+
+    // Unknown format
+    this.detectedVideoType = null
+    this.detectedVideoData = null
+    this.videoPreviewTarget.innerHTML = '<span class="text-amber-500">Unknown format. Enter a YouTube URL or video file path.</span>'
+    this.insertVideoBtnTarget.disabled = true
+  }
+
+  onVideoUrlKeydown(event) {
+    if (event.key === "Enter" && !this.insertVideoBtnTarget.disabled) {
+      event.preventDefault()
+      this.insertVideo()
+    }
+  }
+
+  extractYouTubeId(url) {
+    // Match various YouTube URL formats
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
+      /^([a-zA-Z0-9_-]{11})$/ // Just the ID
+    ]
+
+    for (const pattern of patterns) {
+      const match = url.match(pattern)
+      if (match) return match[1]
+    }
+
+    return null
+  }
+
+  insertVideo() {
+    if (!this.hasTextareaTarget || !this.detectedVideoType) {
+      this.videoDialogTarget.close()
+      return
+    }
+
+    let embedCode
+
+    if (this.detectedVideoType === "youtube") {
+      embedCode = `<div class="embed-container">
+  <iframe
+    src="https://www.youtube.com/embed/${this.detectedVideoData.id}"
+    title="YouTube video player"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen>
+  </iframe>
+</div>`
+    } else if (this.detectedVideoType === "file") {
+      const url = this.detectedVideoData.url
+      const ext = url.split(".").pop().toLowerCase()
+      const mimeTypes = {
+        mp4: "video/mp4",
+        webm: "video/webm",
+        mkv: "video/x-matroska",
+        mov: "video/quicktime",
+        avi: "video/x-msvideo",
+        m4v: "video/x-m4v",
+        ogv: "video/ogg"
+      }
+      const mimeType = mimeTypes[ext] || "video/mp4"
+
+      embedCode = `<video controls class="video-player">
+  <source src="${this.escapeHtml(url)}" type="${mimeType}">
+  Your browser does not support the video tag.
+</video>`
+    }
+
+    const textarea = this.textareaTarget
+    const cursorPos = textarea.selectionStart
+    const text = textarea.value
+    const before = text.substring(0, cursorPos)
+    const after = text.substring(cursorPos)
+
+    // Add newlines if needed
+    const prefix = before.length > 0 && !before.endsWith("\n\n") ? (before.endsWith("\n") ? "\n" : "\n\n") : ""
+    const suffix = after.length > 0 && !after.startsWith("\n\n") ? (after.startsWith("\n") ? "\n" : "\n\n") : ""
+
+    textarea.value = before + prefix + embedCode + suffix + after
+
+    const newCursorPos = before.length + prefix.length + embedCode.length
+    textarea.focus()
+    textarea.setSelectionRange(newCursorPos, newCursorPos)
+
+    this.scheduleAutoSave()
+    this.updatePreview()
+    this.videoDialogTarget.close()
+  }
+
   // New Note/Folder
   newNote() {
     this.newItemType = "note"
@@ -2341,7 +2503,8 @@ export default class extends Controller {
       this.codeDialogTarget,
       this.customizeDialogTarget,
       this.fileFinderDialogTarget,
-      this.contentSearchDialogTarget
+      this.contentSearchDialogTarget,
+      this.videoDialogTarget
     ]
 
     dialogs.forEach(dialog => {
@@ -2550,6 +2713,9 @@ export default class extends Controller {
         }
         if (this.hasContentSearchDialogTarget && this.contentSearchDialogTarget.open) {
           this.contentSearchDialogTarget.close()
+        }
+        if (this.hasVideoDialogTarget && this.videoDialogTarget.open) {
+          this.videoDialogTarget.close()
         }
       }
 

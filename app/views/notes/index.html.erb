@@ -183,6 +183,18 @@
         </button>
         <button
           type="button"
+          data-action="click->app#openVideoDialog"
+          class="px-2 py-1 text-xs rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] flex items-center gap-1"
+          title="Insert Video"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Video
+        </button>
+        <button
+          type="button"
           data-action="click->app#openCodeEditor"
           class="px-2 py-1 text-xs rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] flex items-center gap-1"
           title="Insert/Edit Code Block"
@@ -1046,6 +1058,70 @@
         class="px-3 py-1.5 text-sm rounded-md bg-blue-500 text-white hover:bg-blue-600"
       >
         Insert Code
+      </button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Video Dialog -->
+<dialog
+  class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 w-[500px]"
+  data-app-target="videoDialog"
+>
+  <div class="p-4 text-zinc-900 dark:text-zinc-100">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-sm font-semibold">Insert Video</h3>
+      <button
+        type="button"
+        data-action="click->app#closeVideoDialog"
+        class="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Video URL Input -->
+    <div class="mb-4">
+      <label class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1">Video URL or Path</label>
+      <input
+        type="text"
+        data-app-target="videoUrl"
+        data-action="input->app#onVideoUrlInput keydown->app#onVideoUrlKeydown"
+        class="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        placeholder="YouTube URL or video file path..."
+        autocomplete="off"
+        spellcheck="false"
+      >
+      <div class="mt-2 text-xs text-zinc-500 dark:text-zinc-400 space-y-1">
+        <p><strong>YouTube:</strong> https://youtube.com/watch?v=... or https://youtu.be/...</p>
+        <p><strong>Video file:</strong> /path/to/video.mp4, .webm, .mkv, .mov, .avi</p>
+      </div>
+    </div>
+
+    <!-- Preview/Detection -->
+    <div class="mb-4 p-3 bg-zinc-100 dark:bg-zinc-900 rounded-md text-sm" data-app-target="videoPreview">
+      <span class="text-zinc-500 dark:text-zinc-400">Enter a URL to see preview</span>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex justify-end gap-2">
+      <button
+        type="button"
+        data-action="click->app#closeVideoDialog"
+        class="px-3 py-1.5 text-sm rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        data-action="click->app#insertVideo"
+        data-app-target="insertVideoBtn"
+        class="px-3 py-1.5 text-sm rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled
+      >
+        Insert Video
       </button>
     </div>
   </div>
