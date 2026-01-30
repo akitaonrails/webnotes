@@ -1315,8 +1315,14 @@ export default class extends Controller {
     const textarea = this.textareaTarget
     const text = textarea.value
 
-    // Build the code fence
-    const codeBlock = "```" + language + "\n" + content + (content && !content.endsWith("\n") ? "\n" : "") + "```"
+    // Build the code fence - ensure there's always a line inside for cursor positioning
+    let codeBlock
+    if (content) {
+      codeBlock = "```" + language + "\n" + content + (content.endsWith("\n") ? "" : "\n") + "```"
+    } else {
+      // Empty content: add a blank line inside the fence
+      codeBlock = "```" + language + "\n\n```"
+    }
 
     if (this.codeEditMode) {
       // Replace existing code block
