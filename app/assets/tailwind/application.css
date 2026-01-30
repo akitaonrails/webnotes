@@ -357,8 +357,8 @@
     max-width: 100%;
   }
 
-  /* Focus/Typewriter mode - adds bottom padding to keep cursor in middle area */
-  .editor-textarea.focus-mode {
+  /* Typewriter mode - adds bottom padding to keep cursor in middle area */
+  .editor-textarea.typewriter-mode {
     padding-bottom: 50vh !important; /* Half viewport height of empty space at bottom */
   }
 }
