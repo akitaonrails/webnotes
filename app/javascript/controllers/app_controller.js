@@ -875,6 +875,7 @@ export default class extends Controller {
   togglePreview() {
     // Only allow preview for markdown files
     if (!this.isMarkdownFile()) {
+      this.showTemporaryMessage("Preview is only available for markdown files")
       return
     }
 
