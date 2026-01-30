@@ -228,4 +228,504 @@ class NotesTest < ApplicationSystemTestCase
     assert_no_selector "[data-path='to_delete.md']", wait: 3
     refute @test_notes_dir.join("to_delete.md").exist?
   end
+
+  # Table Editor Tests
+
+  test "toolbar appears when editing a note" do
+    create_test_note("toolbar_test.md", "# Test")
+
+    visit root_url
+    find("[data-path='toolbar_test.md']").click
+
+    # Toolbar should be visible
+    assert_selector "[data-app-target='editorToolbar']", visible: true
+    assert_selector "button[title='Insert/Edit Table']"
+  end
+
+  test "table editor dialog opens and shows grid" do
+    create_test_note("table_test.md", "# Table Test")
+
+    visit root_url
+    find("[data-path='table_test.md']").click
+
+    # Click table button
+    find("button[title='Insert/Edit Table']").click
+
+    # Dialog should open with grid
+    assert_selector "dialog[open]"
+    assert_selector ".table-editor-grid"
+    assert_selector ".table-editor-grid input", minimum: 9  # 3x3 default
+  end
+
+  test "table editor can add and remove columns" do
+    create_test_note("table_cols.md", "# Columns Test")
+
+    visit root_url
+    find("[data-path='table_cols.md']").click
+    find("button[title='Insert/Edit Table']").click
+
+    assert_selector "dialog[open]"
+
+    # Initially 3 columns (9 cells for 3x3)
+    assert_selector ".table-editor-grid input", count: 9
+
+    # Add a column
+    find("button[title='Add Column']").click
+    assert_selector ".table-editor-grid input", count: 12  # 4x3
+
+    # Remove a column
+    find("button[title='Remove Column']").click
+    assert_selector ".table-editor-grid input", count: 9  # back to 3x3
+  end
+
+  test "table editor can add and remove rows" do
+    create_test_note("table_rows.md", "# Rows Test")
+
+    visit root_url
+    find("[data-path='table_rows.md']").click
+    find("button[title='Insert/Edit Table']").click
+
+    assert_selector "dialog[open]"
+
+    # Initially 3 rows (9 cells for 3x3)
+    assert_selector ".table-editor-grid input", count: 9
+
+    # Add a row
+    find("button[title='Add Row']").click
+    assert_selector ".table-editor-grid input", count: 12  # 3x4
+
+    # Remove a row
+    find("button[title='Remove Row']").click
+    assert_selector ".table-editor-grid input", count: 9  # back to 3x3
+  end
+
+  test "inserting a table adds markdown to content" do
+    create_test_note("insert_table.md", "# Insert Test\n\n")
+
+    visit root_url
+    find("[data-path='insert_table.md']").click
+    find("button[title='Insert/Edit Table']").click
+
+    assert_selector "dialog[open]"
+
+    # Fill in a cell
+    within ".table-editor-grid" do
+      first_input = all("input").first
+      first_input.fill_in with: "Name"
+    end
+
+    # Insert the table
+    click_button "Insert Table"
+
+    # Dialog should close
+    assert_no_selector "dialog[open]"
+
+    # Textarea should contain table markdown
+    textarea = find("textarea")
+    assert_includes textarea.value, "| Name"
+    assert_includes textarea.value, "| ----"  # Separator row
+  end
+
+  test "editing existing table in content" do
+    # Create note with existing table
+    table_content = <<~MD
+      # My Note
+
+      | Col1 | Col2 |
+      |------|------|
+      | A    | B    |
+    MD
+    create_test_note("existing_table.md", table_content)
+
+    visit root_url
+    find("[data-path='existing_table.md']").click
+
+    # Position cursor in the table
+    textarea = find("textarea")
+    # Click somewhere in the table area
+    textarea.click
+
+    # Type to position cursor in the table (simulate clicking in table)
+    textarea.send_keys [:control, :end]  # Go to end
+    textarea.send_keys [:up, :up]  # Move up into table
+
+    # Wait a moment for cursor position check
+    sleep 0.2
+
+    # Open table editor
+    find("button[title='Insert/Edit Table']").click
+
+    assert_selector "dialog[open]"
+
+    # Should show existing table data
+    within ".table-editor-grid" do
+      inputs = all("input")
+      assert_equal "Col1", inputs[0].value
+      assert_equal "Col2", inputs[1].value
+    end
+  end
+
+  test "table cell context menu appears on right-click" do
+    create_test_note("context_table.md", "# Test")
+
+    visit root_url
+    find("[data-path='context_table.md']").click
+    find("button[title='Insert/Edit Table']").click
+
+    assert_selector "dialog[open]"
+
+    # Right-click on a cell
+    within ".table-editor-grid" do
+      first("td").right_click
+    end
+
+    # Context menu should appear
+    assert_selector "[data-app-target='tableCellMenu']:not(.hidden)"
+    assert_text "Move Left"
+    assert_text "Move Right"
+    assert_text "Delete Column"
+    assert_text "Move Up"
+    assert_text "Move Down"
+    assert_text "Delete Row"
+  end
+
+  test "move column right via context menu" do
+    create_test_note("move_col.md", "# Test")
+
+    visit root_url
+    find("[data-path='move_col.md']").click
+    find("button[title='Insert/Edit Table']").click
+
+    assert_selector "dialog[open]"
+
+    # Get initial values
+    within ".table-editor-grid" do
+      inputs = all("input")
+      assert_equal "Header 1", inputs[0].value
+      assert_equal "Header 2", inputs[1].value
+
+      # Right-click on first column header
+      first("td").right_click
+    end
+
+    # Click "Move Right"
+    click_button "Move Right"
+
+    # Columns should be swapped
+    within ".table-editor-grid" do
+      inputs = all("input")
+      assert_equal "Header 2", inputs[0].value
+      assert_equal "Header 1", inputs[1].value
+    end
+  end
+
+  test "move row down via context menu" do
+    create_test_note("move_row.md", "# Test")
+
+    visit root_url
+    find("[data-path='move_row.md']").click
+    find("button[title='Insert/Edit Table']").click
+
+    assert_selector "dialog[open]"
+
+    # Fill in some data in row 2 (index 1)
+    within ".table-editor-grid" do
+      inputs = all("input")
+      inputs[3].fill_in with: "Row2Col1"  # Second row, first column
+    end
+
+    # Right-click on second row
+    within ".table-editor-grid" do
+      all("tr")[1].first("td").right_click
+    end
+
+    # Click "Move Down"
+    click_button "Move Down"
+
+    # Row should have moved down
+    within ".table-editor-grid" do
+      inputs = all("input")
+      # Now the value should be in the third row
+      assert_equal "Row2Col1", inputs[6].value
+    end
+  end
+
+  test "delete column via context menu" do
+    create_test_note("del_col.md", "# Test")
+
+    visit root_url
+    find("[data-path='del_col.md']").click
+    find("button[title='Insert/Edit Table']").click
+
+    assert_selector "dialog[open]"
+
+    # Initially 3 columns (9 cells)
+    assert_selector ".table-editor-grid input", count: 9
+
+    # Right-click on second column
+    within ".table-editor-grid" do
+      all("td")[1].right_click
+    end
+
+    # Click "Delete Column"
+    click_button "Delete Column"
+
+    # Should have 2 columns now (6 cells)
+    assert_selector ".table-editor-grid input", count: 6
+  end
+
+  test "delete row via context menu" do
+    create_test_note("del_row.md", "# Test")
+
+    visit root_url
+    find("[data-path='del_row.md']").click
+    find("button[title='Insert/Edit Table']").click
+
+    assert_selector "dialog[open]"
+
+    # Initially 3 rows (9 cells)
+    assert_selector ".table-editor-grid input", count: 9
+
+    # Right-click on second row (not header)
+    within ".table-editor-grid" do
+      all("tr")[1].first("td").right_click
+    end
+
+    # Click "Delete Row"
+    click_button "Delete Row"
+
+    # Should have 2 rows now (6 cells)
+    assert_selector ".table-editor-grid input", count: 6
+  end
+
+  test "cannot delete header row" do
+    create_test_note("no_del_header.md", "# Test")
+
+    visit root_url
+    find("[data-path='no_del_header.md']").click
+    find("button[title='Insert/Edit Table']").click
+
+    assert_selector "dialog[open]"
+
+    # Right-click on header row
+    within ".table-editor-grid" do
+      first("td").right_click
+    end
+
+    # Delete Row button should be disabled
+    delete_btn = find("[data-app-target='deleteRowBtn']")
+    assert delete_btn.disabled?
+  end
+
+  # Image Picker Tests
+
+  test "image button is hidden when images not configured" do
+    # Disable images for this test
+    original_enabled = Rails.application.config.webnotes_images.enabled
+    Rails.application.config.webnotes_images.enabled = false
+
+    create_test_note("img_test.md", "# Test")
+
+    visit root_url
+    find("[data-path='img_test.md']").click
+
+    # Image button should be hidden
+    assert_selector "[data-app-target='imageBtn'].hidden", visible: false
+
+    Rails.application.config.webnotes_images.enabled = original_enabled
+  end
+end
+
+class NotesWithImagesTest < ApplicationSystemTestCase
+  def setup
+    super
+    setup_test_images_dir
+  end
+
+  def teardown
+    teardown_test_images_dir
+    super
+  end
+
+  def setup_test_images_dir
+    @original_path = Rails.application.config.webnotes_images.path
+    @original_enabled = Rails.application.config.webnotes_images.enabled
+
+    @test_images_dir = Rails.root.join("tmp", "test_images_#{SecureRandom.hex(4)}")
+    FileUtils.mkdir_p(@test_images_dir)
+
+    Rails.application.config.webnotes_images.path = @test_images_dir.to_s
+    Rails.application.config.webnotes_images.enabled = true
+    ImagesService.instance_variable_set(:@images_path, nil)
+  end
+
+  def teardown_test_images_dir
+    FileUtils.rm_rf(@test_images_dir) if @test_images_dir&.exist?
+    Rails.application.config.webnotes_images.path = @original_path
+    Rails.application.config.webnotes_images.enabled = @original_enabled
+    ImagesService.instance_variable_set(:@images_path, nil)
+  end
+
+  def create_test_image(name)
+    path = @test_images_dir.join(name)
+    FileUtils.mkdir_p(path.dirname)
+    # Create a minimal valid 1x1 red PNG
+    png_data = [
+      0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D,
+      0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+      0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, 0xDE, 0x00, 0x00, 0x00,
+      0x0C, 0x49, 0x44, 0x41, 0x54, 0x08, 0xD7, 0x63, 0xF8, 0xCF, 0xC0, 0x00,
+      0x00, 0x00, 0x03, 0x00, 0x01, 0x00, 0x05, 0xFE, 0xD4, 0xE7, 0x00, 0x00,
+      0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82
+    ].pack("C*")
+    File.binwrite(path, png_data)
+    path
+  end
+
+  test "image button is visible when images are configured" do
+    create_test_note("img_test.md", "# Test")
+    create_test_image("sample.png")
+
+    visit root_url
+    find("[data-path='img_test.md']").click
+
+    # Wait for config to load
+    sleep 0.5
+
+    # Image button should be visible
+    assert_selector "button[title='Insert Image']", visible: true
+  end
+
+  test "image picker dialog opens and shows images" do
+    create_test_note("img_picker.md", "# Test")
+    create_test_image("photo1.png")
+    create_test_image("photo2.png")
+
+    visit root_url
+    find("[data-path='img_picker.md']").click
+    sleep 0.5
+
+    find("button[title='Insert Image']").click
+
+    assert_selector "dialog[open]"
+    assert_selector ".image-grid-item", count: 2
+  end
+
+  test "image picker search filters images" do
+    create_test_note("img_search.md", "# Test")
+    create_test_image("cat.png")
+    create_test_image("dog.png")
+
+    visit root_url
+    find("[data-path='img_search.md']").click
+    sleep 0.5
+
+    find("button[title='Insert Image']").click
+    assert_selector "dialog[open]"
+
+    # Initially both images visible
+    assert_selector ".image-grid-item", count: 2
+
+    # Search for cat
+    fill_in placeholder: "Search images by filename...", with: "cat"
+    sleep 0.5
+
+    # Only cat image should be visible
+    assert_selector ".image-grid-item", count: 1
+  end
+
+  test "selecting image shows options" do
+    create_test_note("img_select.md", "# Test")
+    create_test_image("myimage.png")
+
+    visit root_url
+    find("[data-path='img_select.md']").click
+    sleep 0.5
+
+    find("button[title='Insert Image']").click
+    assert_selector "dialog[open]"
+
+    # Click on image
+    find(".image-grid-item").click
+
+    # Options should appear
+    assert_selector "[data-app-target='imageOptions']:not(.hidden)"
+    assert_selector "[data-app-target='selectedImageName']", text: "myimage.png"
+
+    # Alt text should be pre-filled
+    alt_input = find("[data-app-target='imageAlt']")
+    assert_equal "myimage", alt_input.value
+  end
+
+  test "inserting image adds markdown to content" do
+    create_test_note("img_insert.md", "# Test\n\n")
+    create_test_image("photo.png")
+
+    visit root_url
+    find("[data-path='img_insert.md']").click
+    sleep 0.5
+
+    find("button[title='Insert Image']").click
+    assert_selector "dialog[open]"
+
+    find(".image-grid-item").click
+
+    # Click the insert button in the dialog
+    within "dialog[open]" do
+      click_button "Insert Image"
+    end
+
+    # Dialog should close
+    assert_no_selector "dialog[open]"
+
+    # Textarea should contain image markdown
+    textarea = find("textarea")
+    assert_includes textarea.value, "![photo]"
+    assert_includes textarea.value, "/images/preview/photo.png"
+  end
+
+  test "inserting image with link wraps in anchor" do
+    create_test_note("img_link.md", "# Test\n\n")
+    create_test_image("clickable.png")
+
+    visit root_url
+    find("[data-path='img_link.md']").click
+    sleep 0.5
+
+    find("button[title='Insert Image']").click
+    find(".image-grid-item").click
+
+    # Add link URL using the target
+    find("[data-app-target='imageLink']").fill_in with: "https://example.com"
+
+    within "dialog[open]" do
+      click_button "Insert Image"
+    end
+
+    textarea = find("textarea")
+    assert_includes textarea.value, "[![clickable]"
+    assert_includes textarea.value, "](https://example.com)"
+  end
+
+  test "inserting image with custom alt text" do
+    create_test_note("img_alt.md", "# Test\n\n")
+    create_test_image("boring-name.png")
+
+    visit root_url
+    find("[data-path='img_alt.md']").click
+    sleep 0.5
+
+    find("button[title='Insert Image']").click
+    find(".image-grid-item").click
+
+    # Change alt text using the target
+    find("[data-app-target='imageAlt']").fill_in with: "A beautiful sunset"
+
+    within "dialog[open]" do
+      click_button "Insert Image"
+    end
+
+    textarea = find("textarea")
+    assert_includes textarea.value, "![A beautiful sunset]"
+  end
 end

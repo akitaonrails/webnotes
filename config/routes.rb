@@ -14,6 +14,12 @@ Rails.application.routes.draw do
   post "folders/*path", to: "folders#create", as: :create_folder
   delete "folders/*path", to: "folders#destroy", as: :destroy_folder
 
+  # Images API
+  get "images/config", to: "images#config"
+  get "images", to: "images#index"
+  get "images/preview/*path", to: "images#preview", as: :image_preview, format: false
+  post "images/upload_to_s3", to: "images#upload_to_s3"
+
   # Health check
   get "up" => "rails/health#show", as: :rails_health_check
 end
