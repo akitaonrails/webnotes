@@ -56,7 +56,11 @@ export default class extends Controller {
     "previewZoomLevel",
     "sidebar",
     "sidebarToggle",
-    "editorWrapper"
+    "editorWrapper",
+    "fileFinderDialog",
+    "fileFinderInput",
+    "fileFinderResults",
+    "fileFinderPreview"
   ]
 
   static values = {
@@ -116,6 +120,11 @@ export default class extends Controller {
 
     // Sidebar/Explorer visibility
     this.sidebarVisible = localStorage.getItem("sidebarVisible") !== "false"
+
+    // File finder state
+    this.allFiles = []
+    this.fileFinderResults = []
+    this.selectedFileIndex = 0
 
     this.codeLanguages = [
       "javascript", "typescript", "python", "ruby", "go", "rust", "java", "c", "cpp", "csharp",
@@ -1268,6 +1277,229 @@ export default class extends Controller {
     }
   }
 
+  // File Finder (Ctrl+P)
+  openFileFinder() {
+    // Build flat list of all files from tree
+    this.allFiles = this.flattenTree(this.treeValue)
+    this.fileFinderResults = [...this.allFiles].slice(0, 10)
+    this.selectedFileIndex = 0
+
+    this.fileFinderInputTarget.value = ""
+    this.renderFileFinderResults()
+    this.showDialogCentered(this.fileFinderDialogTarget)
+    this.fileFinderInputTarget.focus()
+  }
+
+  closeFileFinder() {
+    this.fileFinderDialogTarget.close()
+  }
+
+  flattenTree(items, result = []) {
+    if (!items) return result
+    for (const item of items) {
+      if (item.type === "file") {
+        result.push(item)
+      } else if (item.type === "folder" && item.children) {
+        this.flattenTree(item.children, result)
+      }
+    }
+    return result
+  }
+
+  onFileFinderInput() {
+    const query = this.fileFinderInputTarget.value.trim().toLowerCase()
+
+    if (!query) {
+      this.fileFinderResults = [...this.allFiles].slice(0, 10)
+    } else {
+      // Fuzzy search: files that contain all characters in order
+      this.fileFinderResults = this.allFiles
+        .map(file => {
+          const score = this.fuzzyScore(file.name.toLowerCase(), query)
+          return { ...file, score }
+        })
+        .filter(file => file.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 10)
+    }
+
+    this.selectedFileIndex = 0
+    this.renderFileFinderResults()
+  }
+
+  fuzzyScore(str, query) {
+    let score = 0
+    let strIndex = 0
+    let prevMatchIndex = -1
+    let consecutiveBonus = 0
+
+    for (let i = 0; i < query.length; i++) {
+      const char = query[i]
+      const foundIndex = str.indexOf(char, strIndex)
+
+      if (foundIndex === -1) {
+        return 0 // Character not found, no match
+      }
+
+      // Base score for finding the character
+      score += 1
+
+      // Bonus for consecutive matches
+      if (foundIndex === prevMatchIndex + 1) {
+        consecutiveBonus += 2
+        score += consecutiveBonus
+      } else {
+        consecutiveBonus = 0
+      }
+
+      // Bonus for matching at start or after separator
+      if (foundIndex === 0 || str[foundIndex - 1] === '/' || str[foundIndex - 1] === '-' || str[foundIndex - 1] === '_') {
+        score += 3
+      }
+
+      prevMatchIndex = foundIndex
+      strIndex = foundIndex + 1
+    }
+
+    // Bonus for shorter names (more precise match)
+    score += Math.max(0, 10 - (str.length - query.length))
+
+    return score
+  }
+
+  renderFileFinderResults() {
+    if (this.fileFinderResults.length === 0) {
+      this.fileFinderResultsTarget.innerHTML = `
+        <div class="px-3 py-6 text-center text-[var(--theme-text-muted)] text-sm">
+          No files found
+        </div>
+      `
+      this.fileFinderPreviewTarget.innerHTML = ""
+      return
+    }
+
+    this.fileFinderResultsTarget.innerHTML = this.fileFinderResults
+      .map((file, index) => {
+        const isSelected = index === this.selectedFileIndex
+        const name = file.name.replace(/\.md$/, "")
+        const path = file.path.replace(/\.md$/, "")
+        const displayPath = path !== name ? path.replace(new RegExp(`${name}$`), "").replace(/\/$/, "") : ""
+
+        return `
+          <button
+            type="button"
+            class="w-full px-3 py-2 text-left flex items-center gap-2 ${isSelected ? 'bg-[var(--theme-accent)] text-[var(--theme-accent-text)]' : 'hover:bg-[var(--theme-bg-hover)]'}"
+            data-index="${index}"
+            data-path="${this.escapeHtml(file.path)}"
+            data-action="click->app#selectFileFromFinder mouseenter->app#hoverFileFinderResult"
+          >
+            <svg class="w-4 h-4 flex-shrink-0 ${isSelected ? '' : 'text-[var(--theme-text-muted)]'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <div class="min-w-0 flex-1">
+              <div class="truncate font-medium">${this.escapeHtml(name)}</div>
+              ${displayPath ? `<div class="truncate text-xs ${isSelected ? 'opacity-75' : 'text-[var(--theme-text-muted)]'}">${this.escapeHtml(displayPath)}</div>` : ''}
+            </div>
+          </button>
+        `
+      })
+      .join("")
+
+    this.loadFilePreview()
+  }
+
+  async loadFilePreview() {
+    if (this.fileFinderResults.length === 0) {
+      this.fileFinderPreviewTarget.innerHTML = ""
+      return
+    }
+
+    const file = this.fileFinderResults[this.selectedFileIndex]
+    if (!file) return
+
+    try {
+      const response = await fetch(`/notes/${this.encodePath(file.path)}`, {
+        headers: { "Accept": "application/json" }
+      })
+
+      if (!response.ok) {
+        this.fileFinderPreviewTarget.innerHTML = `<div class="text-[var(--theme-text-muted)] text-sm">Unable to load preview</div>`
+        return
+      }
+
+      const data = await response.json()
+      const lines = (data.content || "").split("\n").slice(0, 10)
+      const preview = lines.join("\n")
+
+      this.fileFinderPreviewTarget.innerHTML = `<pre class="text-xs font-mono whitespace-pre-wrap text-[var(--theme-text-secondary)] leading-relaxed">${this.escapeHtml(preview)}${lines.length >= 10 ? '\n...' : ''}</pre>`
+    } catch (error) {
+      this.fileFinderPreviewTarget.innerHTML = `<div class="text-[var(--theme-text-muted)] text-sm">Unable to load preview</div>`
+    }
+  }
+
+  onFileFinderKeydown(event) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault()
+      if (this.selectedFileIndex < this.fileFinderResults.length - 1) {
+        this.selectedFileIndex++
+        this.renderFileFinderResults()
+      }
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault()
+      if (this.selectedFileIndex > 0) {
+        this.selectedFileIndex--
+        this.renderFileFinderResults()
+      }
+    } else if (event.key === "Enter") {
+      event.preventDefault()
+      this.selectCurrentFile()
+    }
+  }
+
+  hoverFileFinderResult(event) {
+    const index = parseInt(event.currentTarget.dataset.index)
+    if (index !== this.selectedFileIndex) {
+      this.selectedFileIndex = index
+      this.renderFileFinderResults()
+    }
+  }
+
+  selectFileFromFinder(event) {
+    const path = event.currentTarget.dataset.path
+    this.openFileAndRevealInTree(path)
+  }
+
+  selectCurrentFile() {
+    if (this.fileFinderResults.length === 0) return
+    const file = this.fileFinderResults[this.selectedFileIndex]
+    if (file) {
+      this.openFileAndRevealInTree(file.path)
+    }
+  }
+
+  async openFileAndRevealInTree(path) {
+    // Close the finder
+    this.fileFinderDialogTarget.close()
+
+    // Expand all parent folders in the tree
+    const parts = path.split("/")
+    let currentPath = ""
+    for (let i = 0; i < parts.length - 1; i++) {
+      currentPath = currentPath ? `${currentPath}/${parts[i]}` : parts[i]
+      this.expandedFolders.add(currentPath)
+    }
+
+    // Show sidebar if hidden
+    if (!this.sidebarVisible) {
+      this.sidebarVisible = true
+      localStorage.setItem("sidebarVisible", "true")
+      this.applySidebarVisibility()
+    }
+
+    // Load the file
+    await this.loadFile(path)
+  }
+
   // Help Dialog
   openHelp() {
     this.showDialogCentered(this.helpDialogTarget)
@@ -1668,7 +1900,8 @@ export default class extends Controller {
       this.imageDialogTarget,
       this.helpDialogTarget,
       this.codeDialogTarget,
-      this.customizeDialogTarget
+      this.customizeDialogTarget,
+      this.fileFinderDialogTarget
     ]
 
     dialogs.forEach(dialog => {
@@ -1812,10 +2045,16 @@ export default class extends Controller {
         this.saveNow()
       }
 
-      // Ctrl/Cmd + P: Toggle preview
-      if ((event.ctrlKey || event.metaKey) && event.key === "p") {
+      // Ctrl/Cmd + Shift + P: Toggle preview
+      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === "P") {
         event.preventDefault()
         this.togglePreview()
+      }
+
+      // Ctrl/Cmd + P: Open file finder
+      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key === "p") {
+        event.preventDefault()
+        this.openFileFinder()
       }
 
       // Ctrl/Cmd + E: Toggle explorer/sidebar
@@ -1853,6 +2092,9 @@ export default class extends Controller {
         }
         if (this.hasCustomizeDialogTarget && this.customizeDialogTarget.open) {
           this.customizeDialogTarget.close()
+        }
+        if (this.hasFileFinderDialogTarget && this.fileFinderDialogTarget.open) {
+          this.fileFinderDialogTarget.close()
         }
       }
 
