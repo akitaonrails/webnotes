@@ -2030,10 +2030,10 @@ export default class extends Controller {
     if (!query) {
       this.fileFinderResults = [...this.allFiles].slice(0, 10)
     } else {
-      // Fuzzy search: files that contain all characters in order
+      // Fuzzy search: search in full path (including directories)
       this.fileFinderResults = this.allFiles
         .map(file => {
-          const score = this.fuzzyScore(file.name.toLowerCase(), query)
+          const score = this.fuzzyScore(file.path.toLowerCase(), query)
           return { ...file, score }
         })
         .filter(file => file.score > 0)
