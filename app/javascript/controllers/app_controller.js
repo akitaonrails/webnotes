@@ -1440,8 +1440,8 @@ export default class extends Controller {
     // Calculate cursor's vertical position (in pixels from top of content)
     const cursorY = (linesBefore - 1) * lineHeight
 
-    // Target position: 40% from top of visible area
-    const targetY = textarea.clientHeight * 0.4
+    // Target position: 50% from top of visible area (middle of screen)
+    const targetY = textarea.clientHeight * 0.5
 
     // Calculate desired scroll position to put cursor at target
     const desiredScrollTop = cursorY - targetY
@@ -1466,8 +1466,8 @@ export default class extends Controller {
     const preview = this.previewContentTarget
     const lineRatio = (currentLine - 1) / (totalLines - 1)
 
-    // Target: same 40% from top position
-    const targetY = preview.clientHeight * 0.4
+    // Target: same 50% from top position (middle of screen)
+    const targetY = preview.clientHeight * 0.5
     const contentHeight = preview.scrollHeight - preview.clientHeight
 
     if (contentHeight > 0) {
