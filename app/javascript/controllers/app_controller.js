@@ -1234,6 +1234,16 @@ export default class extends Controller {
         const firstBtn = suggestions.querySelector("button")
         if (firstBtn) firstBtn.focus()
       }
+    } else if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault()
+      this.insertCode()
+    }
+  }
+
+  onCodeContentKeydown(event) {
+    if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault()
+      this.insertCode()
     }
   }
 
