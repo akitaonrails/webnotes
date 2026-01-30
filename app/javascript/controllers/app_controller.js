@@ -2231,12 +2231,23 @@ export default class extends Controller {
     if (youtubeId) {
       this.detectedVideoType = "youtube"
       this.detectedVideoData = { id: youtubeId }
+      const thumbnailUrl = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
       this.videoPreviewTarget.innerHTML = `
-        <div class="flex items-center gap-3">
-          <svg class="w-8 h-8 text-red-500" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-          </svg>
-          <div>
+        <div class="flex gap-3">
+          <div class="relative flex-shrink-0 w-32 h-18 rounded overflow-hidden bg-zinc-200 dark:bg-zinc-700">
+            <img
+              src="${thumbnailUrl}"
+              alt="Video thumbnail"
+              class="w-full h-full object-cover"
+              onerror="this.style.display='none'"
+            >
+            <div class="absolute inset-0 flex items-center justify-center">
+              <svg class="w-10 h-10 text-red-600 drop-shadow-lg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="flex flex-col justify-center">
             <div class="font-medium text-zinc-900 dark:text-zinc-100">YouTube Video</div>
             <div class="text-xs text-zinc-500 dark:text-zinc-400">ID: ${youtubeId}</div>
           </div>
