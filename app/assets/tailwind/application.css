@@ -1,4 +1,25 @@
-@import "tailwindcss";
+@import "tailwindcss" source("../../..");
+
+/*
+ * Safelist for arbitrary value classes using CSS custom properties.
+ * These can't be auto-detected by Tailwind because they use runtime CSS variables.
+ * Standard utility classes are auto-detected from ERB templates.
+ */
+
+/* Text colors */
+@source inline("text-[var(--theme-text-primary)] text-[var(--theme-text-secondary)] text-[var(--theme-text-muted)] text-[var(--theme-text-faint)] text-[var(--theme-accent)] text-[var(--theme-accent-text)] text-[var(--theme-error)]");
+
+/* Background colors */
+@source inline("bg-[var(--theme-bg-primary)] bg-[var(--theme-bg-secondary)] bg-[var(--theme-bg-tertiary)] bg-[var(--theme-bg-hover)] bg-[var(--theme-accent)] bg-[var(--theme-accent-hover)] bg-[var(--theme-border)] bg-[var(--theme-code-bg)] bg-[var(--theme-error)]");
+
+/* Border colors */
+@source inline("border-[var(--theme-border)] border-[var(--theme-accent)]");
+
+/* Hover states */
+@source inline("hover:bg-[var(--theme-bg-hover)] hover:bg-[var(--theme-bg-secondary)] hover:bg-[var(--theme-accent-hover)] hover:text-[var(--theme-text-secondary)]");
+
+/* Ring colors */
+@source inline("ring-[var(--theme-accent)] focus:ring-[var(--theme-accent)] hover:ring-[var(--theme-accent)]");
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;

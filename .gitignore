@@ -37,4 +37,8 @@
 
 /app/assets/builds/*
 !/app/assets/builds/.keep
-notes/
+/notes/
+
+# JavaScript dependencies (for testing)
+node_modules/
+package-lock.json
