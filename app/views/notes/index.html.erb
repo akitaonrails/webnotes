@@ -1,8 +1,8 @@
-<div class="h-screen w-full flex flex-col" data-controller="app" data-app-tree-value="<%= @tree.to_json %>">
+<div class="h-screen w-full flex flex-col bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)]" data-controller="app" data-app-tree-value="<%= @tree.to_json %>">
   <!-- Header -->
-  <header class="flex-none h-12 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between px-4 bg-zinc-50 dark:bg-zinc-800">
+  <header class="flex-none h-12 border-b border-[var(--theme-border)] flex items-center justify-between px-4 bg-[var(--theme-bg-secondary)]">
     <div class="flex items-center gap-2">
-      <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-5 h-5 text-[var(--theme-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
       <span class="font-semibold text-sm">WebNotes</span>
@@ -12,7 +12,7 @@
         type="button"
         data-action="click->app#togglePreview"
         data-app-target="previewToggle"
-        class="p-1.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
+        class="p-1.5 rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]"
         title="Toggle Preview (Ctrl+Shift+P)"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -20,35 +20,45 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
         </svg>
       </button>
-      <button
-        type="button"
-        data-controller="theme"
-        data-action="click->theme#toggle"
-        class="p-1.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
-        title="Toggle Theme"
-      >
-        <svg data-theme-target="lightIcon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-        <svg data-theme-target="darkIcon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-        </svg>
-      </button>
+      <!-- Theme Picker -->
+      <div class="relative" data-controller="theme">
+        <button
+          type="button"
+          data-action="click->theme#toggle"
+          class="flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]"
+          title="Change Theme"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+          </svg>
+          <span class="text-xs" data-theme-target="currentTheme">Light</span>
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <!-- Theme dropdown menu -->
+        <div
+          class="hidden absolute right-0 mt-1 w-48 rounded-lg shadow-lg bg-[var(--theme-bg-secondary)] border border-[var(--theme-border)] py-1 z-50"
+          data-theme-target="menu"
+        >
+          <!-- Menu items rendered by JavaScript -->
+        </div>
+      </div>
     </div>
   </header>
 
   <!-- Main Content -->
   <div class="flex-1 flex overflow-hidden">
     <!-- Sidebar -->
-    <aside class="flex-none w-64 border-r border-zinc-200 dark:border-zinc-700 flex flex-col bg-zinc-50 dark:bg-zinc-800/50">
+    <aside class="flex-none w-64 border-r border-[var(--theme-border)] flex flex-col bg-[var(--theme-bg-secondary)]">
       <!-- Sidebar Header -->
-      <div class="flex-none h-10 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between px-3">
-        <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">Explorer</span>
+      <div class="flex-none h-10 border-b border-[var(--theme-border)] flex items-center justify-between px-3">
+        <span class="text-xs font-medium text-[var(--theme-text-muted)] uppercase tracking-wide">Explorer</span>
         <div class="flex items-center gap-1">
           <button
             type="button"
             data-action="click->app#newNote"
-            class="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
+            class="p-1 rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]"
             title="New Note (Ctrl+N)"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,7 +68,7 @@
           <button
             type="button"
             data-action="click->app#newFolder"
-            class="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
+            class="p-1 rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]"
             title="New Folder"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,19 +91,19 @@
     <!-- Editor Panel -->
     <main class="flex-1 flex flex-col min-w-0" data-app-target="editorPanel">
       <!-- Editor Header -->
-      <div class="flex-none h-10 border-b border-zinc-200 dark:border-zinc-700 flex items-center px-4 bg-white dark:bg-zinc-900">
-        <span class="text-sm text-zinc-500 dark:text-zinc-400 truncate" data-app-target="currentPath">
+      <div class="flex-none h-10 border-b border-[var(--theme-border)] flex items-center px-4 bg-[var(--theme-bg-primary)]">
+        <span class="text-sm text-[var(--theme-text-muted)] truncate" data-app-target="currentPath">
           Select or create a note
         </span>
-        <span class="ml-2 text-xs text-zinc-400 dark:text-zinc-500 hidden" data-app-target="saveStatus"></span>
+        <span class="ml-2 text-xs text-[var(--theme-text-faint)] hidden" data-app-target="saveStatus"></span>
       </div>
 
       <!-- Editor Toolbar (visible when editing) -->
-      <div class="flex-none h-9 border-b border-zinc-200 dark:border-zinc-700 hidden items-center px-2 gap-1 bg-zinc-50 dark:bg-zinc-800/50" data-app-target="editorToolbar">
+      <div class="flex-none h-9 border-b border-[var(--theme-border)] hidden items-center px-2 gap-1 bg-[var(--theme-bg-secondary)]" data-app-target="editorToolbar">
         <button
           type="button"
           data-action="click->app#openHelp"
-          class="px-2 py-1 text-xs rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 flex items-center gap-1"
+          class="px-2 py-1 text-xs rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] flex items-center gap-1"
           title="Markdown Help (F1)"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,11 +111,11 @@
           </svg>
           Help
         </button>
-        <div class="h-5 w-px bg-zinc-300 dark:bg-zinc-600 mx-1"></div>
+        <div class="h-5 w-px bg-[var(--theme-border)] mx-1"></div>
         <button
           type="button"
           data-action="click->app#openTableEditor"
-          class="px-2 py-1 text-xs rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 flex items-center gap-1"
+          class="px-2 py-1 text-xs rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] flex items-center gap-1"
           title="Insert/Edit Table"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,7 +126,7 @@
         <button
           type="button"
           data-action="click->app#openImagePicker"
-          class="px-2 py-1 text-xs rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 flex items-center gap-1 hidden"
+          class="px-2 py-1 text-xs rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] flex items-center gap-1 hidden"
           title="Insert Image"
           data-app-target="imageBtn"
         >
@@ -128,7 +138,7 @@
         <button
           type="button"
           data-action="click->app#openCodeEditor"
-          class="px-2 py-1 text-xs rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 flex items-center gap-1"
+          class="px-2 py-1 text-xs rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] flex items-center gap-1"
           title="Insert/Edit Code Block"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,15 +146,15 @@
           </svg>
           Code
         </button>
-        <div class="h-5 w-px bg-zinc-300 dark:bg-zinc-600 mx-1"></div>
-        <span class="text-xs text-zinc-400 dark:text-zinc-500 hidden" data-app-target="tableHint">
+        <div class="h-5 w-px bg-[var(--theme-border)] mx-1"></div>
+        <span class="text-xs text-[var(--theme-text-faint)] hidden" data-app-target="tableHint">
           Cursor in table - click to edit
         </span>
       </div>
 
       <!-- Editor Container -->
       <div class="flex-1 overflow-hidden" data-app-target="editorContainer">
-        <div class="h-full flex items-center justify-center text-zinc-400 dark:text-zinc-600" data-app-target="editorPlaceholder">
+        <div class="h-full flex items-center justify-center text-[var(--theme-text-faint)]" data-app-target="editorPlaceholder">
           <div class="text-center">
             <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -157,7 +167,7 @@
           <textarea
             data-app-target="textarea"
             data-action="input->app#onTextareaInput"
-            class="w-full h-full p-4 resize-none bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-mono text-sm leading-relaxed focus:outline-none"
+            class="w-full h-full p-4 resize-none bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] font-mono text-sm leading-relaxed focus:outline-none"
             placeholder="Start writing..."
             spellcheck="false"
           ></textarea>
@@ -166,10 +176,10 @@
     </main>
 
     <!-- Preview Panel -->
-    <aside class="flex-none w-[40%] border-l border-zinc-200 dark:border-zinc-700 flex-col bg-white dark:bg-zinc-900 hidden" data-app-target="previewPanel">
+    <aside class="flex-none w-[40%] border-l border-[var(--theme-border)] flex-col bg-[var(--theme-bg-primary)] hidden" data-app-target="previewPanel">
       <!-- Preview Header -->
-      <div class="flex-none h-10 border-b border-zinc-200 dark:border-zinc-700 flex items-center px-4">
-        <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">Preview</span>
+      <div class="flex-none h-10 border-b border-[var(--theme-border)] flex items-center px-4">
+        <span class="text-xs font-medium text-[var(--theme-text-muted)] uppercase tracking-wide">Preview</span>
       </div>
 
       <!-- Preview Content -->
