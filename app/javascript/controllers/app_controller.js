@@ -53,7 +53,10 @@ export default class extends Controller {
     "fontSelect",
     "fontSizeSelect",
     "fontPreview",
-    "previewZoomLevel"
+    "previewZoomLevel",
+    "sidebar",
+    "sidebarToggle",
+    "editorWrapper"
   ]
 
   static values = {
@@ -111,6 +114,9 @@ export default class extends Controller {
     this.previewZoomLevels = [50, 75, 90, 100, 110, 125, 150, 175, 200]
     this.previewZoom = parseInt(localStorage.getItem("previewZoom")) || 100
 
+    // Sidebar/Explorer visibility
+    this.sidebarVisible = localStorage.getItem("sidebarVisible") !== "false"
+
     this.codeLanguages = [
       "javascript", "typescript", "python", "ruby", "go", "rust", "java", "c", "cpp", "csharp",
       "php", "swift", "kotlin", "scala", "haskell", "elixir", "erlang", "clojure", "lua", "perl",
@@ -126,6 +132,7 @@ export default class extends Controller {
     this.loadImagesConfig()
     this.applyEditorSettings()
     this.applyPreviewZoom()
+    this.applySidebarVisibility()
 
     // Configure marked
     marked.setOptions({
@@ -621,6 +628,9 @@ export default class extends Controller {
     const isHidden = this.previewPanelTarget.classList.contains("hidden")
     this.previewPanelTarget.classList.toggle("hidden", !isHidden)
     this.previewPanelTarget.classList.toggle("flex", isHidden)
+
+    // Toggle preview-visible class on body for CSS adjustments
+    document.body.classList.toggle("preview-visible", isHidden)
 
     if (isHidden) {
       this.updatePreview()
@@ -1241,6 +1251,23 @@ export default class extends Controller {
     }
   }
 
+  // Sidebar/Explorer Toggle
+  toggleSidebar() {
+    this.sidebarVisible = !this.sidebarVisible
+    localStorage.setItem("sidebarVisible", this.sidebarVisible.toString())
+    this.applySidebarVisibility()
+  }
+
+  applySidebarVisibility() {
+    if (this.hasSidebarTarget) {
+      this.sidebarTarget.classList.toggle("hidden", !this.sidebarVisible)
+    }
+    if (this.hasSidebarToggleTarget) {
+      // Update toggle button icon state if needed
+      this.sidebarToggleTarget.setAttribute("aria-expanded", this.sidebarVisible.toString())
+    }
+  }
+
   // Help Dialog
   openHelp() {
     this.showDialogCentered(this.helpDialogTarget)
@@ -1785,10 +1812,16 @@ export default class extends Controller {
         this.saveNow()
       }
 
-      // Ctrl/Cmd + Shift + P: Toggle preview
-      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === "P") {
+      // Ctrl/Cmd + P: Toggle preview
+      if ((event.ctrlKey || event.metaKey) && event.key === "p") {
         event.preventDefault()
         this.togglePreview()
+      }
+
+      // Ctrl/Cmd + E: Toggle explorer/sidebar
+      if ((event.ctrlKey || event.metaKey) && event.key === "e") {
+        event.preventDefault()
+        this.toggleSidebar()
       }
 
       // Escape: Close menus and dialogs

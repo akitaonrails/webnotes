@@ -322,6 +322,42 @@
   }
 }
 
+/*
+ * Writer-focused editor styles
+ * Centers text on wide screens for comfortable reading/writing
+ * Adapts to narrower windows when side-by-side with other apps
+ */
+@layer components {
+  .editor-textarea {
+    /* Default: full width for narrow windows */
+    max-width: 100%;
+    min-width: 320px;
+  }
+
+  /* On wider screens (> 900px), center the editor with max-width */
+  @media (min-width: 900px) {
+    .editor-textarea {
+      max-width: 72ch; /* ~72 characters - comfortable reading width */
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+
+  /* On very wide screens (> 1400px), allow slightly wider */
+  @media (min-width: 1400px) {
+    .editor-textarea {
+      max-width: 80ch;
+      padding-left: 3rem;
+      padding-right: 3rem;
+    }
+  }
+
+  /* When preview is visible, use less max-width */
+  .preview-visible .editor-textarea {
+    max-width: 100%;
+  }
+}
+
 /* CodeMirror theme overrides */
 @layer components {
   .cm-editor {

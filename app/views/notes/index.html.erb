@@ -2,6 +2,19 @@
   <!-- Header -->
   <header class="flex-none h-12 border-b border-[var(--theme-border)] flex items-center justify-between px-4 bg-[var(--theme-bg-secondary)]">
     <div class="flex items-center gap-2">
+      <!-- Sidebar Toggle (Burger Menu) -->
+      <button
+        type="button"
+        data-action="click->app#toggleSidebar"
+        data-app-target="sidebarToggle"
+        class="p-1.5 rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]"
+        title="Toggle Explorer (Ctrl+E)"
+        aria-expanded="true"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
       <svg class="w-5 h-5 text-[var(--theme-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
@@ -13,7 +26,7 @@
         data-action="click->app#togglePreview"
         data-app-target="previewToggle"
         class="p-1.5 rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]"
-        title="Toggle Preview (Ctrl+Shift+P)"
+        title="Toggle Preview (Ctrl+P)"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -50,7 +63,7 @@
   <!-- Main Content -->
   <div class="flex-1 flex overflow-hidden">
     <!-- Sidebar -->
-    <aside class="flex-none w-64 border-r border-[var(--theme-border)] flex flex-col bg-[var(--theme-bg-secondary)]">
+    <aside class="flex-none w-64 border-r border-[var(--theme-border)] flex flex-col bg-[var(--theme-bg-secondary)]" data-app-target="sidebar">
       <!-- Sidebar Header -->
       <div class="flex-none h-10 border-b border-[var(--theme-border)] flex items-center justify-between px-3">
         <span class="text-xs font-medium text-[var(--theme-text-muted)] uppercase tracking-wide">Explorer</span>
@@ -177,13 +190,16 @@
           </div>
         </div>
         <div class="h-full hidden" data-app-target="editor">
-          <textarea
-            data-app-target="textarea"
-            data-action="input->app#onTextareaInput"
-            class="w-full h-full p-4 resize-none bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] font-mono text-sm leading-relaxed focus:outline-none"
-            placeholder="Start writing..."
-            spellcheck="false"
-          ></textarea>
+          <!-- Centered editor wrapper for focus mode -->
+          <div class="h-full flex justify-center" data-app-target="editorWrapper">
+            <textarea
+              data-app-target="textarea"
+              data-action="input->app#onTextareaInput"
+              class="editor-textarea w-full h-full p-4 resize-none bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] font-mono text-sm leading-relaxed focus:outline-none"
+              placeholder="Start writing..."
+              spellcheck="false"
+            ></textarea>
+          </div>
         </div>
       </div>
     </main>
@@ -745,7 +761,7 @@
 
     <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400 text-center">
       <span class="font-semibold">Keyboard Shortcuts:</span>
-      Ctrl+S save &bull; Ctrl+N new note &bull; Ctrl+Shift+P preview &bull; F1 help
+      Ctrl+S save &bull; Ctrl+N new note &bull; Ctrl+E explorer &bull; Ctrl+P preview &bull; F1 help
     </div>
   </div>
 </dialog>
