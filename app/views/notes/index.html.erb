@@ -147,6 +147,19 @@
           Code
         </button>
         <div class="h-5 w-px bg-[var(--theme-border)] mx-1"></div>
+        <button
+          type="button"
+          data-action="click->app#openCustomize"
+          class="px-2 py-1 text-xs rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] flex items-center gap-1"
+          title="Editor Settings"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          Font
+        </button>
+        <div class="h-5 w-px bg-[var(--theme-border)] mx-1"></div>
         <span class="text-xs text-[var(--theme-text-faint)] hidden" data-app-target="tableHint">
           Cursor in table - click to edit
         </span>
@@ -710,6 +723,100 @@
     <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400 text-center">
       <span class="font-semibold">Keyboard Shortcuts:</span>
       Ctrl+S save &bull; Ctrl+N new note &bull; Ctrl+Shift+P preview &bull; F1 help
+    </div>
+  </div>
+</dialog>
+
+<!-- Editor Customization Dialog -->
+<dialog
+  class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 w-[400px]"
+  data-app-target="customizeDialog"
+>
+  <div class="p-4">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-sm font-semibold">Editor Settings</h3>
+      <button
+        type="button"
+        data-action="click->app#closeCustomizeDialog"
+        class="p-1 rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Font Family -->
+    <div class="mb-4">
+      <label class="block text-xs text-[var(--theme-text-muted)] mb-1.5">Font Family</label>
+      <select
+        data-app-target="fontSelect"
+        data-action="change->app#onFontChange"
+        class="w-full px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
+      >
+        <option value="cascadia-code" style="font-family: 'Cascadia Code', monospace">Cascadia Code</option>
+        <option value="consolas" style="font-family: Consolas, monospace">Consolas</option>
+        <option value="dejavu-mono" style="font-family: 'DejaVu Mono', monospace">DejaVu Sans Mono</option>
+        <option value="fira-code" style="font-family: 'Fira Code', monospace">Fira Code</option>
+        <option value="hack" style="font-family: Hack, monospace">Hack</option>
+        <option value="jetbrains-mono" style="font-family: 'JetBrains Mono', monospace">JetBrains Mono</option>
+        <option value="roboto-mono" style="font-family: 'Roboto Mono', monospace">Roboto Mono</option>
+        <option value="source-code-pro" style="font-family: 'Source Code Pro', monospace">Source Code Pro</option>
+        <option value="ubuntu-mono" style="font-family: 'Ubuntu Mono', monospace">Ubuntu Mono</option>
+      </select>
+    </div>
+
+    <!-- Font Size -->
+    <div class="mb-4">
+      <label class="block text-xs text-[var(--theme-text-muted)] mb-1.5">Font Size</label>
+      <select
+        data-app-target="fontSizeSelect"
+        data-action="change->app#onFontSizeChange"
+        class="w-full px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
+      >
+        <option value="12">12px</option>
+        <option value="13">13px</option>
+        <option value="14" selected>14px</option>
+        <option value="15">15px</option>
+        <option value="16">16px</option>
+        <option value="18">18px</option>
+        <option value="20">20px</option>
+        <option value="22">22px</option>
+        <option value="24">24px</option>
+      </select>
+    </div>
+
+    <!-- Preview -->
+    <div class="mb-4">
+      <label class="block text-xs text-[var(--theme-text-muted)] mb-1.5">Preview</label>
+      <div
+        data-app-target="fontPreview"
+        class="p-3 border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] h-24 overflow-hidden"
+        style="font-family: 'Cascadia Code', monospace; font-size: 14px; line-height: 1.6;"
+      >
+        <div>// The quick brown fox</div>
+        <div>function hello() {</div>
+        <div>&nbsp;&nbsp;return "Hello, World!";</div>
+        <div>}</div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex justify-end gap-2">
+      <button
+        type="button"
+        data-action="click->app#closeCustomizeDialog"
+        class="px-3 py-1.5 text-sm rounded-md hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-secondary)]"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        data-action="click->app#applyCustomization"
+        class="px-3 py-1.5 text-sm rounded-md bg-[var(--theme-accent)] text-[var(--theme-accent-text)] hover:opacity-90"
+      >
+        Apply
+      </button>
     </div>
   </div>
 </dialog>

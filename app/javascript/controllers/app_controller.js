@@ -48,7 +48,11 @@ export default class extends Controller {
     "codeDialog",
     "codeLanguage",
     "codeContent",
-    "codeSuggestions"
+    "codeSuggestions",
+    "customizeDialog",
+    "fontSelect",
+    "fontSizeSelect",
+    "fontPreview"
   ]
 
   static values = {
@@ -85,6 +89,23 @@ export default class extends Controller {
     this.codeEditMode = false
     this.codeStartPos = 0
     this.codeEndPos = 0
+
+    // Editor customization - fonts in alphabetical order, Cascadia Code as default
+    this.editorFonts = [
+      { id: "cascadia-code", name: "Cascadia Code", family: "'Cascadia Code', monospace" },
+      { id: "consolas", name: "Consolas", family: "Consolas, monospace" },
+      { id: "dejavu-mono", name: "DejaVu Sans Mono", family: "'DejaVu Mono', monospace" },
+      { id: "fira-code", name: "Fira Code", family: "'Fira Code', monospace" },
+      { id: "hack", name: "Hack", family: "Hack, monospace" },
+      { id: "jetbrains-mono", name: "JetBrains Mono", family: "'JetBrains Mono', monospace" },
+      { id: "roboto-mono", name: "Roboto Mono", family: "'Roboto Mono', monospace" },
+      { id: "source-code-pro", name: "Source Code Pro", family: "'Source Code Pro', monospace" },
+      { id: "ubuntu-mono", name: "Ubuntu Mono", family: "'Ubuntu Mono', monospace" }
+    ]
+    this.editorFontSizes = [12, 13, 14, 15, 16, 18, 20, 22, 24]
+    this.currentFont = localStorage.getItem("editorFont") || "cascadia-code"
+    this.currentFontSize = parseInt(localStorage.getItem("editorFontSize")) || 14
+
     this.codeLanguages = [
       "javascript", "typescript", "python", "ruby", "go", "rust", "java", "c", "cpp", "csharp",
       "php", "swift", "kotlin", "scala", "haskell", "elixir", "erlang", "clojure", "lua", "perl",
@@ -98,6 +119,7 @@ export default class extends Controller {
     this.setupContextMenuClose()
     this.setupDialogClickOutside()
     this.loadImagesConfig()
+    this.applyEditorSettings()
 
     // Configure marked
     marked.setOptions({
@@ -1128,6 +1150,63 @@ export default class extends Controller {
     this.closeImageDialog()
   }
 
+  // Editor Customization
+  openCustomize() {
+    // Set current values in the selects
+    this.fontSelectTarget.value = this.currentFont
+    this.fontSizeSelectTarget.value = this.currentFontSize
+
+    // Update preview with current settings
+    this.updateFontPreview()
+
+    this.showDialogCentered(this.customizeDialogTarget)
+  }
+
+  closeCustomizeDialog() {
+    this.customizeDialogTarget.close()
+  }
+
+  onFontChange() {
+    this.updateFontPreview()
+  }
+
+  onFontSizeChange() {
+    this.updateFontPreview()
+  }
+
+  updateFontPreview() {
+    const fontId = this.fontSelectTarget.value
+    const fontSize = this.fontSizeSelectTarget.value
+    const font = this.editorFonts.find(f => f.id === fontId)
+
+    if (font && this.hasFontPreviewTarget) {
+      this.fontPreviewTarget.style.fontFamily = font.family
+      this.fontPreviewTarget.style.fontSize = `${fontSize}px`
+    }
+  }
+
+  applyCustomization() {
+    this.currentFont = this.fontSelectTarget.value
+    this.currentFontSize = parseInt(this.fontSizeSelectTarget.value)
+
+    // Save to localStorage
+    localStorage.setItem("editorFont", this.currentFont)
+    localStorage.setItem("editorFontSize", this.currentFontSize.toString())
+
+    // Apply to editor
+    this.applyEditorSettings()
+
+    this.customizeDialogTarget.close()
+  }
+
+  applyEditorSettings() {
+    const font = this.editorFonts.find(f => f.id === this.currentFont)
+    if (font && this.hasTextareaTarget) {
+      this.textareaTarget.style.fontFamily = font.family
+      this.textareaTarget.style.fontSize = `${this.currentFontSize}px`
+    }
+  }
+
   // Help Dialog
   openHelp() {
     this.showDialogCentered(this.helpDialogTarget)
@@ -1527,7 +1606,8 @@ export default class extends Controller {
       this.tableDialogTarget,
       this.imageDialogTarget,
       this.helpDialogTarget,
-      this.codeDialogTarget
+      this.codeDialogTarget,
+      this.customizeDialogTarget
     ]
 
     dialogs.forEach(dialog => {
@@ -1703,6 +1783,9 @@ export default class extends Controller {
         }
         if (this.hasCodeDialogTarget && this.codeDialogTarget.open) {
           this.codeDialogTarget.close()
+        }
+        if (this.hasCustomizeDialogTarget && this.customizeDialogTarget.open) {
+          this.customizeDialogTarget.close()
         }
       }
 
