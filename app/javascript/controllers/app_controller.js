@@ -2181,8 +2181,8 @@ export default class extends Controller {
         this.toggleSidebar()
       }
 
-      // Ctrl/Cmd + T: Toggle focus/typewriter mode
-      if ((event.ctrlKey || event.metaKey) && event.key === "t") {
+      // Ctrl/Cmd + B: Toggle focus/typewriter mode
+      if ((event.ctrlKey || event.metaKey) && event.key === "b") {
         event.preventDefault()
         this.toggleFocusMode()
       }

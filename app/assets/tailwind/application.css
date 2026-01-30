@@ -359,7 +359,7 @@
 
   /* Focus/Typewriter mode - adds bottom padding to keep cursor in middle area */
   .editor-textarea.focus-mode {
-    padding-bottom: 50vh; /* Half viewport height of empty space at bottom */
+    padding-bottom: 50vh !important; /* Half viewport height of empty space at bottom */
   }
 }
 
