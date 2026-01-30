@@ -58,6 +58,10 @@ export default class extends Controller {
     this.newItemType = null
     this.newItemParent = ""
 
+    // Context menu click position (for positioning dialogs near click)
+    this.contextClickX = 0
+    this.contextClickY = 0
+
     // Table editor state
     this.tableData = []
     this.tableEditMode = false  // true if editing existing table
@@ -75,6 +79,7 @@ export default class extends Controller {
     this.renderTree()
     this.setupKeyboardShortcuts()
     this.setupContextMenuClose()
+    this.setupDialogClickOutside()
     this.loadImagesConfig()
 
     // Configure marked
@@ -1113,7 +1118,7 @@ export default class extends Controller {
     this.newItemTitleTarget.textContent = "New Note"
     this.newItemInputTarget.value = ""
     this.newItemInputTarget.placeholder = "Note name"
-    this.newItemDialogTarget.showModal()
+    this.showDialogCentered(this.newItemDialogTarget)
     this.newItemInputTarget.focus()
   }
 
@@ -1123,7 +1128,7 @@ export default class extends Controller {
     this.newItemTitleTarget.textContent = "New Folder"
     this.newItemInputTarget.value = ""
     this.newItemInputTarget.placeholder = "Folder name"
-    this.newItemDialogTarget.showModal()
+    this.showDialogCentered(this.newItemDialogTarget)
     this.newItemInputTarget.focus()
   }
 
@@ -1189,6 +1194,10 @@ export default class extends Controller {
       type: event.currentTarget.dataset.type
     }
 
+    // Store click position for positioning dialogs near the click
+    this.contextClickX = event.clientX
+    this.contextClickY = event.clientY
+
     // Show/hide "New Note" button based on item type
     if (this.contextItem.type === "folder") {
       this.newNoteBtnTarget.classList.remove("hidden")
@@ -1221,7 +1230,7 @@ export default class extends Controller {
     this.newItemTitleTarget.textContent = "New Note"
     this.newItemInputTarget.value = ""
     this.newItemInputTarget.placeholder = "Note name"
-    this.newItemDialogTarget.showModal()
+    this.positionDialogNearPoint(this.newItemDialogTarget, this.contextClickX, this.contextClickY)
     this.newItemInputTarget.focus()
 
     // Expand the folder
@@ -1235,12 +1244,33 @@ export default class extends Controller {
     })
   }
 
+  setupDialogClickOutside() {
+    // Close dialog when clicking on backdrop (outside the dialog content)
+    const dialogs = [
+      this.renameDialogTarget,
+      this.newItemDialogTarget,
+      this.tableDialogTarget,
+      this.imageDialogTarget
+    ]
+
+    dialogs.forEach(dialog => {
+      if (!dialog) return
+
+      dialog.addEventListener("click", (event) => {
+        // If click is directly on the dialog (backdrop area), close it
+        if (event.target === dialog) {
+          dialog.close()
+        }
+      })
+    })
+  }
+
   renameItem() {
     if (!this.contextItem) return
 
     const name = this.contextItem.path.split("/").pop().replace(/\.md$/, "")
     this.renameInputTarget.value = name
-    this.renameDialogTarget.showModal()
+    this.positionDialogNearPoint(this.renameDialogTarget, this.contextClickX, this.contextClickY)
     this.renameInputTarget.focus()
     this.renameInputTarget.select()
   }
@@ -1370,9 +1400,27 @@ export default class extends Controller {
         this.togglePreview()
       }
 
-      // Escape: Close dialogs
+      // Escape: Close menus and dialogs
       if (event.key === "Escape") {
+        // Close context menus
         this.contextMenuTarget.classList.add("hidden")
+        if (this.hasTableCellMenuTarget) {
+          this.tableCellMenuTarget.classList.add("hidden")
+        }
+
+        // Close any open dialogs
+        if (this.hasRenameDialogTarget && this.renameDialogTarget.open) {
+          this.renameDialogTarget.close()
+        }
+        if (this.hasNewItemDialogTarget && this.newItemDialogTarget.open) {
+          this.newItemDialogTarget.close()
+        }
+        if (this.hasTableDialogTarget && this.tableDialogTarget.open) {
+          this.tableDialogTarget.close()
+        }
+        if (this.hasImageDialogTarget && this.imageDialogTarget.open) {
+          this.imageDialogTarget.close()
+        }
       }
     })
   }
@@ -1393,5 +1441,46 @@ export default class extends Controller {
   get csrfToken() {
     const meta = document.querySelector('meta[name="csrf-token"]')
     return meta ? meta.content : ""
+  }
+
+  // Position a dialog near a specific point (for explorer dialogs)
+  positionDialogNearPoint(dialog, x, y) {
+    dialog.classList.add("positioned")
+
+    // Use showModal first to get dimensions
+    dialog.showModal()
+
+    // Get dialog dimensions
+    const rect = dialog.getBoundingClientRect()
+    const padding = 10
+
+    // Calculate position, keeping dialog on screen
+    let left = x
+    let top = y
+
+    // Adjust if dialog would go off right edge
+    if (left + rect.width > window.innerWidth - padding) {
+      left = window.innerWidth - rect.width - padding
+    }
+
+    // Adjust if dialog would go off bottom edge
+    if (top + rect.height > window.innerHeight - padding) {
+      top = window.innerHeight - rect.height - padding
+    }
+
+    // Ensure dialog stays on screen (left/top)
+    left = Math.max(padding, left)
+    top = Math.max(padding, top)
+
+    dialog.style.left = `${left}px`
+    dialog.style.top = `${top}px`
+  }
+
+  // Show dialog centered (default behavior)
+  showDialogCentered(dialog) {
+    dialog.classList.remove("positioned")
+    dialog.style.left = ""
+    dialog.style.top = ""
+    dialog.showModal()
   }
 }
