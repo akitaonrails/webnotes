@@ -69,7 +69,9 @@ export default class extends Controller {
         const isExpanded = this.expandedFolders.has(item.path)
         return `
           <div class="tree-folder" data-path="${this.escapeHtml(item.path)}">
-            <div class="tree-item" data-action="click->app#toggleFolder contextmenu->app#showContextMenu" data-path="${this.escapeHtml(item.path)}" data-type="folder">
+            <div class="tree-item drop-target" draggable="true"
+              data-action="click->app#toggleFolder contextmenu->app#showContextMenu dragstart->app#onDragStart dragover->app#onDragOver dragenter->app#onDragEnter dragleave->app#onDragLeave drop->app#onDrop dragend->app#onDragEnd"
+              data-path="${this.escapeHtml(item.path)}" data-type="folder">
               <svg class="tree-chevron ${isExpanded ? 'expanded' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
@@ -86,7 +88,9 @@ export default class extends Controller {
       } else {
         const isSelected = this.currentFile === item.path
         return `
-          <div class="tree-item ${isSelected ? 'selected' : ''}" data-action="click->app#selectFile contextmenu->app#showContextMenu" data-path="${this.escapeHtml(item.path)}" data-type="file">
+          <div class="tree-item ${isSelected ? 'selected' : ''}" draggable="true"
+            data-action="click->app#selectFile contextmenu->app#showContextMenu dragstart->app#onDragStart dragend->app#onDragEnd"
+            data-path="${this.escapeHtml(item.path)}" data-type="file">
             <svg class="tree-icon text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -111,6 +115,180 @@ export default class extends Controller {
       this.expandedFolders.add(path)
       children.classList.remove("hidden")
       chevron.classList.add("expanded")
+    }
+  }
+
+  // Drag and Drop
+  onDragStart(event) {
+    const target = event.currentTarget
+    this.draggedItem = {
+      path: target.dataset.path,
+      type: target.dataset.type
+    }
+    event.dataTransfer.effectAllowed = "move"
+    event.dataTransfer.setData("text/plain", target.dataset.path)
+    target.classList.add("dragging")
+
+    // Add a slight delay to show the dragging state
+    setTimeout(() => {
+      target.classList.add("drag-ghost")
+    }, 0)
+  }
+
+  onDragEnd(event) {
+    event.currentTarget.classList.remove("dragging", "drag-ghost")
+    this.draggedItem = null
+
+    // Remove all drop highlights
+    this.fileTreeTarget.querySelectorAll(".drop-highlight").forEach(el => {
+      el.classList.remove("drop-highlight")
+    })
+    this.fileTreeTarget.classList.remove("drop-highlight-root")
+  }
+
+  onDragOver(event) {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = "move"
+  }
+
+  onDragEnter(event) {
+    event.preventDefault()
+    const target = event.currentTarget
+
+    if (!this.draggedItem) return
+
+    // Don't allow dropping on itself or its children
+    if (this.draggedItem.path === target.dataset.path) return
+    if (target.dataset.path.startsWith(this.draggedItem.path + "/")) return
+
+    // Only folders are valid drop targets
+    if (target.dataset.type === "folder") {
+      target.classList.add("drop-highlight")
+    }
+  }
+
+  onDragLeave(event) {
+    const target = event.currentTarget
+    // Check if we're actually leaving the element (not just entering a child)
+    const rect = target.getBoundingClientRect()
+    const x = event.clientX
+    const y = event.clientY
+
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      target.classList.remove("drop-highlight")
+    }
+  }
+
+  async onDrop(event) {
+    event.preventDefault()
+    event.stopPropagation()
+
+    const target = event.currentTarget
+    target.classList.remove("drop-highlight")
+
+    if (!this.draggedItem) return
+    if (target.dataset.type !== "folder") return
+
+    const sourcePath = this.draggedItem.path
+    const targetFolder = target.dataset.path
+
+    // Don't drop on itself or its parent
+    if (sourcePath === targetFolder) return
+    if (sourcePath.startsWith(targetFolder + "/")) return
+
+    // Get the item name
+    const itemName = sourcePath.split("/").pop()
+    const newPath = `${targetFolder}/${itemName}`
+
+    // Don't move to same location
+    const currentParent = sourcePath.split("/").slice(0, -1).join("/")
+    if (currentParent === targetFolder) return
+
+    await this.moveItem(sourcePath, newPath, this.draggedItem.type)
+  }
+
+  onDragOverRoot(event) {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = "move"
+  }
+
+  onDragEnterRoot(event) {
+    event.preventDefault()
+    if (!this.draggedItem) return
+
+    // Only highlight if the item is not already at root
+    if (this.draggedItem.path.includes("/")) {
+      this.fileTreeTarget.classList.add("drop-highlight-root")
+    }
+  }
+
+  onDragLeaveRoot(event) {
+    // Only remove highlight if we're leaving the file tree entirely
+    const rect = this.fileTreeTarget.getBoundingClientRect()
+    const x = event.clientX
+    const y = event.clientY
+
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      this.fileTreeTarget.classList.remove("drop-highlight-root")
+    }
+  }
+
+  async onDropToRoot(event) {
+    event.preventDefault()
+    event.stopPropagation()
+
+    this.fileTreeTarget.classList.remove("drop-highlight-root")
+
+    if (!this.draggedItem) return
+
+    const sourcePath = this.draggedItem.path
+
+    // If already at root, do nothing
+    if (!sourcePath.includes("/")) return
+
+    const itemName = sourcePath.split("/").pop()
+    const newPath = itemName
+
+    await this.moveItem(sourcePath, newPath, this.draggedItem.type)
+  }
+
+  async moveItem(oldPath, newPath, type) {
+    try {
+      const endpoint = type === "file" ? "notes" : "folders"
+      const response = await fetch(`/${endpoint}/${this.encodePath(oldPath)}/rename`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": this.csrfToken
+        },
+        body: JSON.stringify({ new_path: newPath })
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to move")
+      }
+
+      // Update current file reference if it was moved
+      if (this.currentFile === oldPath) {
+        this.currentFile = newPath
+        this.currentPathTarget.textContent = newPath.replace(/\.md$/, "")
+      } else if (type === "folder" && this.currentFile && this.currentFile.startsWith(oldPath + "/")) {
+        // If a folder containing the current file was moved
+        this.currentFile = this.currentFile.replace(oldPath, newPath)
+        this.currentPathTarget.textContent = this.currentFile.replace(/\.md$/, "")
+      }
+
+      // Expand the target folder
+      const targetFolder = newPath.split("/").slice(0, -1).join("/")
+      if (targetFolder) {
+        this.expandedFolders.add(targetFolder)
+      }
+
+      await this.refreshTree()
+    } catch (error) {
+      console.error("Error moving item:", error)
+      alert(error.message)
     }
   }
 
@@ -178,7 +356,7 @@ export default class extends Controller {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
+          "X-CSRF-Token": this.csrfToken
         },
         body: JSON.stringify({ content })
       })
@@ -260,7 +438,7 @@ export default class extends Controller {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
+            "X-CSRF-Token": this.csrfToken
           },
           body: JSON.stringify({ content: `# ${name}\n\n` })
         })
@@ -276,7 +454,7 @@ export default class extends Controller {
         const response = await fetch(`/folders/${this.encodePath(path)}`, {
           method: "POST",
           headers: {
-            "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
+            "X-CSRF-Token": this.csrfToken
           }
         })
 
@@ -390,7 +568,7 @@ export default class extends Controller {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
+          "X-CSRF-Token": this.csrfToken
         },
         body: JSON.stringify({ new_path: newPath })
       })
@@ -427,7 +605,7 @@ export default class extends Controller {
       const response = await fetch(`/${endpoint}/${this.encodePath(this.contextItem.path)}`, {
         method: "DELETE",
         headers: {
-          "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
+          "X-CSRF-Token": this.csrfToken
         }
       })
 
@@ -502,5 +680,11 @@ export default class extends Controller {
   // Encode path for URL (encode each segment, preserve slashes)
   encodePath(path) {
     return path.split("/").map(segment => encodeURIComponent(segment)).join("/")
+  }
+
+  // Get CSRF token safely
+  get csrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]')
+    return meta ? meta.content : ""
   }
 }

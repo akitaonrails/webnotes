@@ -69,7 +69,11 @@
       </div>
 
       <!-- File Tree -->
-      <div class="flex-1 overflow-y-auto p-2" data-app-target="fileTree">
+      <div
+        class="flex-1 overflow-y-auto p-2"
+        data-app-target="fileTree"
+        data-action="dragover->app#onDragOverRoot dragenter->app#onDragEnterRoot dragleave->app#onDragLeaveRoot drop->app#onDropToRoot"
+      >
         <!-- Tree will be rendered by JavaScript -->
       </div>
     </aside>

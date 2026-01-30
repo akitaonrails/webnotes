@@ -314,6 +314,44 @@
   .tree-children {
     padding-left: 1rem;
   }
+
+  /* Drag and drop styles */
+  .tree-item.dragging {
+    opacity: 0.5;
+  }
+
+  .tree-item.drag-ghost {
+    opacity: 0.4;
+  }
+
+  .tree-item.drop-highlight {
+    background: #3b82f6 !important;
+    color: white !important;
+    outline: 2px solid #2563eb;
+    outline-offset: -2px;
+  }
+
+  .tree-item.drop-highlight .tree-icon,
+  .tree-item.drop-highlight .tree-chevron {
+    color: white !important;
+  }
+
+  .dark .tree-item.drop-highlight {
+    background: #2563eb !important;
+    outline-color: #60a5fa;
+  }
+
+  /* Root drop zone highlight */
+  .drop-highlight-root {
+    background: #dbeafe !important;
+    outline: 2px dashed #3b82f6;
+    outline-offset: -4px;
+  }
+
+  .dark .drop-highlight-root {
+    background: #1e3a5f33 !important;
+    outline-color: #60a5fa;
+  }
 }
 
 /* Dialog styles */

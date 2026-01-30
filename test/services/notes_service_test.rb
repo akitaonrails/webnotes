@@ -1,0 +1,203 @@
+# frozen_string_literal: true
+
+require "test_helper"
+
+class NotesServiceTest < ActiveSupport::TestCase
+  def setup
+    setup_test_notes_dir
+    @service = NotesService.new(base_path: @test_notes_dir)
+  end
+
+  def teardown
+    teardown_test_notes_dir
+  end
+
+  # === list_tree ===
+
+  test "list_tree returns empty array for empty directory" do
+    assert_equal [], @service.list_tree
+  end
+
+  test "list_tree returns files with correct structure" do
+    create_test_note("note1.md")
+    create_test_note("note2.md")
+
+    tree = @service.list_tree
+    assert_equal 2, tree.length
+    assert tree.all? { |item| item[:type] == "file" }
+    assert tree.map { |item| item[:name] }.sort == %w[note1 note2]
+  end
+
+  test "list_tree returns nested folders with children" do
+    create_test_folder("folder1")
+    create_test_note("folder1/nested.md")
+
+    tree = @service.list_tree
+    assert_equal 1, tree.length
+
+    folder = tree.first
+    assert_equal "folder", folder[:type]
+    assert_equal "folder1", folder[:name]
+    assert_equal 1, folder[:children].length
+    assert_equal "nested", folder[:children].first[:name]
+  end
+
+  test "list_tree sorts folders before files" do
+    create_test_note("zebra.md")
+    create_test_folder("alpha")
+
+    tree = @service.list_tree
+    assert_equal "folder", tree.first[:type]
+    assert_equal "file", tree.last[:type]
+  end
+
+  test "list_tree ignores hidden files" do
+    create_test_note(".hidden.md")
+    create_test_note("visible.md")
+
+    tree = @service.list_tree
+    assert_equal 1, tree.length
+    assert_equal "visible", tree.first[:name]
+  end
+
+  # === read ===
+
+  test "read returns file content" do
+    create_test_note("test.md", "Hello World")
+
+    content = @service.read("test.md")
+    assert_equal "Hello World", content
+  end
+
+  test "read raises NotFoundError for missing file" do
+    assert_raises(NotesService::NotFoundError) do
+      @service.read("nonexistent.md")
+    end
+  end
+
+  # === write ===
+
+  test "write creates new file" do
+    @service.write("new.md", "New content")
+
+    assert @test_notes_dir.join("new.md").exist?
+    assert_equal "New content", File.read(@test_notes_dir.join("new.md"))
+  end
+
+  test "write overwrites existing file" do
+    create_test_note("existing.md", "Old content")
+
+    @service.write("existing.md", "New content")
+    assert_equal "New content", File.read(@test_notes_dir.join("existing.md"))
+  end
+
+  test "write creates parent directories" do
+    @service.write("deep/nested/note.md", "Content")
+
+    assert @test_notes_dir.join("deep/nested/note.md").exist?
+  end
+
+  # === delete ===
+
+  test "delete removes file" do
+    path = create_test_note("to_delete.md")
+
+    @service.delete("to_delete.md")
+    refute path.exist?
+  end
+
+  test "delete raises NotFoundError for missing file" do
+    assert_raises(NotesService::NotFoundError) do
+      @service.delete("nonexistent.md")
+    end
+  end
+
+  # === rename ===
+
+  test "rename moves file to new location" do
+    create_test_note("old.md", "Content")
+
+    @service.rename("old.md", "new.md")
+
+    refute @test_notes_dir.join("old.md").exist?
+    assert @test_notes_dir.join("new.md").exist?
+    assert_equal "Content", File.read(@test_notes_dir.join("new.md"))
+  end
+
+  test "rename moves file to different folder" do
+    create_test_note("root.md", "Content")
+    create_test_folder("subfolder")
+
+    @service.rename("root.md", "subfolder/moved.md")
+
+    refute @test_notes_dir.join("root.md").exist?
+    assert @test_notes_dir.join("subfolder/moved.md").exist?
+  end
+
+  test "rename moves folder with contents" do
+    create_test_folder("old_folder")
+    create_test_note("old_folder/note.md", "Content")
+
+    @service.rename("old_folder", "new_folder")
+
+    refute @test_notes_dir.join("old_folder").exist?
+    assert @test_notes_dir.join("new_folder").exist?
+    assert @test_notes_dir.join("new_folder/note.md").exist?
+  end
+
+  test "rename raises NotFoundError for missing source" do
+    assert_raises(NotesService::NotFoundError) do
+      @service.rename("nonexistent.md", "new.md")
+    end
+  end
+
+  # === create_folder ===
+
+  test "create_folder creates directory" do
+    @service.create_folder("new_folder")
+
+    assert @test_notes_dir.join("new_folder").directory?
+  end
+
+  test "create_folder creates nested directories" do
+    @service.create_folder("deep/nested/folder")
+
+    assert @test_notes_dir.join("deep/nested/folder").directory?
+  end
+
+  # === delete_folder ===
+
+  test "delete_folder removes empty directory" do
+    create_test_folder("empty_folder")
+
+    @service.delete_folder("empty_folder")
+    refute @test_notes_dir.join("empty_folder").exist?
+  end
+
+  test "delete_folder raises InvalidPathError for non-empty directory" do
+    create_test_folder("folder")
+    create_test_note("folder/note.md")
+
+    assert_raises(NotesService::InvalidPathError) do
+      @service.delete_folder("folder")
+    end
+  end
+
+  # === security ===
+
+  test "prevents path traversal attacks" do
+    assert_raises(NotesService::InvalidPathError) do
+      @service.read("../../../etc/passwd")
+    end
+  end
+
+  test "sanitizes paths with double dots" do
+    # The service should either reject or sanitize paths with ..
+    create_test_note("safe.md", "Safe content")
+
+    # This should not allow escaping the base directory
+    assert_raises(NotesService::NotFoundError) do
+      @service.read("folder/../../../etc/passwd")
+    end
+  end
+end
