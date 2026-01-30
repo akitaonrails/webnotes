@@ -21,6 +21,7 @@ export default class extends Controller {
     "newItemTitle",
     "newItemInput",
     "editorToolbar",
+    "helpDialog",
     "tableHint",
     "tableDialog",
     "tableGrid",
@@ -1111,6 +1112,15 @@ export default class extends Controller {
     this.closeImageDialog()
   }
 
+  // Help Dialog
+  openHelp() {
+    this.showDialogCentered(this.helpDialogTarget)
+  }
+
+  closeHelp() {
+    this.helpDialogTarget.close()
+  }
+
   // New Note/Folder
   newNote() {
     this.newItemType = "note"
@@ -1250,7 +1260,8 @@ export default class extends Controller {
       this.renameDialogTarget,
       this.newItemDialogTarget,
       this.tableDialogTarget,
-      this.imageDialogTarget
+      this.imageDialogTarget,
+      this.helpDialogTarget
     ]
 
     dialogs.forEach(dialog => {
@@ -1421,6 +1432,15 @@ export default class extends Controller {
         if (this.hasImageDialogTarget && this.imageDialogTarget.open) {
           this.imageDialogTarget.close()
         }
+        if (this.hasHelpDialogTarget && this.helpDialogTarget.open) {
+          this.helpDialogTarget.close()
+        }
+      }
+
+      // F1 or Ctrl+H: Open help
+      if (event.key === "F1" || ((event.ctrlKey || event.metaKey) && event.key === "h")) {
+        event.preventDefault()
+        this.openHelp()
       }
     })
   }

@@ -92,6 +92,18 @@
       <div class="flex-none h-9 border-b border-zinc-200 dark:border-zinc-700 hidden items-center px-2 gap-1 bg-zinc-50 dark:bg-zinc-800/50" data-app-target="editorToolbar">
         <button
           type="button"
+          data-action="click->app#openHelp"
+          class="px-2 py-1 text-xs rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 flex items-center gap-1"
+          title="Markdown Help (F1)"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Help
+        </button>
+        <div class="h-5 w-px bg-zinc-300 dark:bg-zinc-600 mx-1"></div>
+        <button
+          type="button"
           data-action="click->app#openTableEditor"
           class="px-2 py-1 text-xs rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 flex items-center gap-1"
           title="Insert/Edit Table"
@@ -521,6 +533,162 @@
       >
         Insert Image
       </button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Help Dialog (Markdown Cheatsheet) -->
+<dialog
+  class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 max-w-4xl w-full max-h-[85vh]"
+  data-app-target="helpDialog"
+>
+  <div class="p-4 text-zinc-900 dark:text-zinc-100 overflow-y-auto">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold">Markdown Cheatsheet</h3>
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-zinc-500 dark:text-zinc-400">Press F1 or Ctrl+H to toggle</span>
+        <button
+          type="button"
+          data-action="click->app#closeHelp"
+          class="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <!-- Column 1 -->
+      <div class="space-y-3">
+        <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg p-3">
+          <h4 class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase mb-2">Headings</h4>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <code class="font-mono text-zinc-600 dark:text-zinc-300"># Heading 1</code>
+            <span class="text-xl font-bold">Heading 1</span>
+            <code class="font-mono text-zinc-600 dark:text-zinc-300">## Heading 2</code>
+            <span class="text-lg font-bold">Heading 2</span>
+            <code class="font-mono text-zinc-600 dark:text-zinc-300">### Heading 3</code>
+            <span class="text-base font-bold">Heading 3</span>
+          </div>
+        </div>
+
+        <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg p-3">
+          <h4 class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase mb-2">Emphasis</h4>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <code class="font-mono text-zinc-600 dark:text-zinc-300">**bold**</code>
+            <span class="font-bold">bold</span>
+            <code class="font-mono text-zinc-600 dark:text-zinc-300">*italic*</code>
+            <span class="italic">italic</span>
+            <code class="font-mono text-zinc-600 dark:text-zinc-300">~~strikethrough~~</code>
+            <span class="line-through">strikethrough</span>
+            <code class="font-mono text-zinc-600 dark:text-zinc-300">`inline code`</code>
+            <code class="bg-zinc-200 dark:bg-zinc-700 px-1 rounded text-sm">inline code</code>
+          </div>
+        </div>
+
+        <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg p-3">
+          <h4 class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase mb-2">Lists</h4>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <div class="font-mono text-zinc-600 dark:text-zinc-300">
+              <div>- Item 1</div>
+              <div>- Item 2</div>
+            </div>
+            <div>
+              <div>&bull; Item 1</div>
+              <div>&bull; Item 2</div>
+            </div>
+            <div class="font-mono text-zinc-600 dark:text-zinc-300">
+              <div>1. First</div>
+              <div>2. Second</div>
+            </div>
+            <div>
+              <div>1. First</div>
+              <div>2. Second</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg p-3">
+          <h4 class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase mb-2">Task List</h4>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <div class="font-mono text-zinc-600 dark:text-zinc-300">
+              <div>- [x] Done</div>
+              <div>- [ ] Todo</div>
+            </div>
+            <div>
+              <div><input type="checkbox" checked disabled class="mr-1">Done</div>
+              <div><input type="checkbox" disabled class="mr-1">Todo</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column 2 -->
+      <div class="space-y-3">
+        <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg p-3">
+          <h4 class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase mb-2">Links & Images</h4>
+          <div class="space-y-2 text-sm">
+            <div class="grid grid-cols-2 gap-2">
+              <code class="font-mono text-zinc-600 dark:text-zinc-300">[text](url)</code>
+              <a href="#" class="text-blue-500 underline">text</a>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <code class="font-mono text-zinc-600 dark:text-zinc-300">![alt](image.jpg)</code>
+              <span class="text-zinc-500">[image]</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg p-3">
+          <h4 class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase mb-2">Blockquote</h4>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <code class="font-mono text-zinc-600 dark:text-zinc-300">> Quote text</code>
+            <blockquote class="border-l-2 border-zinc-400 pl-2 italic text-zinc-600 dark:text-zinc-400">Quote text</blockquote>
+          </div>
+        </div>
+
+        <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg p-3">
+          <h4 class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase mb-2">Code Block</h4>
+          <div class="text-sm space-y-1">
+            <div class="font-mono text-zinc-600 dark:text-zinc-300">
+              <div>```javascript</div>
+              <div>const x = 1;</div>
+              <div>```</div>
+            </div>
+            <pre class="bg-zinc-200 dark:bg-zinc-700 p-2 rounded text-xs"><code>const x = 1;</code></pre>
+          </div>
+        </div>
+
+        <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg p-3">
+          <h4 class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase mb-2">Table</h4>
+          <div class="text-sm space-y-1">
+            <div class="font-mono text-zinc-600 dark:text-zinc-300 text-xs">
+              <div>| Col 1 | Col 2 |</div>
+              <div>| ----- | ----- |</div>
+              <div>| A     | B     |</div>
+            </div>
+            <table class="text-xs border-collapse">
+              <tr><th class="border border-zinc-300 dark:border-zinc-600 px-2">Col 1</th><th class="border border-zinc-300 dark:border-zinc-600 px-2">Col 2</th></tr>
+              <tr><td class="border border-zinc-300 dark:border-zinc-600 px-2">A</td><td class="border border-zinc-300 dark:border-zinc-600 px-2">B</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg p-3">
+          <h4 class="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase mb-2">Horizontal Rule</h4>
+          <div class="grid grid-cols-2 gap-2 text-sm items-center">
+            <code class="font-mono text-zinc-600 dark:text-zinc-300">---</code>
+            <hr class="border-zinc-400">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-700 text-xs text-zinc-500 dark:text-zinc-400 text-center">
+      <span class="font-semibold">Keyboard Shortcuts:</span>
+      Ctrl+S save &bull; Ctrl+N new note &bull; Ctrl+Shift+P preview &bull; F1 help
     </div>
   </div>
 </dialog>
