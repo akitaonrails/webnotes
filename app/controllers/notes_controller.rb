@@ -66,7 +66,7 @@ class NotesController < ApplicationController
 
   def search
     query = params[:q].to_s
-    results = @service.search_content(query, context_lines: 3, max_results: 50)
+    results = @service.search_content(query, context_lines: 3, max_results: 20)
     render json: results
   end
 

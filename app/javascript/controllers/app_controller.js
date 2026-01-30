@@ -134,7 +134,7 @@ export default class extends Controller {
     this.selectedFileIndex = 0
 
     // Content search state
-    this.contentSearchResults = []
+    this.searchResultsData = []
     this.selectedSearchIndex = 0
     this.contentSearchTimeout = null
 
@@ -1710,7 +1710,7 @@ export default class extends Controller {
 
   // Content Search (Ctrl+Shift+F)
   openContentSearch() {
-    this.contentSearchResults = []
+    this.searchResultsData = []
     this.selectedSearchIndex = 0
     this.contentSearchInputTarget.value = ""
     this.contentSearchResultsTarget.innerHTML = ""
@@ -1732,7 +1732,7 @@ export default class extends Controller {
     }
 
     if (!query) {
-      this.contentSearchResults = []
+      this.searchResultsData = []
       this.contentSearchResultsTarget.innerHTML = ""
       this.contentSearchStatusTarget.textContent = "Type to search in file contents (supports regex)"
       return
@@ -1755,14 +1755,15 @@ export default class extends Controller {
         throw new Error("Search failed")
       }
 
-      this.contentSearchResults = await response.json()
+      this.searchResultsData = await response.json()
       this.selectedSearchIndex = 0
       this.renderContentSearchResults()
 
-      const count = this.contentSearchResults.length
+      const count = this.searchResultsData.length
+      const maxMsg = count >= 20 ? " (showing first 20)" : ""
       this.contentSearchStatusTarget.textContent = count === 0
         ? "No matches found"
-        : `${count} match${count === 1 ? "" : "es"} found`
+        : `${count} match${count === 1 ? "" : "es"} found${maxMsg} - use ↑↓ to navigate, Enter to open`
     } catch (error) {
       console.error("Search error:", error)
       this.contentSearchStatusTarget.textContent = "Search error"
@@ -1771,7 +1772,7 @@ export default class extends Controller {
   }
 
   renderContentSearchResults() {
-    if (this.contentSearchResults.length === 0) {
+    if (this.searchResultsData.length === 0) {
       this.contentSearchResultsTarget.innerHTML = `
         <div class="px-4 py-8 text-center text-[var(--theme-text-muted)] text-sm">
           No matches found
@@ -1780,7 +1781,7 @@ export default class extends Controller {
       return
     }
 
-    this.contentSearchResultsTarget.innerHTML = this.contentSearchResults
+    this.contentSearchResultsTarget.innerHTML = this.searchResultsData
       .map((result, index) => {
         const isSelected = index === this.selectedSearchIndex
         const contextHtml = result.context.map(line => {
@@ -1794,10 +1795,14 @@ export default class extends Controller {
           </div>`
         }).join("")
 
+        const selectedClass = isSelected
+          ? 'bg-[var(--theme-accent)] text-[var(--theme-accent-text)]'
+          : 'hover:bg-[var(--theme-bg-hover)]'
+
         return `
           <button
             type="button"
-            class="w-full text-left border-b border-[var(--theme-border)] last:border-b-0 ${isSelected ? 'bg-[var(--theme-bg-hover)]' : 'hover:bg-[var(--theme-bg-hover)]'}"
+            class="w-full text-left border-b border-[var(--theme-border)] last:border-b-0 ${selectedClass}"
             data-index="${index}"
             data-path="${this.escapeHtml(result.path)}"
             data-line="${result.line_number}"
@@ -1805,14 +1810,14 @@ export default class extends Controller {
           >
             <div class="px-3 py-2">
               <div class="flex items-center gap-2 mb-1">
-                <svg class="w-4 h-4 flex-shrink-0 text-[var(--theme-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 flex-shrink-0 ${isSelected ? '' : 'text-[var(--theme-text-muted)]'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 <span class="font-medium truncate">${this.escapeHtml(result.name)}</span>
-                <span class="text-xs text-[var(--theme-text-muted)]">:${result.line_number}</span>
-                <span class="text-xs text-[var(--theme-text-faint)] truncate ml-auto">${this.escapeHtml(result.path.replace(/\.md$/, ""))}</span>
+                <span class="text-xs ${isSelected ? 'opacity-80' : 'text-[var(--theme-text-muted)]'}">:${result.line_number}</span>
+                <span class="text-xs ${isSelected ? 'opacity-70' : 'text-[var(--theme-text-faint)]'} truncate ml-auto">${this.escapeHtml(result.path.replace(/\.md$/, ""))}</span>
               </div>
-              <div class="font-mono text-xs leading-relaxed overflow-hidden bg-[var(--theme-bg-tertiary)] rounded p-2">
+              <div class="font-mono text-xs leading-relaxed overflow-hidden ${isSelected ? 'bg-black/20' : 'bg-[var(--theme-bg-tertiary)]'} rounded p-2">
                 ${contextHtml}
               </div>
             </div>
@@ -1825,7 +1830,7 @@ export default class extends Controller {
   onContentSearchKeydown(event) {
     if (event.key === "ArrowDown") {
       event.preventDefault()
-      if (this.selectedSearchIndex < this.contentSearchResults.length - 1) {
+      if (this.selectedSearchIndex < this.searchResultsData.length - 1) {
         this.selectedSearchIndex++
         this.renderContentSearchResults()
         this.scrollSearchResultIntoView()
@@ -1865,8 +1870,8 @@ export default class extends Controller {
   }
 
   openSelectedSearchResult() {
-    if (this.contentSearchResults.length === 0) return
-    const result = this.contentSearchResults[this.selectedSearchIndex]
+    if (this.searchResultsData.length === 0) return
+    const result = this.searchResultsData[this.selectedSearchIndex]
     if (result) {
       this.openSearchResultFile(result.path, result.line_number)
     }
