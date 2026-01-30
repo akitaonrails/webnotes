@@ -543,11 +543,12 @@
 
 <!-- Image Picker Dialog -->
 <dialog
-  class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 max-w-2xl w-full"
+  class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 w-[700px] max-w-[90vw]"
   data-app-target="imageDialog"
 >
-  <div class="p-4 text-zinc-900 dark:text-zinc-100">
-    <div class="flex items-center justify-between mb-3">
+  <div class="text-zinc-900 dark:text-zinc-100">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 pt-4">
       <h3 class="text-sm font-semibold">Insert Image</h3>
       <button
         type="button"
@@ -560,27 +561,185 @@
       </button>
     </div>
 
-    <!-- Search -->
-    <div class="mb-3">
-      <input
-        type="text"
-        data-app-target="imageSearch"
-        data-action="input->app#onImageSearch"
-        class="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        placeholder="Search images by filename..."
+    <!-- Tabs -->
+    <div class="flex border-b border-zinc-200 dark:border-zinc-700 px-4 mt-2">
+      <button
+        type="button"
+        data-action="click->app#switchImageTab"
+        data-tab="local"
+        data-app-target="imageTabLocal"
+        class="px-4 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
       >
+        Local
+      </button>
+      <button
+        type="button"
+        data-action="click->app#switchImageTab"
+        data-tab="web"
+        data-app-target="imageTabWeb"
+        class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+      >
+        Web Search
+      </button>
+      <button
+        type="button"
+        data-action="click->app#switchImageTab"
+        data-tab="google"
+        data-app-target="imageTabGoogle"
+        class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hidden"
+      >
+        Google
+      </button>
+      <button
+        type="button"
+        data-action="click->app#switchImageTab"
+        data-tab="pinterest"
+        data-app-target="imageTabPinterest"
+        class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+      >
+        Pinterest
+      </button>
     </div>
 
-    <!-- Image Grid -->
-    <div class="grid grid-cols-5 gap-2 mb-4 min-h-[200px] max-h-[300px] overflow-y-auto" data-app-target="imageGrid">
-      <!-- Images will be rendered by JavaScript -->
+    <!-- Tab Content: Local Images -->
+    <div class="p-4" data-app-target="imageLocalPanel">
+      <!-- Search -->
+      <div class="mb-3">
+        <input
+          type="text"
+          data-app-target="imageSearch"
+          data-action="input->app#onImageSearch"
+          class="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Search images by filename..."
+        >
+      </div>
+
+      <!-- Image Grid -->
+      <div class="grid grid-cols-5 gap-2 mb-4 min-h-[200px] max-h-[300px] overflow-y-auto" data-app-target="imageGrid">
+        <!-- Images will be rendered by JavaScript -->
+      </div>
     </div>
 
-    <!-- Selected Image Info -->
-    <div class="border-t border-zinc-200 dark:border-zinc-700 pt-3 hidden" data-app-target="imageOptions">
+    <!-- Tab Content: Web Search (Bing/DuckDuckGo) -->
+    <div class="p-4 hidden" data-app-target="imageWebPanel">
+      <!-- Search -->
+      <div class="mb-3">
+        <div class="flex gap-2">
+          <input
+            type="text"
+            data-app-target="webImageSearch"
+            data-action="keydown->app#onWebImageSearchKeydown"
+            class="flex-1 px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Search web images..."
+          >
+          <button
+            type="button"
+            data-action="click->app#searchWebImages"
+            data-app-target="webSearchBtn"
+            class="px-4 py-2 text-sm rounded-md bg-blue-500 text-white hover:bg-blue-600 flex items-center gap-1"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Search
+          </button>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="mb-2 text-xs text-zinc-500 dark:text-zinc-400" data-app-target="webImageStatus">
+        Enter keywords and click Search or press Enter
+      </div>
+
+      <!-- Image Grid -->
+      <div class="grid grid-cols-4 gap-2 mb-4 min-h-[200px] max-h-[350px] overflow-y-auto" data-app-target="webImageGrid">
+        <!-- Images will be rendered by JavaScript -->
+      </div>
+    </div>
+
+    <!-- Tab Content: Google Images (requires API key) -->
+    <div class="p-4 hidden" data-app-target="imageGooglePanel">
+      <!-- Search -->
+      <div class="mb-3">
+        <div class="flex gap-2">
+          <input
+            type="text"
+            data-app-target="googleImageSearch"
+            data-action="keydown->app#onGoogleImageSearchKeydown"
+            class="flex-1 px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Search Google Images..."
+          >
+          <button
+            type="button"
+            data-action="click->app#searchGoogleImages"
+            data-app-target="googleSearchBtn"
+            class="px-4 py-2 text-sm rounded-md bg-blue-500 text-white hover:bg-blue-600 flex items-center gap-1"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Search
+          </button>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="mb-2 text-xs text-zinc-500 dark:text-zinc-400" data-app-target="googleImageStatus">
+        Enter keywords and click Search or press Enter
+      </div>
+
+      <!-- Image Grid with infinite scroll -->
+      <div
+        class="grid grid-cols-4 gap-2 mb-4 min-h-[200px] max-h-[350px] overflow-y-auto"
+        data-app-target="googleImageGrid"
+        data-action="scroll->app#onGoogleImageScroll"
+      >
+        <!-- Images will be rendered by JavaScript -->
+      </div>
+    </div>
+
+    <!-- Tab Content: Pinterest -->
+    <div class="p-4 hidden" data-app-target="imagePinterestPanel">
+      <!-- Search -->
+      <div class="mb-3">
+        <div class="flex gap-2">
+          <input
+            type="text"
+            data-app-target="pinterestImageSearch"
+            data-action="keydown->app#onPinterestImageSearchKeydown"
+            class="flex-1 px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Search Pinterest..."
+          >
+          <button
+            type="button"
+            data-action="click->app#searchPinterestImages"
+            data-app-target="pinterestSearchBtn"
+            class="px-4 py-2 text-sm rounded-md bg-red-500 text-white hover:bg-red-600 flex items-center gap-1"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Search
+          </button>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="mb-2 text-xs text-zinc-500 dark:text-zinc-400" data-app-target="pinterestImageStatus">
+        Enter keywords and click Search or press Enter
+      </div>
+
+      <!-- Image Grid -->
+      <div class="grid grid-cols-4 gap-2 mb-4 min-h-[200px] max-h-[350px] overflow-y-auto" data-app-target="pinterestImageGrid">
+        <!-- Images will be rendered by JavaScript -->
+      </div>
+    </div>
+
+    <!-- Selected Image Options (shared across all tabs) -->
+    <div class="border-t border-zinc-200 dark:border-zinc-700 px-4 pt-3 hidden" data-app-target="imageOptions">
       <div class="flex items-center gap-2 mb-3 text-sm">
         <span class="text-zinc-500">Selected:</span>
-        <span class="font-medium truncate" data-app-target="selectedImageName"></span>
+        <span class="font-medium truncate max-w-md" data-app-target="selectedImageName"></span>
       </div>
 
       <!-- Options -->
@@ -607,7 +766,7 @@
           >
         </div>
 
-        <!-- S3 Upload Option -->
+        <!-- S3 Upload Option (for local images) -->
         <div class="hidden" data-app-target="s3Option">
           <label class="flex items-center gap-2 text-sm cursor-pointer">
             <input
@@ -621,20 +780,35 @@
             Image will be uploaded to S3 and the URL will be used instead of local path
           </p>
         </div>
+
+        <!-- S3 Re-upload Option (for external images) -->
+        <div class="hidden" data-app-target="s3ExternalOption">
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              data-app-target="reuploadToS3"
+              class="rounded border-zinc-300 dark:border-zinc-600 text-blue-500 focus:ring-blue-500"
+            >
+            <span>Download and re-upload to AWS S3</span>
+          </label>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 ml-6">
+            Image will be downloaded and uploaded to your S3, using your URL instead of the original
+          </p>
+        </div>
       </div>
     </div>
 
     <!-- Loading Indicator -->
-    <div class="hidden items-center justify-center py-8" data-app-target="imageLoading">
+    <div class="hidden items-center justify-center py-8 px-4" data-app-target="imageLoading">
       <svg class="animate-spin w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
       </svg>
-      <span class="ml-2 text-sm text-zinc-500">Uploading to S3...</span>
+      <span class="ml-2 text-sm text-zinc-500" data-app-target="imageLoadingText">Uploading to S3...</span>
     </div>
 
     <!-- Footer -->
-    <div class="flex justify-end gap-2 mt-4 border-t border-zinc-200 dark:border-zinc-700 pt-4">
+    <div class="flex justify-end gap-2 px-4 pb-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
       <button
         type="button"
         data-action="click->app#closeImageDialog"

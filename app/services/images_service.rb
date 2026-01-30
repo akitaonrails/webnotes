@@ -83,6 +83,62 @@ class ImagesService
       "https://#{config.aws_s3_bucket}.s3.#{config.aws_region}.amazonaws.com/#{key}"
     end
 
+    def download_and_upload_to_s3(url)
+      return nil unless s3_enabled?
+
+      require "aws-sdk-s3"
+      require "net/http"
+      require "securerandom"
+
+      # Download the image
+      uri = URI(url)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = uri.scheme == "https"
+      http.open_timeout = 10
+      http.read_timeout = 30
+
+      request = Net::HTTP::Get.new(uri)
+      request["User-Agent"] = "Mozilla/5.0 (compatible; WebNotes/1.0)"
+
+      response = http.request(request)
+
+      unless response.is_a?(Net::HTTPSuccess)
+        Rails.logger.error "Failed to download image: #{response.code}"
+        return nil
+      end
+
+      file_content = response.body
+      content_type = response["Content-Type"] || "image/jpeg"
+
+      # Generate filename from URL or use random name
+      extension = extension_for_content_type(content_type)
+      original_name = File.basename(uri.path).gsub(/[^a-zA-Z0-9._-]/, "_")
+      if original_name.blank? || original_name == "_" || !original_name.match?(/\.\w+$/)
+        original_name = "#{SecureRandom.hex(8)}#{extension}"
+      end
+
+      client = Aws::S3::Client.new(
+        access_key_id: config.aws_access_key_id,
+        secret_access_key: config.aws_secret_access_key,
+        region: config.aws_region
+      )
+
+      key = "webnotes/#{Time.current.strftime('%Y/%m')}/#{original_name}"
+
+      begin
+        client.put_object(
+          bucket: config.aws_s3_bucket,
+          key: key,
+          body: file_content,
+          content_type: content_type
+        )
+      rescue Aws::S3::Errors::AccessControlListNotSupported
+        # Bucket has ACLs disabled, which is fine
+      end
+
+      "https://#{config.aws_s3_bucket}.s3.#{config.aws_region}.amazonaws.com/#{key}"
+    end
+
     private
 
     def config
@@ -123,6 +179,18 @@ class ImagesService
       when ".svg" then "image/svg+xml"
       when ".bmp" then "image/bmp"
       else "application/octet-stream"
+      end
+    end
+
+    def extension_for_content_type(content_type)
+      case content_type.to_s.split(";").first.strip.downcase
+      when "image/jpeg" then ".jpg"
+      when "image/png" then ".png"
+      when "image/gif" then ".gif"
+      when "image/webp" then ".webp"
+      when "image/svg+xml" then ".svg"
+      when "image/bmp" then ".bmp"
+      else ".jpg"
       end
     end
   end

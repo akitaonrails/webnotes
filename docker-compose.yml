@@ -1,0 +1,63 @@
+# WebNotes Docker Compose
+#
+# Quick start:
+#   docker compose up -d
+#
+# With custom notes directory:
+#   NOTES_PATH=~/my-notes docker compose up -d
+#
+# Generate secret key (first time only):
+#   echo "SECRET_KEY_BASE=$(openssl rand -hex 64)" >> .env
+
+services:
+  webnotes:
+    image: akitaonrails/webnotes:latest
+    # Or build locally:
+    # build: .
+    container_name: webnotes
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:80"
+    volumes:
+      # Notes directory - default to ./notes, override with NOTES_PATH env var
+      - ${NOTES_PATH:-./notes}:/rails/notes
+      # Images directory (optional) - for local image browsing
+      - ${IMAGES_PATH:-./images}:/rails/images
+    environment:
+      # Required
+      - SECRET_KEY_BASE=${SECRET_KEY_BASE:-development_secret_key_base_change_in_production}
+      - NOTES_PATH=/rails/notes
+      - IMAGES_PATH=/rails/images
+
+      # Optional: AWS S3 for image uploads
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET:-}
+      - AWS_REGION=${AWS_REGION:-}
+
+      # Optional: YouTube search
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY:-}
+
+      # Optional: Google Image search
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - GOOGLE_CSE_ID=${GOOGLE_CSE_ID:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/up"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+# Uncomment for Cloudflare Tunnel (secure remote access)
+#
+#   cloudflared:
+#     image: cloudflare/cloudflared:latest
+#     container_name: webnotes-tunnel
+#     restart: unless-stopped
+#     command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+#     depends_on:
+#       - webnotes
+#     # Configure tunnel in Cloudflare Zero Trust dashboard:
+#     # - Create tunnel at https://one.dash.cloudflare.com/
+#     # - Add public hostname pointing to http://webnotes:80
+#     # - Copy tunnel token to .env as CLOUDFLARE_TUNNEL_TOKEN

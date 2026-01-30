@@ -12,6 +12,50 @@ class ImagesControllerTest < ActionDispatch::IntegrationTest
     data = JSON.parse(response.body)
     assert_includes [ true, false ], data["enabled"]
     assert_includes [ true, false ], data["s3_enabled"]
+    assert_includes [ true, false ], data["web_search_enabled"]
+    assert_includes [ true, false ], data["google_enabled"]
+    assert_includes [ true, false ], data["pinterest_enabled"]
+  end
+
+  # === Web Search ===
+
+  test "search_web returns error when query is blank" do
+    get "/images/search_web", params: { q: "" }, as: :json
+    assert_response :bad_request
+
+    data = JSON.parse(response.body)
+    assert_includes data["error"], "required"
+  end
+
+  # === Google Images Search ===
+
+  test "search_google returns error when no API key" do
+    ENV.delete("GOOGLE_API_KEY")
+    ENV.delete("GOOGLE_CSE_ID")
+
+    get "/images/search_google", params: { q: "test" }, as: :json
+    assert_response :service_unavailable
+
+    data = JSON.parse(response.body)
+    assert_includes data["error"], "not configured"
+  end
+
+  test "search_google returns error when query is blank" do
+    get "/images/search_google", params: { q: "" }, as: :json
+    assert_response :bad_request
+
+    data = JSON.parse(response.body)
+    assert_includes data["error"], "required"
+  end
+
+  # === Pinterest Search ===
+
+  test "search_pinterest returns error when query is blank" do
+    get "/images/search_pinterest", params: { q: "" }, as: :json
+    assert_response :bad_request
+
+    data = JSON.parse(response.body)
+    assert_includes data["error"], "required"
   end
 
   # Tests that require images to be configured

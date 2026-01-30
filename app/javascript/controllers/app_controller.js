@@ -44,7 +44,30 @@ export default class extends Controller {
     "s3Option",
     "uploadToS3",
     "imageLoading",
+    "imageLoadingText",
     "insertImageBtn",
+    "imageTabLocal",
+    "imageTabWeb",
+    "imageTabGoogle",
+    "imageTabPinterest",
+    "imageLocalPanel",
+    "imageWebPanel",
+    "imageGooglePanel",
+    "imagePinterestPanel",
+    "webImageSearch",
+    "webSearchBtn",
+    "webImageStatus",
+    "webImageGrid",
+    "googleImageSearch",
+    "googleSearchBtn",
+    "googleImageStatus",
+    "googleImageGrid",
+    "pinterestImageSearch",
+    "pinterestSearchBtn",
+    "pinterestImageStatus",
+    "pinterestImageGrid",
+    "s3ExternalOption",
+    "reuploadToS3",
     "codeDialog",
     "codeLanguage",
     "codeContent",
@@ -106,8 +129,18 @@ export default class extends Controller {
     // Image picker state
     this.imagesEnabled = false
     this.s3Enabled = false
+    this.webSearchEnabled = false
+    this.googleImagesEnabled = false
+    this.pinterestEnabled = false
     this.selectedImage = null
     this.imageSearchTimeout = null
+    this.currentImageTab = "local"
+    this.webImageResults = []
+    this.googleImageResults = []
+    this.googleImageNextStart = 0
+    this.googleImageLoading = false
+    this.googleImageQuery = ""
+    this.pinterestImageResults = []
 
     // Code snippet state
     this.codeEditMode = false
@@ -1135,9 +1168,12 @@ export default class extends Controller {
         const config = await response.json()
         this.imagesEnabled = config.enabled
         this.s3Enabled = config.s3_enabled
+        this.webSearchEnabled = config.web_search_enabled
+        this.googleImagesEnabled = config.google_enabled
+        this.pinterestEnabled = config.pinterest_enabled
 
-        // Show/hide image button based on config
-        if (this.imagesEnabled && this.hasImageBtnTarget) {
+        // Show image button if any image source is enabled
+        if ((this.imagesEnabled || this.webSearchEnabled || this.googleImagesEnabled || this.pinterestEnabled) && this.hasImageBtnTarget) {
           this.imageBtnTarget.classList.remove("hidden")
         }
       }
@@ -1147,24 +1183,83 @@ export default class extends Controller {
   }
 
   async openImagePicker() {
-    if (!this.imagesEnabled) return
+    // Allow opening if any image source is enabled
+    if (!this.imagesEnabled && !this.webSearchEnabled && !this.googleImagesEnabled && !this.pinterestEnabled) return
 
     this.selectedImage = null
-    this.imageSearchTarget.value = ""
+    this.currentImageTab = "local"
+
+    // Reset local tab
+    if (this.hasImageSearchTarget) this.imageSearchTarget.value = ""
     this.imageAltTarget.value = ""
     this.imageLinkTarget.value = ""
     this.imageOptionsTarget.classList.add("hidden")
     this.insertImageBtnTarget.disabled = true
 
-    // Show/hide S3 option
-    if (this.s3Enabled) {
-      this.s3OptionTarget.classList.remove("hidden")
-      this.uploadToS3Target.checked = false
-    } else {
-      this.s3OptionTarget.classList.add("hidden")
+    // Reset Web Search tab
+    if (this.hasWebImageSearchTarget) this.webImageSearchTarget.value = ""
+    if (this.hasWebImageGridTarget) this.webImageGridTarget.innerHTML = ""
+    if (this.hasWebImageStatusTarget) {
+      this.webImageStatusTarget.textContent = "Enter keywords and click Search or press Enter"
+    }
+    this.webImageResults = []
+
+    // Reset Google tab
+    if (this.hasGoogleImageSearchTarget) this.googleImageSearchTarget.value = ""
+    if (this.hasGoogleImageGridTarget) this.googleImageGridTarget.innerHTML = ""
+    if (this.hasGoogleImageStatusTarget) {
+      this.googleImageStatusTarget.textContent = "Enter keywords and click Search or press Enter"
+    }
+    this.googleImageResults = []
+    this.googleImageNextStart = 0
+    this.googleImageQuery = ""
+
+    // Reset Pinterest tab
+    if (this.hasPinterestImageSearchTarget) this.pinterestImageSearchTarget.value = ""
+    if (this.hasPinterestImageGridTarget) this.pinterestImageGridTarget.innerHTML = ""
+    if (this.hasPinterestImageStatusTarget) {
+      this.pinterestImageStatusTarget.textContent = "Enter keywords and click Search or press Enter"
+    }
+    this.pinterestImageResults = []
+
+    // Hide all S3 options initially
+    if (this.hasS3OptionTarget) this.s3OptionTarget.classList.add("hidden")
+    if (this.hasS3ExternalOptionTarget) this.s3ExternalOptionTarget.classList.add("hidden")
+    if (this.hasUploadToS3Target) this.uploadToS3Target.checked = false
+    if (this.hasReuploadToS3Target) this.reuploadToS3Target.checked = false
+
+    // Show/hide tabs based on enabled features
+    if (this.hasImageTabLocalTarget) {
+      this.imageTabLocalTarget.classList.toggle("hidden", !this.imagesEnabled)
+    }
+    if (this.hasImageTabWebTarget) {
+      this.imageTabWebTarget.classList.toggle("hidden", !this.webSearchEnabled)
+    }
+    if (this.hasImageTabGoogleTarget) {
+      this.imageTabGoogleTarget.classList.toggle("hidden", !this.googleImagesEnabled)
+    }
+    // Pinterest is always shown
+
+    // Set initial tab to first available
+    let initialTab = "local"
+    if (!this.imagesEnabled) {
+      if (this.webSearchEnabled) {
+        initialTab = "web"
+      } else if (this.googleImagesEnabled) {
+        initialTab = "google"
+      } else {
+        initialTab = "pinterest"
+      }
     }
 
-    await this.loadImages()
+    // Switch to initial tab
+    this.switchImageTab({ currentTarget: { dataset: { tab: initialTab } } })
+
+    // Load local images if enabled
+    if (this.imagesEnabled) {
+      await this.loadImages()
+    }
+
     this.imageDialogTarget.showModal()
   }
 
@@ -1228,69 +1323,415 @@ export default class extends Controller {
     const path = item.dataset.path
     const name = item.dataset.name
 
-    // Deselect previous
+    // Deselect previous in local grid
     this.imageGridTarget.querySelectorAll(".image-grid-item").forEach(el => {
       el.classList.remove("selected")
     })
 
+    // Also deselect in external grids
+    if (this.hasGoogleImageGridTarget) {
+      this.googleImageGridTarget.querySelectorAll(".external-image-item").forEach(el => {
+        el.classList.remove("ring-2", "ring-blue-500")
+      })
+    }
+    if (this.hasPinterestImageGridTarget) {
+      this.pinterestImageGridTarget.querySelectorAll(".external-image-item").forEach(el => {
+        el.classList.remove("ring-2", "ring-blue-500")
+      })
+    }
+
     // Select new
     item.classList.add("selected")
-    this.selectedImage = { path, name }
+    this.selectedImage = { path, name, type: "local" }
 
     // Show options
     this.imageOptionsTarget.classList.remove("hidden")
     this.selectedImageNameTarget.textContent = name
     this.insertImageBtnTarget.disabled = false
 
+    // Show S3 option for local, hide external S3 option
+    if (this.s3Enabled && this.hasS3OptionTarget) {
+      this.s3OptionTarget.classList.remove("hidden")
+    }
+    if (this.hasS3ExternalOptionTarget) {
+      this.s3ExternalOptionTarget.classList.add("hidden")
+    }
+
     // Pre-fill alt text with filename (without extension)
     const altText = name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " ")
     this.imageAltTarget.value = altText
   }
 
+  selectExternalImage(event) {
+    const item = event.currentTarget
+    const url = item.dataset.url
+    const thumbnail = item.dataset.thumbnail
+    const title = item.dataset.title || "Image"
+    const source = item.dataset.source || "external"
+
+    // Deselect previous in all grids
+    if (this.hasImageGridTarget) {
+      this.imageGridTarget.querySelectorAll(".image-grid-item").forEach(el => {
+        el.classList.remove("selected")
+      })
+    }
+    if (this.hasGoogleImageGridTarget) {
+      this.googleImageGridTarget.querySelectorAll(".external-image-item").forEach(el => {
+        el.classList.remove("ring-2", "ring-blue-500")
+      })
+    }
+    if (this.hasPinterestImageGridTarget) {
+      this.pinterestImageGridTarget.querySelectorAll(".external-image-item").forEach(el => {
+        el.classList.remove("ring-2", "ring-blue-500")
+      })
+    }
+
+    // Select new
+    item.classList.add("ring-2", "ring-blue-500")
+    this.selectedImage = { url, thumbnail, title, source, type: "external" }
+
+    // Show options
+    this.imageOptionsTarget.classList.remove("hidden")
+    this.selectedImageNameTarget.textContent = title
+    this.insertImageBtnTarget.disabled = false
+
+    // Hide local S3 option, show external S3 option
+    if (this.hasS3OptionTarget) {
+      this.s3OptionTarget.classList.add("hidden")
+    }
+    if (this.s3Enabled && this.hasS3ExternalOptionTarget) {
+      this.s3ExternalOptionTarget.classList.remove("hidden")
+    }
+
+    // Pre-fill alt text with title
+    const altText = title.replace(/[-_]/g, " ").substring(0, 100)
+    this.imageAltTarget.value = altText
+  }
+
+  switchImageTab(event) {
+    const tab = event.currentTarget.dataset.tab
+    this.currentImageTab = tab
+
+    const activeClasses = "border-blue-500 text-blue-600 dark:text-blue-400"
+    const inactiveClasses = "border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+
+    // Update tab button styles
+    if (this.hasImageTabLocalTarget && !this.imageTabLocalTarget.classList.contains("hidden")) {
+      this.imageTabLocalTarget.className = `px-4 py-2 text-sm font-medium border-b-2 ${tab === "local" ? activeClasses : inactiveClasses}`
+    }
+    if (this.hasImageTabWebTarget && !this.imageTabWebTarget.classList.contains("hidden")) {
+      this.imageTabWebTarget.className = `px-4 py-2 text-sm font-medium border-b-2 ${tab === "web" ? activeClasses : inactiveClasses}`
+    }
+    if (this.hasImageTabGoogleTarget && !this.imageTabGoogleTarget.classList.contains("hidden")) {
+      this.imageTabGoogleTarget.className = `px-4 py-2 text-sm font-medium border-b-2 ${tab === "google" ? activeClasses : inactiveClasses}`
+    }
+    if (this.hasImageTabPinterestTarget) {
+      this.imageTabPinterestTarget.className = `px-4 py-2 text-sm font-medium border-b-2 ${tab === "pinterest" ? activeClasses : inactiveClasses}`
+    }
+
+    // Show/hide panels
+    if (this.hasImageLocalPanelTarget) {
+      this.imageLocalPanelTarget.classList.toggle("hidden", tab !== "local")
+    }
+    if (this.hasImageWebPanelTarget) {
+      this.imageWebPanelTarget.classList.toggle("hidden", tab !== "web")
+    }
+    if (this.hasImageGooglePanelTarget) {
+      this.imageGooglePanelTarget.classList.toggle("hidden", tab !== "google")
+    }
+    if (this.hasImagePinterestPanelTarget) {
+      this.imagePinterestPanelTarget.classList.toggle("hidden", tab !== "pinterest")
+    }
+
+    // Focus appropriate input
+    if (tab === "local" && this.hasImageSearchTarget) {
+      this.imageSearchTarget.focus()
+    } else if (tab === "web" && this.hasWebImageSearchTarget) {
+      this.webImageSearchTarget.focus()
+    } else if (tab === "google" && this.hasGoogleImageSearchTarget) {
+      this.googleImageSearchTarget.focus()
+    } else if (tab === "pinterest" && this.hasPinterestImageSearchTarget) {
+      this.pinterestImageSearchTarget.focus()
+    }
+  }
+
+  // Web Search (DuckDuckGo/Bing)
+  onWebImageSearchKeydown(event) {
+    if (event.key === "Enter") {
+      event.preventDefault()
+      this.searchWebImages()
+    }
+  }
+
+  async searchWebImages() {
+    const query = this.webImageSearchTarget.value.trim()
+
+    if (!query) {
+      this.webImageStatusTarget.textContent = "Please enter search keywords"
+      return
+    }
+
+    this.webImageStatusTarget.textContent = "Searching..."
+    if (this.hasWebSearchBtnTarget) this.webSearchBtnTarget.disabled = true
+    this.webImageGridTarget.innerHTML = ""
+
+    try {
+      const response = await fetch(`/images/search_web?q=${encodeURIComponent(query)}`)
+      const data = await response.json()
+
+      if (data.error) {
+        this.webImageStatusTarget.innerHTML = `<span class="text-red-500">${data.error}</span>`
+        this.webImageResults = []
+      } else {
+        this.webImageResults = data.images || []
+
+        if (this.webImageResults.length === 0) {
+          this.webImageStatusTarget.textContent = data.note || "No images found"
+        } else {
+          this.webImageStatusTarget.textContent = `Found ${this.webImageResults.length} images - click to select`
+        }
+
+        this.renderExternalImageGrid(this.webImageResults, this.webImageGridTarget)
+      }
+    } catch (error) {
+      console.error("Web search error:", error)
+      this.webImageStatusTarget.innerHTML = '<span class="text-red-500">Search failed. Please try again.</span>'
+      this.webImageResults = []
+    } finally {
+      if (this.hasWebSearchBtnTarget) this.webSearchBtnTarget.disabled = false
+    }
+  }
+
+  // Google Images (Custom Search API)
+  onGoogleImageSearchKeydown(event) {
+    if (event.key === "Enter") {
+      event.preventDefault()
+      this.searchGoogleImages()
+    }
+  }
+
+  async searchGoogleImages() {
+    const query = this.googleImageSearchTarget.value.trim()
+
+    if (!query) {
+      this.googleImageStatusTarget.textContent = "Please enter search keywords"
+      return
+    }
+
+    // Reset for new search
+    this.googleImageResults = []
+    this.googleImageNextStart = 1
+    this.googleImageQuery = query
+    this.googleImageGridTarget.innerHTML = ""
+
+    await this.loadMoreGoogleImages()
+  }
+
+  async loadMoreGoogleImages() {
+    if (this.googleImageLoading) return
+
+    this.googleImageLoading = true
+    this.googleImageStatusTarget.textContent = "Searching..."
+    if (this.hasGoogleSearchBtnTarget) this.googleSearchBtnTarget.disabled = true
+
+    try {
+      const response = await fetch(`/images/search_google?q=${encodeURIComponent(this.googleImageQuery)}&start=${this.googleImageNextStart}`)
+      const data = await response.json()
+
+      if (data.error) {
+        this.googleImageStatusTarget.innerHTML = `<span class="text-red-500">${data.error}</span>`
+      } else {
+        this.googleImageResults = [...this.googleImageResults, ...data.images]
+        this.googleImageNextStart = data.next_start
+
+        if (this.googleImageResults.length === 0) {
+          this.googleImageStatusTarget.textContent = "No images found"
+        } else {
+          this.googleImageStatusTarget.textContent = `Found ${data.total || this.googleImageResults.length} images - click to select`
+        }
+
+        this.renderExternalImageGrid(this.googleImageResults, this.googleImageGridTarget)
+      }
+    } catch (error) {
+      console.error("Google search error:", error)
+      this.googleImageStatusTarget.innerHTML = '<span class="text-red-500">Search failed. Please try again.</span>'
+    } finally {
+      this.googleImageLoading = false
+      if (this.hasGoogleSearchBtnTarget) this.googleSearchBtnTarget.disabled = false
+    }
+  }
+
+  onGoogleImageScroll(event) {
+    const container = event.target
+    const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight
+
+    // Load more when near bottom
+    if (scrollBottom < 100 && !this.googleImageLoading && this.googleImageResults.length > 0) {
+      this.loadMoreGoogleImages()
+    }
+  }
+
+  onPinterestImageSearchKeydown(event) {
+    if (event.key === "Enter") {
+      event.preventDefault()
+      this.searchPinterestImages()
+    }
+  }
+
+  async searchPinterestImages() {
+    const query = this.pinterestImageSearchTarget.value.trim()
+
+    if (!query) {
+      this.pinterestImageStatusTarget.textContent = "Please enter search keywords"
+      return
+    }
+
+    this.pinterestImageStatusTarget.textContent = "Searching..."
+    if (this.hasPinterestSearchBtnTarget) this.pinterestSearchBtnTarget.disabled = true
+    this.pinterestImageGridTarget.innerHTML = ""
+
+    try {
+      const response = await fetch(`/images/search_pinterest?q=${encodeURIComponent(query)}`)
+      const data = await response.json()
+
+      if (data.error) {
+        this.pinterestImageStatusTarget.innerHTML = `<span class="text-red-500">${data.error}</span>`
+        this.pinterestImageResults = []
+      } else {
+        this.pinterestImageResults = data.images || []
+
+        if (this.pinterestImageResults.length === 0) {
+          this.pinterestImageStatusTarget.textContent = "No images found"
+        } else {
+          this.pinterestImageStatusTarget.textContent = `Found ${this.pinterestImageResults.length} images - click to select`
+        }
+
+        this.renderExternalImageGrid(this.pinterestImageResults, this.pinterestImageGridTarget)
+      }
+    } catch (error) {
+      console.error("Pinterest search error:", error)
+      this.pinterestImageStatusTarget.innerHTML = '<span class="text-red-500">Search failed. Please try again.</span>'
+      this.pinterestImageResults = []
+    } finally {
+      if (this.hasPinterestSearchBtnTarget) this.pinterestSearchBtnTarget.disabled = false
+    }
+  }
+
+  renderExternalImageGrid(images, container) {
+    if (!images || images.length === 0) {
+      container.innerHTML = '<div class="col-span-4 text-center text-zinc-500 py-8">No images found</div>'
+      return
+    }
+
+    container.innerHTML = images.map((image, index) => `
+      <button
+        type="button"
+        data-index="${index}"
+        data-url="${this.escapeHtml(image.url)}"
+        data-thumbnail="${this.escapeHtml(image.thumbnail || image.url)}"
+        data-title="${this.escapeHtml(image.title || '')}"
+        data-source="${this.escapeHtml(image.source || '')}"
+        data-action="click->app#selectExternalImage"
+        class="external-image-item relative aspect-square rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-900 hover:ring-2 hover:ring-blue-400 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
+        title="${this.escapeHtml(image.title || 'Image')}"
+      >
+        <img
+          src="${this.escapeHtml(image.thumbnail || image.url)}"
+          alt="${this.escapeHtml(image.title || 'Image')}"
+          class="w-full h-full object-cover"
+          loading="lazy"
+          onerror="this.parentElement.remove()"
+        >
+        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-1">
+          <div class="text-white text-xs truncate">${this.escapeHtml(image.source || '')}</div>
+        </div>
+      </button>
+    `).join("")
+  }
+
   async insertImage() {
     if (!this.selectedImage || !this.hasTextareaTarget) return
 
-    const uploadToS3 = this.s3Enabled && this.uploadToS3Target.checked
-    let imageUrl = `/images/preview/${this.encodePath(this.selectedImage.path)}`
+    let imageUrl
 
-    if (uploadToS3) {
-      // Show loading state
-      this.imageLoadingTarget.classList.remove("hidden")
-      this.imageLoadingTarget.classList.add("flex")
-      this.insertImageBtnTarget.disabled = true
+    if (this.selectedImage.type === "local") {
+      // Local image
+      const uploadToS3 = this.s3Enabled && this.hasUploadToS3Target && this.uploadToS3Target.checked
+      imageUrl = `/images/preview/${this.encodePath(this.selectedImage.path)}`
 
-      try {
-        const response = await fetch("/images/upload_to_s3", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-Token": this.csrfToken
-          },
-          body: JSON.stringify({ path: this.selectedImage.path })
-        })
+      if (uploadToS3) {
+        // Show loading state
+        this.showImageLoading("Uploading to S3...")
+        this.insertImageBtnTarget.disabled = true
 
-        if (!response.ok) {
+        try {
+          const response = await fetch("/images/upload_to_s3", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-Token": this.csrfToken
+            },
+            body: JSON.stringify({ path: this.selectedImage.path })
+          })
+
+          if (!response.ok) {
+            const data = await response.json()
+            throw new Error(data.error || "Failed to upload to S3")
+          }
+
           const data = await response.json()
-          throw new Error(data.error || "Failed to upload to S3")
+          imageUrl = data.url
+        } catch (error) {
+          console.error("Error uploading to S3:", error)
+          alert(`Failed to upload to S3: ${error.message}`)
+          this.hideImageLoading()
+          this.insertImageBtnTarget.disabled = false
+          return
         }
 
-        const data = await response.json()
-        imageUrl = data.url
-      } catch (error) {
-        console.error("Error uploading to S3:", error)
-        alert(`Failed to upload to S3: ${error.message}`)
-        this.imageLoadingTarget.classList.add("hidden")
-        this.imageLoadingTarget.classList.remove("flex")
-        this.insertImageBtnTarget.disabled = false
-        return
+        this.hideImageLoading()
       }
+    } else {
+      // External image (Google/Pinterest)
+      const reuploadToS3 = this.s3Enabled && this.hasReuploadToS3Target && this.reuploadToS3Target.checked
+      imageUrl = this.selectedImage.url
 
-      this.imageLoadingTarget.classList.add("hidden")
-      this.imageLoadingTarget.classList.remove("flex")
+      if (reuploadToS3) {
+        // Show loading state
+        this.showImageLoading("Downloading and uploading to S3...")
+        this.insertImageBtnTarget.disabled = true
+
+        try {
+          const response = await fetch("/images/upload_external_to_s3", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-Token": this.csrfToken
+            },
+            body: JSON.stringify({ url: this.selectedImage.url })
+          })
+
+          if (!response.ok) {
+            const data = await response.json()
+            throw new Error(data.error || "Failed to upload to S3")
+          }
+
+          const data = await response.json()
+          imageUrl = data.url
+        } catch (error) {
+          console.error("Error uploading external image to S3:", error)
+          alert(`Failed to upload to S3: ${error.message}`)
+          this.hideImageLoading()
+          this.insertImageBtnTarget.disabled = false
+          return
+        }
+
+        this.hideImageLoading()
+      }
     }
 
     // Build markdown
-    const altText = this.imageAltTarget.value.trim() || this.selectedImage.name
+    const altText = this.imageAltTarget.value.trim() || this.selectedImage.name || this.selectedImage.title || "Image"
     const linkUrl = this.imageLinkTarget.value.trim()
 
     let markdown = `![${altText}](${imageUrl})`
@@ -1319,6 +1760,23 @@ export default class extends Controller {
     this.scheduleAutoSave()
     this.updatePreview()
     this.closeImageDialog()
+  }
+
+  showImageLoading(message) {
+    if (this.hasImageLoadingTarget) {
+      this.imageLoadingTarget.classList.remove("hidden")
+      this.imageLoadingTarget.classList.add("flex")
+    }
+    if (this.hasImageLoadingTextTarget) {
+      this.imageLoadingTextTarget.textContent = message
+    }
+  }
+
+  hideImageLoading() {
+    if (this.hasImageLoadingTarget) {
+      this.imageLoadingTarget.classList.add("hidden")
+      this.imageLoadingTarget.classList.remove("flex")
+    }
   }
 
   // Editor Customization

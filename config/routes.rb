@@ -20,6 +20,10 @@ Rails.application.routes.draw do
   get "images", to: "images#index"
   get "images/preview/*path", to: "images#preview", as: :image_preview, format: false
   post "images/upload_to_s3", to: "images#upload_to_s3"
+  post "images/upload_external_to_s3", to: "images#upload_external_to_s3"
+  get "images/search_web", to: "images#search_web"
+  get "images/search_google", to: "images#search_google"
+  get "images/search_pinterest", to: "images#search_pinterest"
 
   # YouTube API
   get "youtube/config", to: "youtube#config"
