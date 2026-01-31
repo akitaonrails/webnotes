@@ -116,7 +116,7 @@
       <div class="h-full flex justify-center" data-app-target="editorWrapper">
         <textarea
           data-app-target="textarea"
-          data-action="input->app#onTextareaInput contextmenu->app#onTextareaContextMenu"
+          data-action="input->app#onTextareaInput contextmenu->app#onTextareaContextMenu keydown->app#onTextareaKeydown"
           class="editor-textarea w-full h-full p-4 resize-none bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] font-mono text-sm leading-relaxed focus:outline-none"
           placeholder="<%= t('editor.start_writing') %>"
           spellcheck="false"

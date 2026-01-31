@@ -16,6 +16,7 @@ class Config
     "preview_zoom" => { default: 100, type: :integer, env: nil },
     "sidebar_visible" => { default: true, type: :boolean, env: nil },
     "typewriter_mode" => { default: false, type: :boolean, env: nil },
+    "editor_indent" => { default: 2, type: :integer, env: nil },
 
     # Paths (ENV defaults)
     "images_path" => { default: nil, type: :string, env: "IMAGES_PATH" },
@@ -72,6 +73,7 @@ class Config
     preview_zoom
     sidebar_visible
     typewriter_mode
+    editor_indent
   ].freeze
 
   # AI provider priority (default order when ai_provider = "auto")
@@ -118,7 +120,10 @@ class Config
         "# editor_font_size = 14",
         "# preview_zoom = 100",
         "# sidebar_visible = true",
-        "# typewriter_mode = false"
+        "# typewriter_mode = false",
+        "",
+        "# Editor indent: 0 = tab, 1-6 = spaces (default: 2)",
+        "# editor_indent = 2"
       ]
     },
     {

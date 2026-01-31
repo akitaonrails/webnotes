@@ -63,6 +63,9 @@ export default class extends Controller {
     // Typewriter mode - focused writing mode
     this.typewriterModeEnabled = settings.typewriter_mode === true
 
+    // Editor indent setting: 0 = tab, 1-6 = spaces (default 2)
+    this.editorIndent = this.parseIndentSetting(settings.editor_indent)
+
     // Track pending config saves to debounce
     this.configSaveTimeout = null
 
@@ -675,6 +678,7 @@ export default class extends Controller {
       this.currentFont = settings.editor_font || "cascadia-code"
       this.currentFontSize = parseInt(settings.editor_font_size) || 14
       this.previewZoom = parseInt(settings.preview_zoom) || 100
+      this.editorIndent = this.parseIndentSetting(settings.editor_indent)
 
       // Apply changes if they differ
       if (this.currentFont !== oldFont || this.currentFontSize !== oldFontSize) {
@@ -1718,6 +1722,119 @@ export default class extends Controller {
       }
     }
     document.addEventListener("keydown", this.boundKeydownHandler)
+  }
+
+  // Editor Indentation
+  // Parse indent setting: 0 = tab, 1-6 = spaces (default 2)
+  parseIndentSetting(value) {
+    if (value === undefined || value === null || value === "") {
+      return "  " // Default: 2 spaces
+    }
+    const num = parseInt(value, 10)
+    if (isNaN(num) || num < 0) {
+      return "  " // Default: 2 spaces
+    }
+    if (num === 0) {
+      return "\t" // Tab character
+    }
+    // Clamp to 1-6 spaces
+    const spaces = Math.min(Math.max(num, 1), 6)
+    return " ".repeat(spaces)
+  }
+
+  // Get the current indent string
+  getIndentString() {
+    return this.editorIndent || "  "
+  }
+
+  // Handle keydown events on textarea (Tab/Shift+Tab for indentation)
+  onTextareaKeydown(event) {
+    // Only handle Tab key
+    if (event.key !== "Tab") return
+
+    // Don't interfere if a dialog is open or modifier keys other than Shift are pressed
+    if (event.ctrlKey || event.metaKey || event.altKey) return
+
+    const textarea = this.textareaTarget
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const text = textarea.value
+
+    // Check if there's a selection spanning multiple characters
+    if (start === end) {
+      // No selection - insert indent at cursor (default Tab behavior but with our indent string)
+      event.preventDefault()
+      if (!event.shiftKey) {
+        const indent = this.getIndentString()
+        const before = text.substring(0, start)
+        const after = text.substring(end)
+        textarea.value = before + indent + after
+        textarea.selectionStart = textarea.selectionEnd = start + indent.length
+        this.onTextareaInput()
+      }
+      return
+    }
+
+    // There's a selection - indent/unindent block
+    event.preventDefault()
+
+    // Find the start and end of the affected lines
+    const lineStartPos = text.lastIndexOf("\n", start - 1) + 1
+    const lineEndPos = text.indexOf("\n", end - 1)
+    const actualLineEnd = lineEndPos === -1 ? text.length : lineEndPos
+
+    // Get the selected lines
+    const selectedText = text.substring(lineStartPos, actualLineEnd)
+    const lines = selectedText.split("\n")
+
+    const indent = this.getIndentString()
+    let modifiedLines
+
+    if (event.shiftKey) {
+      // Unindent: remove one level of indentation from each line
+      modifiedLines = lines.map(line => {
+        // Try to remove the exact indent string first
+        if (line.startsWith(indent)) {
+          return line.substring(indent.length)
+        }
+        // If indent is spaces, try removing up to that many leading spaces
+        if (indent !== "\t") {
+          const indentLength = indent.length
+          let removeCount = 0
+          for (let i = 0; i < Math.min(indentLength, line.length); i++) {
+            if (line[i] === " ") {
+              removeCount++
+            } else {
+              break
+            }
+          }
+          if (removeCount > 0) {
+            return line.substring(removeCount)
+          }
+        }
+        // Try removing a single tab if present
+        if (line.startsWith("\t")) {
+          return line.substring(1)
+        }
+        return line
+      })
+    } else {
+      // Indent: add indentation to the beginning of each line
+      modifiedLines = lines.map(line => indent + line)
+    }
+
+    const modifiedText = modifiedLines.join("\n")
+    const before = text.substring(0, lineStartPos)
+    const after = text.substring(actualLineEnd)
+
+    textarea.value = before + modifiedText + after
+
+    // Adjust selection to cover the modified lines
+    const lengthDiff = modifiedText.length - selectedText.length
+    textarea.selectionStart = lineStartPos
+    textarea.selectionEnd = actualLineEnd + lengthDiff
+
+    this.onTextareaInput()
   }
 
   // Text Format Menu
