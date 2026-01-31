@@ -1720,6 +1720,12 @@ export default class extends Controller {
         event.preventDefault()
         this.openTextFormatMenu()
       }
+
+      // Ctrl/Cmd + L: Open emoji picker
+      if ((event.ctrlKey || event.metaKey) && event.key === "l") {
+        event.preventDefault()
+        this.openEmojiPicker()
+      }
     }
     document.addEventListener("keydown", this.boundKeydownHandler)
   }
@@ -1995,6 +2001,53 @@ export default class extends Controller {
     if (this.hasTextareaTarget) {
       this.textareaTarget.focus()
     }
+  }
+
+  // Emoji Picker
+  // Get the emoji picker controller instance
+  getEmojiPickerController() {
+    const emojiPickerElement = document.querySelector('[data-controller~="emoji-picker"]')
+    if (emojiPickerElement) {
+      return this.application.getControllerForElementAndIdentifier(emojiPickerElement, "emoji-picker")
+    }
+    return null
+  }
+
+  // Open emoji picker dialog
+  openEmojiPicker() {
+    if (!this.hasTextareaTarget) return
+    if (!this.isMarkdownFile()) return
+
+    const emojiPickerController = this.getEmojiPickerController()
+    if (emojiPickerController) {
+      emojiPickerController.open()
+    }
+  }
+
+  // Handle emoji selected event
+  onEmojiSelected(event) {
+    if (!this.hasTextareaTarget) return
+
+    const { markdown } = event.detail
+    if (!markdown) return
+
+    const textarea = this.textareaTarget
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const text = textarea.value
+
+    // Insert the emoji markdown at cursor position
+    const before = text.substring(0, start)
+    const after = text.substring(end)
+    textarea.value = before + markdown + after
+
+    // Position cursor after the inserted emoji
+    const newPosition = start + markdown.length
+    textarea.setSelectionRange(newPosition, newPosition)
+
+    textarea.focus()
+    this.scheduleAutoSave()
+    this.updatePreview()
   }
 
   // Utilities

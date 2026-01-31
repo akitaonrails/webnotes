@@ -75,6 +75,8 @@ ja:
       font_title: "エディタ設定"
       ai: "AI"
       ai_title: "AI文法チェック"
+      emoji: "絵文字"
+      emoji_title: "絵文字挿入 (Ctrl+L)"
     # AI processing overlay
     processing_with: "処理中："
     press_esc_to_cancel: "ESCでキャンセル"
@@ -350,6 +352,11 @@ ja:
       subscript: "下付き文字"
       superscript: "上付き文字"
       link: "リンク"
+
+    # 絵文字ピッカー
+    emoji_picker:
+      title: "絵文字ピッカー"
+      search_placeholder: "絵文字を検索..."
 
   # Error messages
   errors:

@@ -75,6 +75,8 @@ pt-PT:
       font_title: "Definições do Editor"
       ai: "IA"
       ai_title: "Verificação Gramatical com IA"
+      emoji: "Emoji"
+      emoji_title: "Inserir Emoji (Ctrl+L)"
     # Overlay de processamento IA
     processing_with: "A processar com"
     press_esc_to_cancel: "Prima ESC para cancelar"
@@ -350,6 +352,11 @@ pt-PT:
       subscript: "Subscrito"
       superscript: "Sobrescrito"
       link: "Ligação"
+
+    # Seletor de emoji
+    emoji_picker:
+      title: "Seletor de Emoji"
+      search_placeholder: "Pesquisar emojis..."
 
   # Mensagens de erro
   errors:

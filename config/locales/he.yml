@@ -75,6 +75,8 @@ he:
       font_title: "הגדרות עורך"
       ai: "AI"
       ai_title: "בדיקת דקדוק עם AI"
+      emoji: "אימוג'י"
+      emoji_title: "הוסף אימוג'י (Ctrl+L)"
     # שכבת עיבוד AI
     processing_with: "מעבד עם"
     press_esc_to_cancel: "לחץ ESC לביטול"
@@ -350,6 +352,11 @@ he:
       subscript: "כתב תחתי"
       superscript: "כתב עילי"
       link: "קישור"
+
+    # בוחר אימוג'י
+    emoji_picker:
+      title: "בוחר אימוג'י"
+      search_placeholder: "חפש אימוג'ים..."
 
   # הודעות שגיאה
   errors:

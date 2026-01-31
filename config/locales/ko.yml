@@ -75,6 +75,8 @@ ko:
       font_title: "에디터 설정"
       ai: "AI"
       ai_title: "AI 문법 검사"
+      emoji: "이모지"
+      emoji_title: "이모지 삽입 (Ctrl+L)"
     # AI 처리 오버레이
     processing_with: "처리 중:"
     press_esc_to_cancel: "ESC를 눌러 취소"
@@ -350,6 +352,11 @@ ko:
       subscript: "아래 첨자"
       superscript: "위 첨자"
       link: "링크"
+
+    # 이모지 선택
+    emoji_picker:
+      title: "이모지 선택"
+      search_placeholder: "이모지 검색..."
 
   # 오류 메시지
   errors:
