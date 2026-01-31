@@ -1,8 +1,20 @@
-# <img src="public/icon.svg" width="32" height="32" alt="FrankMD icon" style="vertical-align: middle;"> FrankMD
+<p align="center">
+  <img src="public/icon.svg" width="200" height="200" alt="FrankMD icon">
+</p>
 
-**FrankMD** (Frank Markdown) is a simple, feature-rich, self-hosted markdown note-taking app built with Ruby on Rails 8. The name honors Frank Rosenblatt, inventor of the Perceptron - the pioneering neural network that laid the foundation for modern AI. **fed** (frank editor) is the command-line alias.
+<h1 align="center">FrankMD</h1>
 
-[![GitHub](https://img.shields.io/badge/GitHub-akitaonrails%2FFrankMD-blue?logo=github)](https://github.com/akitaonrails/FrankMD)
+<p align="center">
+  <strong>FrankMD</strong> (Frank Markdown) is a simple, feature-rich, self-hosted markdown note-taking app built with Ruby on Rails 8.<br>
+  The name honors Frank Rosenblatt, inventor of the Perceptron - the pioneering neural network that laid the foundation for modern AI.<br>
+  <strong>fed</strong> (frank editor) is the command-line alias.
+</p>
+
+<p align="center">
+  <a href="https://github.com/akitaonrails/FrankMD">
+    <img src="https://img.shields.io/badge/GitHub-akitaonrails%2FFrankMD-blue?logo=github" alt="GitHub">
+  </a>
+</p>
 
 ## Why FrankMD?
 

@@ -31,7 +31,6 @@ pt-BR:
     change_theme: "Alterar Tema"
     change_language: "Alterar Idioma"
     about_app: "Sobre FrankMD"
-    view_github: "Ver no GitHub"
 
   # Secao da barra lateral/explorador
   sidebar:

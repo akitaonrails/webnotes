@@ -1,6 +1,6 @@
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <!-- Dark purple circle background -->
-  <circle cx="256" cy="256" r="250" fill="#2D1B4E"/>
+  <!-- Pink circle background (matching outline color) -->
+  <circle cx="256" cy="256" r="250" fill="#FF6B9D"/>
   <circle cx="256" cy="256" r="250" fill="none" stroke="#FF6B9D" stroke-width="12"/>
   
   <!-- Frankenstein head - cute cartoon style -->
