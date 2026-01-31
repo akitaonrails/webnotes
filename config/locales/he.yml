@@ -36,6 +36,7 @@ he:
     change_theme: "שנה ערכת נושא"
     change_language: "שנה שפה"
     about_app: "אודות FrankMD"
+    click_to_copy_path: "לחץ להעתקת הנתיב"
 
   # אזור סרגל הצד/סייר
   sidebar:

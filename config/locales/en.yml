@@ -36,6 +36,7 @@ en:
     change_theme: "Change Theme"
     change_language: "Change Language"
     about_app: "About FrankMD"
+    click_to_copy_path: "Click to copy path"
 
   # Sidebar/Explorer section
   sidebar:

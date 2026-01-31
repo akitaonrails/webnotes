@@ -1,12 +1,4 @@
 <main class="flex-1 flex flex-col min-w-0" data-app-target="editorPanel">
-  <!-- Editor Header -->
-  <div class="flex-none h-10 border-b border-[var(--theme-border)] flex items-center px-4 bg-[var(--theme-bg-primary)]">
-    <span class="text-sm text-[var(--theme-text-muted)] truncate" data-app-target="currentPath">
-      <%= t('editor.select_note') %>
-    </span>
-    <span class="ml-2 text-xs text-[var(--theme-text-faint)] hidden" data-app-target="saveStatus"></span>
-  </div>
-
   <!-- Editor Toolbar (visible when editing) -->
   <!-- Group 1: image, video, code, table | Group 2: emoji, ai | Group 3: font, help -->
   <div class="editor-toolbar flex-none h-9 border-b border-[var(--theme-border)] hidden items-center px-2 gap-1 bg-[var(--theme-bg-secondary)]" data-app-target="editorToolbar">

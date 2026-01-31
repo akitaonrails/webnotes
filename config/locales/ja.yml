@@ -36,6 +36,7 @@ ja:
     change_theme: "テーマ変更"
     change_language: "言語変更"
     about_app: "FrankMDについて"
+    click_to_copy_path: "クリックでパスをコピー"
 
   # Sidebar/Explorer section
   sidebar:

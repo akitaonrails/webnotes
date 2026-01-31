@@ -83,6 +83,7 @@ export default class extends Controller {
     this.applyTypewriterMode()
     this.setupConfigFileListener()
     this.setupTableEditorListener()
+    this.setupPathResizeListener()
 
     // Configure marked with custom extensions for superscript, subscript, highlight, emoji
     marked.use({
@@ -116,6 +117,9 @@ export default class extends Controller {
     if (this.boundKeydownHandler) {
       document.removeEventListener("keydown", this.boundKeydownHandler)
     }
+    if (this.boundPathResizeHandler) {
+      window.removeEventListener("resize", this.boundPathResizeHandler)
+    }
 
     // Clean up object URLs to prevent memory leaks
     this.cleanupLocalFolderImages()
@@ -137,9 +141,8 @@ export default class extends Controller {
         // File exists - load it directly from server-provided data
         this.currentFile = path
         const fileType = this.getFileType(path)
-        this.currentPathTarget.textContent = fileType === "markdown"
-          ? path.replace(/\.md$/, "")
-          : path
+        const displayPath = fileType === "markdown" ? path.replace(/\.md$/, "") : path
+        this.updatePathDisplay(displayPath)
         this.expandParentFolders(path)
         this.showEditor(content, fileType)
         this.renderTree()
@@ -196,7 +199,7 @@ export default class extends Controller {
       } else {
         // No file - show placeholder
         this.currentFile = null
-        this.currentPathTarget.textContent = window.t("editor.select_note")
+        this.updatePathDisplay(null)
         this.editorPlaceholderTarget.classList.remove("hidden")
         this.editorTarget.classList.add("hidden")
         this.editorToolbarTarget.classList.add("hidden")
@@ -235,7 +238,7 @@ export default class extends Controller {
     // Clear after a moment and return to normal state
     setTimeout(() => {
       this.textareaTarget.disabled = false
-      this.currentPathTarget.textContent = window.t("editor.select_note")
+      this.updatePathDisplay(null)
       this.editorPlaceholderTarget.classList.remove("hidden")
       this.editorTarget.classList.add("hidden")
       this.hideStatsPanel()
@@ -472,11 +475,11 @@ export default class extends Controller {
       // Update current file reference if it was moved
       if (this.currentFile === oldPath) {
         this.currentFile = newPath
-        this.currentPathTarget.textContent = newPath.replace(/\.md$/, "")
+        this.updatePathDisplay(newPath.replace(/\.md$/, ""))
       } else if (type === "folder" && this.currentFile && this.currentFile.startsWith(oldPath + "/")) {
         // If a folder containing the current file was moved
         this.currentFile = this.currentFile.replace(oldPath, newPath)
-        this.currentPathTarget.textContent = this.currentFile.replace(/\.md$/, "")
+        this.updatePathDisplay(this.currentFile.replace(/\.md$/, ""))
       }
 
       // Expand the target folder
@@ -522,9 +525,8 @@ export default class extends Controller {
       const fileType = this.getFileType(path)
 
       // Display path (don't strip extension for non-markdown files)
-      this.currentPathTarget.textContent = fileType === "markdown"
-        ? path.replace(/\.md$/, "")
-        : path
+      const displayPath = fileType === "markdown" ? path.replace(/\.md$/, "") : path
+      this.updatePathDisplay(displayPath)
 
       // Expand parent folders in tree
       this.expandParentFolders(path)
@@ -854,6 +856,21 @@ export default class extends Controller {
     window.addEventListener("frankmd:insert-table", this.boundTableInsertHandler)
   }
 
+  // Setup resize listener to recalculate path display
+  setupPathResizeListener() {
+    this.boundPathResizeHandler = this.debounce(() => this.handlePathResize(), 100)
+    window.addEventListener("resize", this.boundPathResizeHandler)
+  }
+
+  // Simple debounce helper
+  debounce(func, wait) {
+    let timeout
+    return (...args) => {
+      clearTimeout(timeout)
+      timeout = setTimeout(() => func.apply(this, args), wait)
+    }
+  }
+
   // Handle table insertion from table_editor_controller
   handleTableInsert(event) {
     const { markdown, editMode, startPos, endPos } = event.detail
@@ -1082,6 +1099,111 @@ export default class extends Controller {
     if (this.hasSidebarToggleTarget) {
       // Update toggle button icon state if needed
       this.sidebarToggleTarget.setAttribute("aria-expanded", this.sidebarVisible.toString())
+    }
+  }
+
+  // Copy current file path to clipboard
+  copyPathToClipboard() {
+    const fullPath = this.currentPathTarget.dataset.fullPath
+    if (!fullPath) return
+
+    navigator.clipboard.writeText(fullPath).then(() => {
+      // Show copied feedback
+      const container = this.currentPathTarget.closest(".path-container")
+      if (container) {
+        container.dataset.copiedText = window.t("status.copied")
+        container.classList.add("copied")
+        setTimeout(() => {
+          container.classList.remove("copied")
+        }, 1500)
+      }
+    }).catch(err => {
+      console.error("Failed to copy path:", err)
+    })
+  }
+
+  // Update path display with smart truncation from the left
+  updatePathDisplay(path) {
+    if (!this.hasCurrentPathTarget) return
+
+    const container = this.currentPathTarget.closest(".path-container")
+    const wrapper = container?.parentElement // The flex-1 parent that has actual width
+
+    if (!path) {
+      this.currentPathTarget.textContent = window.t("editor.select_note")
+      this.currentPathTarget.dataset.fullPath = ""
+      if (container) container.classList.remove("truncated")
+      return
+    }
+
+    // Store full path for hover and copy
+    this.currentPathTarget.dataset.fullPath = path
+
+    // Measure available width from the wrapper (flex-1 container)
+    // Subtract some padding for the save status and margins
+    const availableWidth = wrapper ? (wrapper.clientWidth - 20) : 300
+
+    // Create a temporary span to measure text width
+    const measureSpan = document.createElement("span")
+    measureSpan.style.cssText = "visibility:hidden;position:absolute;white-space:nowrap;font:inherit;"
+    measureSpan.className = this.currentPathTarget.className
+    document.body.appendChild(measureSpan)
+
+    measureSpan.textContent = path
+    const fullWidth = measureSpan.offsetWidth
+
+    if (fullWidth <= availableWidth) {
+      // Path fits - show full path, left-aligned
+      this.currentPathTarget.textContent = path
+      if (container) container.classList.remove("truncated")
+    } else {
+      // Path doesn't fit - truncate from left with "..."
+      const ellipsis = "..."
+      let truncatedPath = path
+
+      // Progressively remove path segments from the left
+      const parts = path.split("/")
+      for (let i = 1; i < parts.length; i++) {
+        truncatedPath = ellipsis + parts.slice(i).join("/")
+        measureSpan.textContent = truncatedPath
+        if (measureSpan.offsetWidth <= availableWidth) {
+          break
+        }
+      }
+
+      this.currentPathTarget.textContent = truncatedPath
+      if (container) container.classList.add("truncated")
+    }
+
+    document.body.removeChild(measureSpan)
+  }
+
+  // Recalculate path display on resize
+  handlePathResize() {
+    const fullPath = this.currentPathTarget?.dataset?.fullPath
+    if (fullPath) {
+      this.updatePathDisplay(fullPath)
+    }
+  }
+
+  // Show full path on hover (when truncated)
+  showFullPath() {
+    if (!this.hasCurrentPathTarget) return
+    const container = this.currentPathTarget.closest(".path-container")
+    if (!container?.classList.contains("truncated")) return
+
+    const fullPath = this.currentPathTarget.dataset.fullPath
+    if (fullPath) {
+      this.currentPathTarget.textContent = fullPath
+    }
+  }
+
+  // Restore truncated path after hover
+  hideFullPath() {
+    if (!this.hasCurrentPathTarget) return
+    const fullPath = this.currentPathTarget.dataset.fullPath
+    if (fullPath) {
+      this.updatePathDisplay(fullPath)
     }
   }
 
@@ -1582,7 +1704,7 @@ export default class extends Controller {
     // Update current file if it was the renamed file
     if (this.currentFile === oldPath) {
       this.currentFile = newPath
-      this.currentPathTarget.textContent = newPath.replace(/\.md$/, "")
+      this.updatePathDisplay(newPath.replace(/\.md$/, ""))
     }
 
     await this.refreshTree()
@@ -1594,7 +1716,7 @@ export default class extends Controller {
     // Clear editor if deleted file was currently open
     if (this.currentFile === path) {
       this.currentFile = null
-      this.currentPathTarget.textContent = window.t("editor.select_note")
+      this.updatePathDisplay(null)
       this.editorPlaceholderTarget.classList.remove("hidden")
       this.editorTarget.classList.add("hidden")
       this.hideStatsPanel()

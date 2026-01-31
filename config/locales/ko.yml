@@ -36,6 +36,7 @@ ko:
     change_theme: "테마 변경"
     change_language: "언어 변경"
     about_app: "FrankMD 정보"
+    click_to_copy_path: "클릭하여 경로 복사"
 
   # 사이드바/탐색기 섹션
   sidebar:

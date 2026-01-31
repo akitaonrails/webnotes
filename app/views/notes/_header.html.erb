@@ -1,5 +1,6 @@
-<header class="flex-none h-12 border-b border-[var(--theme-border)] flex items-center justify-between px-4 bg-[var(--theme-bg-secondary)]">
-  <div class="flex items-center gap-2">
+<header class="flex-none h-12 border-b border-[var(--theme-border)] flex items-center px-4 bg-[var(--theme-bg-secondary)]">
+  <!-- Left: Sidebar toggle + App name -->
+  <div class="flex items-center gap-2 shrink-0">
     <!-- Sidebar Toggle (Burger Menu) -->
     <button
       type="button"
@@ -23,7 +24,24 @@
       <span class="font-semibold text-sm"><%= t('app.name') %></span>
     </button>
   </div>
-  <div class="flex items-center gap-2">
+
+  <!-- Center: Current file path (truncates from left with ... when overflowing) -->
+  <div class="flex-1 min-w-0 mx-3 flex items-center gap-2">
+    <div
+      class="path-container relative cursor-pointer"
+      data-action="click->app#copyPathToClipboard mouseenter->app#showFullPath mouseleave->app#hideFullPath"
+      title="<%= t('header.click_to_copy_path') %>"
+    >
+      <span
+        class="path-text text-sm text-[var(--theme-text-muted)] whitespace-nowrap"
+        data-app-target="currentPath"
+      ><%= t('editor.select_note') %></span>
+    </div>
+    <span class="text-xs text-[var(--theme-text-faint)] hidden shrink-0" data-app-target="saveStatus"></span>
+  </div>
+
+  <!-- Right: Toolbar buttons -->
+  <div class="flex items-center gap-2 shrink-0">
     <button
       type="button"
       data-action="click->app#toggleTypewriterMode"
