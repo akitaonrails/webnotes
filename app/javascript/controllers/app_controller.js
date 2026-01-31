@@ -638,6 +638,37 @@ export default class extends Controller {
 
   onTextareaScroll() {
     this.syncLineNumberScroll()
+    // Sync preview scroll
+    if (this.typewriterModeEnabled) {
+      this.syncPreviewScrollTypewriter()
+    } else {
+      this.syncPreviewScroll()
+    }
+  }
+
+  // Sync preview scroll in typewriter mode based on visible content
+  syncPreviewScrollTypewriter() {
+    if (!this.syncScrollEnabled) return
+    if (!this.hasTextareaTarget) return
+
+    const previewController = this.getPreviewController()
+    if (!previewController || !previewController.isVisible) return
+
+    const textarea = this.textareaTarget
+    const content = textarea.value
+    const totalLines = content.split("\n").length
+
+    // Calculate which line is at the center of visible area
+    const scrollTop = textarea.scrollTop
+    const clientHeight = textarea.clientHeight
+    const scrollHeight = textarea.scrollHeight
+
+    // Estimate line height and calculate center line
+    const lineHeight = scrollHeight / totalLines
+    const centerY = scrollTop + (clientHeight / 2)
+    const centerLine = Math.max(1, Math.min(totalLines, Math.round(centerY / lineHeight)))
+
+    previewController.syncToTypewriter(centerLine, totalLines)
   }
 
   // Update preview and sync scroll to cursor position
@@ -854,14 +885,9 @@ export default class extends Controller {
   setupSyncScroll() {
     if (!this.hasTextareaTarget) return
 
-    // Listen for scroll events on the textarea (only sync preview if not in typewriter mode)
-    this.textareaTarget.addEventListener("scroll", () => {
-      if (!this.typewriterModeEnabled) {
-        this.syncPreviewScroll()
-      }
-    })
+    // Note: scroll sync is handled by onTextareaScroll via data-action
 
-    // Also sync on cursor position changes (selection change)
+    // Sync on cursor position changes (selection change)
     this.textareaTarget.addEventListener("click", () => {
       if (this.typewriterModeEnabled) {
         this.maintainTypewriterScroll()
