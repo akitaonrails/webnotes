@@ -1,3 +1,9 @@
 #!/bin/bash -e
 
+# Generate SECRET_KEY_BASE if not provided
+# Safe for FrankMD since there's no user authentication - sessions only store UI preferences
+if [ -z "$SECRET_KEY_BASE" ]; then
+  export SECRET_KEY_BASE=$(openssl rand -hex 64)
+fi
+
 exec "${@}"

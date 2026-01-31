@@ -50,12 +50,10 @@ Rails.application.configure do
   # the I18n.default_locale when a translation cannot be found).
   config.i18n.fallbacks = true
 
-  # Enable DNS rebinding protection and other `Host` header attacks.
-  # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
-  # ]
-  #
-  # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  # Disable DNS rebinding protection - FrankMD is self-hosted and accessed from
+  # various hosts (localhost, LAN IPs, tunnel domains, etc.)
+  config.hosts = nil
+
+  # Serve static files from /public (required for Docker without nginx)
+  config.public_file_server.enabled = true
 end

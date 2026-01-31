@@ -108,12 +108,12 @@ export OPENAI_API_KEY=sk-...
 ### 2. Add the `fed` Function
 
 ```bash
-# FrankMD editor function - stops any running instance before starting
+# FrankMD editor function - stops any running instance, starts new one, opens browser
 fed() {
   docker stop frankmd 2>/dev/null
   docker rm frankmd 2>/dev/null
 
-  local args=(-p 3000:80 -v "$(realpath "${1:-.}"):/rails/notes")
+  local args=(-d -p 3000:80 -v "$(realpath "${1:-.}"):/rails/notes")
 
   [[ -n "$FRANKMD_LOCALE" ]] && args+=(-e "FRANKMD_LOCALE=$FRANKMD_LOCALE")
   [[ -n "$IMAGES_PATH" ]] && args+=(-v "$(realpath "$IMAGES_PATH"):/rails/images" -e IMAGES_PATH=/rails/images)
@@ -138,6 +138,9 @@ fed() {
   [[ -n "$OPENAI_MODEL" ]] && args+=(-e "OPENAI_MODEL=$OPENAI_MODEL")
 
   docker run --name frankmd --rm "${args[@]}" akitaonrails/frankmd:latest
+
+  sleep 2
+  brave --app=http://localhost:3000
 }
 ```
 
@@ -150,11 +153,11 @@ fed ~/my-notes    # open a specific directory
 fed .             # open current directory
 ```
 
-Press `Ctrl+C` to stop.
+To stop: `docker stop frankmd`
 
-### 4. Open as Desktop App (Optional)
+### 4. Using a Different Browser (Optional)
 
-Open FrankMD in app mode for a native-like experience (no URL bar, tabs, or bookmarks):
+The `fed` function opens Brave by default. To use a different browser, change the last line:
 
 ```bash
 # Chromium
@@ -163,20 +166,11 @@ chromium --app=http://localhost:3000
 # Google Chrome
 google-chrome --app=http://localhost:3000
 
-# Brave
-brave --app=http://localhost:3000
-
 # Microsoft Edge
 microsoft-edge --app=http://localhost:3000
 
 # Firefox (requires about:config → browser.ssb.enabled = true)
 firefox --ssb http://localhost:3000
-```
-
-Add an alias for convenience:
-
-```bash
-alias frankmd='chromium --app=http://localhost:3000'
 ```
 
 ### Running in Background
