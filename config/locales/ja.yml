@@ -175,6 +175,7 @@ ja:
       url_hint_youtube: "YouTube: https://youtube.com/watch?v=... または https://youtu.be/..."
       url_hint_file: "動画ファイル: /path/to/video.mp4, .webm, .mkv, .mov, .avi"
       preview_hint: "URLを入力するとプレビューが表示されます"
+      unknown_format: "不明なフォーマット。YouTubeのURLまたは動画ファイルのパスを入力してください。"
       insert_video: "動画を挿入"
       # YouTube search
       youtube_api_required: "YouTube APIキーが必要です"

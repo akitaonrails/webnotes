@@ -1,81 +1,84 @@
 <!-- Code Snippet Dialog -->
-<dialog
-  class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 bg-[var(--theme-bg-secondary)] border border-[var(--theme-border)] w-[500px]"
-  data-app-target="codeDialog"
->
-  <div class="p-4 text-[var(--theme-text-primary)]">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-sm font-semibold"><%= t('dialogs.code.title') %></h3>
-      <button
-        type="button"
-        data-action="click->app#closeCodeDialog"
-        class="p-1 rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
+<div data-controller="code-dialog"
+     data-action="code-dialog:insert->app#onCodeInsert">
+  <dialog
+    class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 bg-[var(--theme-bg-secondary)] border border-[var(--theme-border)] w-[500px]"
+    data-code-dialog-target="dialog"
+  >
+    <div class="p-4 text-[var(--theme-text-primary)]">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-semibold"><%= t('dialogs.code.title') %></h3>
+        <button
+          type="button"
+          data-action="click->code-dialog#close"
+          class="p-1 rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
 
-    <!-- Language Input with Autocomplete -->
-    <div class="mb-4 relative">
-      <label class="block text-xs text-[var(--theme-text-muted)] mb-1"><%= t('dialogs.code.language_label') %></label>
-      <input
-        type="text"
-        data-app-target="codeLanguage"
-        data-action="input->app#onCodeLanguageInput keydown->app#onCodeLanguageKeydown"
-        class="w-full px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)] font-mono"
-        placeholder="<%= t('dialogs.code.language_placeholder') %>"
-        autocomplete="off"
-        spellcheck="false"
-      >
-      <!-- Suggestions dropdown -->
-      <div
-        class="hidden absolute z-10 w-full mt-1 bg-[var(--theme-bg-secondary)] border border-[var(--theme-border)] rounded-md shadow-lg max-h-48 overflow-y-auto"
-        data-app-target="codeSuggestions"
-      >
-        <!-- Suggestions will be populated by JavaScript -->
+      <!-- Language Input with Autocomplete -->
+      <div class="mb-4 relative">
+        <label class="block text-xs text-[var(--theme-text-muted)] mb-1"><%= t('dialogs.code.language_label') %></label>
+        <input
+          type="text"
+          data-code-dialog-target="language"
+          data-action="input->code-dialog#onLanguageInput keydown->code-dialog#onLanguageKeydown"
+          class="w-full px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)] font-mono"
+          placeholder="<%= t('dialogs.code.language_placeholder') %>"
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <!-- Suggestions dropdown -->
+        <div
+          class="hidden absolute z-10 w-full mt-1 bg-[var(--theme-bg-secondary)] border border-[var(--theme-border)] rounded-md shadow-lg max-h-48 overflow-y-auto"
+          data-code-dialog-target="suggestions"
+        >
+          <!-- Suggestions will be populated by JavaScript -->
+        </div>
+      </div>
+
+      <!-- Code Content -->
+      <div class="mb-4">
+        <div class="flex items-center justify-between mb-1">
+          <label class="text-xs text-[var(--theme-text-muted)]"><%= t('dialogs.code.code_label') %></label>
+          <label class="flex items-center gap-2 text-xs text-[var(--theme-text-muted)] cursor-pointer">
+            <input
+              type="checkbox"
+              data-code-dialog-target="indentTabs"
+              class="rounded border-[var(--theme-border)] text-[var(--theme-accent)] focus:ring-[var(--theme-accent)] w-3 h-3"
+            >
+            <span><%= t('dialogs.code.use_tabs') %></span>
+          </label>
+        </div>
+        <textarea
+          data-code-dialog-target="content"
+          data-action="keydown->code-dialog#onContentKeydown"
+          class="w-full h-48 px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)] font-mono resize-none"
+          placeholder="<%= t('dialogs.code.code_placeholder') %>"
+          spellcheck="false"
+        ></textarea>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex justify-end gap-2">
+        <button
+          type="button"
+          data-action="click->code-dialog#close"
+          class="px-3 py-1.5 text-sm rounded-md hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-secondary)]"
+        >
+          <%= t('common.cancel') %>
+        </button>
+        <button
+          type="button"
+          data-action="click->code-dialog#insert"
+          class="px-3 py-1.5 text-sm rounded-md bg-[var(--theme-accent)] text-[var(--theme-accent-text)] hover:bg-[var(--theme-accent-hover)]"
+        >
+          <%= t('dialogs.code.insert_code') %>
+        </button>
       </div>
     </div>
-
-    <!-- Code Content -->
-    <div class="mb-4">
-      <div class="flex items-center justify-between mb-1">
-        <label class="text-xs text-[var(--theme-text-muted)]"><%= t('dialogs.code.code_label') %></label>
-        <label class="flex items-center gap-2 text-xs text-[var(--theme-text-muted)] cursor-pointer">
-          <input
-            type="checkbox"
-            data-app-target="codeIndentTabs"
-            class="rounded border-[var(--theme-border)] text-[var(--theme-accent)] focus:ring-[var(--theme-accent)] w-3 h-3"
-          >
-          <span><%= t('dialogs.code.use_tabs') %></span>
-        </label>
-      </div>
-      <textarea
-        data-app-target="codeContent"
-        data-action="keydown->app#onCodeContentKeydown"
-        class="w-full h-48 px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)] font-mono resize-none"
-        placeholder="<%= t('dialogs.code.code_placeholder') %>"
-        spellcheck="false"
-      ></textarea>
-    </div>
-
-    <!-- Footer -->
-    <div class="flex justify-end gap-2">
-      <button
-        type="button"
-        data-action="click->app#closeCodeDialog"
-        class="px-3 py-1.5 text-sm rounded-md hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-secondary)]"
-      >
-        <%= t('common.cancel') %>
-      </button>
-      <button
-        type="button"
-        data-action="click->app#insertCode"
-        class="px-3 py-1.5 text-sm rounded-md bg-[var(--theme-accent)] text-[var(--theme-accent-text)] hover:bg-[var(--theme-accent-hover)]"
-      >
-        <%= t('dialogs.code.insert_code') %>
-      </button>
-    </div>
-  </div>
-</dialog>
+  </dialog>
+</div>

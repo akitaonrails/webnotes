@@ -175,6 +175,7 @@ en:
       url_hint_youtube: "YouTube: https://youtube.com/watch?v=... or https://youtu.be/..."
       url_hint_file: "Video file: /path/to/video.mp4, .webm, .mkv, .mov, .avi"
       preview_hint: "Enter a URL to see preview"
+      unknown_format: "Unknown format. Enter a YouTube URL or video file path."
       insert_video: "Insert Video"
       # YouTube search
       youtube_api_required: "YouTube API Key Required"

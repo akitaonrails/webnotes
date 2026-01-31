@@ -1,48 +1,51 @@
 <!-- Content Search Dialog (Ctrl+Shift+F) -->
-<dialog
-  class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 w-[700px] max-h-[80vh]"
-  data-app-target="contentSearchDialog"
->
-  <div class="flex flex-col max-h-[80vh]">
-    <!-- Search Input -->
-    <div class="p-3 border-b border-[var(--theme-border)]">
-      <div class="flex items-center gap-2">
-        <svg class="w-5 h-5 text-[var(--theme-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <input
-          type="text"
-          data-app-target="contentSearchInput"
-          data-action="input->app#onContentSearchInput keydown->app#onContentSearchKeydown"
-          class="flex-1 bg-transparent border-0 text-[var(--theme-text-primary)] placeholder-[var(--theme-text-muted)] focus:outline-none text-sm font-mono"
-          placeholder="<%= t('dialogs.content_search.placeholder') %>"
-          autocomplete="off"
-          spellcheck="false"
-        >
-        <span class="text-xs text-[var(--theme-text-faint)]"><%= t('dialogs.file_finder.esc_to_close') %></span>
+<div data-controller="content-search"
+     data-action="content-search:selected->app#onSearchResultSelected">
+  <dialog
+    class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 w-[700px] max-h-[80vh]"
+    data-content-search-target="dialog"
+  >
+    <div class="flex flex-col max-h-[80vh]">
+      <!-- Search Input -->
+      <div class="p-3 border-b border-[var(--theme-border)]">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-[var(--theme-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <input
+            type="text"
+            data-content-search-target="input"
+            data-action="input->content-search#onInput keydown->content-search#onKeydown"
+            class="flex-1 bg-transparent border-0 text-[var(--theme-text-primary)] placeholder-[var(--theme-text-muted)] focus:outline-none text-sm font-mono"
+            placeholder="<%= t('dialogs.content_search.placeholder') %>"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <span class="text-xs text-[var(--theme-text-faint)]"><%= t('dialogs.file_finder.esc_to_close') %></span>
+        </div>
+        <div class="mt-1 text-xs text-[var(--theme-text-muted)]" data-content-search-target="status">
+          <%= t('dialogs.content_search.status') %>
+        </div>
+        <div class="mt-2 text-xs text-[var(--theme-text-faint)] flex flex-wrap gap-x-4 gap-y-1">
+          <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hello</code> <%= t('dialogs.content_search.literal_text') %></span>
+          <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hello|world</code> <%= t('dialogs.content_search.or_operator') %></span>
+          <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hel+o</code> <%= t('dialogs.content_search.one_or_more') %></span>
+          <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hel.*o</code> <%= t('dialogs.content_search.any_chars') %></span>
+          <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">^hello</code> <%= t('dialogs.content_search.start_of_line') %></span>
+          <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hello$</code> <%= t('dialogs.content_search.end_of_line') %></span>
+          <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">\d+</code> <%= t('dialogs.content_search.digits') %></span>
+          <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">\bword\b</code> <%= t('dialogs.content_search.whole_word') %></span>
+        </div>
       </div>
-      <div class="mt-1 text-xs text-[var(--theme-text-muted)]" data-app-target="contentSearchStatus">
-        <%= t('dialogs.content_search.status') %>
-      </div>
-      <div class="mt-2 text-xs text-[var(--theme-text-faint)] flex flex-wrap gap-x-4 gap-y-1">
-        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hello</code> <%= t('dialogs.content_search.literal_text') %></span>
-        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hello|world</code> <%= t('dialogs.content_search.or_operator') %></span>
-        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hel+o</code> <%= t('dialogs.content_search.one_or_more') %></span>
-        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hel.*o</code> <%= t('dialogs.content_search.any_chars') %></span>
-        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">^hello</code> <%= t('dialogs.content_search.start_of_line') %></span>
-        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hello$</code> <%= t('dialogs.content_search.end_of_line') %></span>
-        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">\d+</code> <%= t('dialogs.content_search.digits') %></span>
-        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">\bword\b</code> <%= t('dialogs.content_search.whole_word') %></span>
-      </div>
-    </div>
 
-    <!-- Results List -->
-    <div
-      class="flex-1 overflow-y-auto min-h-[200px] max-h-[60vh]"
-      data-app-target="contentSearchResults"
-      data-action="mousemove->app#onContentSearchMouseMove"
-    >
-      <!-- Results rendered by JavaScript -->
+      <!-- Results List -->
+      <div
+        class="flex-1 overflow-y-auto min-h-[200px] max-h-[60vh]"
+        data-content-search-target="results"
+        data-action="mousemove->content-search#onMouseMove"
+      >
+        <!-- Results rendered by JavaScript -->
+      </div>
     </div>
-  </div>
-</dialog>
+  </dialog>
+</div>

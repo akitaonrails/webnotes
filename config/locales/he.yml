@@ -175,6 +175,7 @@ he:
       url_hint_youtube: "YouTube: https://youtube.com/watch?v=... או https://youtu.be/..."
       url_hint_file: "קובץ סרטון: /path/to/video.mp4, .webm, .mkv, .mov, .avi"
       preview_hint: "הזן URL לתצוגה מקדימה"
+      unknown_format: "פורמט לא ידוע. הזן URL של YouTube או נתיב לקובץ סרטון."
       insert_video: "הוסף סרטון"
       # חיפוש YouTube
       youtube_api_required: "נדרש מפתח API של YouTube"

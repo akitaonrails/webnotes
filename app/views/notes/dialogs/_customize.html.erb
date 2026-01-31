@@ -1,93 +1,99 @@
 <!-- Editor Customization Dialog -->
-<dialog
-  class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 w-[400px]"
-  data-app-target="customizeDialog"
->
-  <div class="p-4">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-sm font-semibold"><%= t('dialogs.customize.title') %></h3>
-      <button
-        type="button"
-        data-action="click->app#closeCustomizeDialog"
-        class="p-1 rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
+<div data-controller="customize"
+     data-customize-font-value="<%= @config&.dig('settings', 'editor_font') || 'cascadia-code' %>"
+     data-customize-font-size-value="<%= @config&.dig('settings', 'editor_font_size') || 14 %>"
+     data-action="customize:applied->app#onCustomizeApplied">
+  <dialog
+    class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 w-[400px]"
+    data-customize-target="dialog"
+    data-app-target="customizeDialog"
+  >
+    <div class="p-4">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-semibold"><%= t('dialogs.customize.title') %></h3>
+        <button
+          type="button"
+          data-action="click->customize#close"
+          class="p-1 rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
 
-    <!-- Font Family -->
-    <div class="mb-4">
-      <label class="block text-xs text-[var(--theme-text-muted)] mb-1.5"><%= t('dialogs.customize.font_family') %></label>
-      <select
-        data-app-target="fontSelect"
-        data-action="change->app#onFontChange"
-        class="w-full px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
-      >
-        <option value="cascadia-code" style="font-family: 'Cascadia Code', monospace">Cascadia Code</option>
-        <option value="consolas" style="font-family: Consolas, monospace">Consolas</option>
-        <option value="dejavu-mono" style="font-family: 'DejaVu Mono', monospace">DejaVu Sans Mono</option>
-        <option value="fira-code" style="font-family: 'Fira Code', monospace">Fira Code</option>
-        <option value="hack" style="font-family: Hack, monospace">Hack</option>
-        <option value="jetbrains-mono" style="font-family: 'JetBrains Mono', monospace">JetBrains Mono</option>
-        <option value="roboto-mono" style="font-family: 'Roboto Mono', monospace">Roboto Mono</option>
-        <option value="source-code-pro" style="font-family: 'Source Code Pro', monospace">Source Code Pro</option>
-        <option value="ubuntu-mono" style="font-family: 'Ubuntu Mono', monospace">Ubuntu Mono</option>
-      </select>
-    </div>
+      <!-- Font Family -->
+      <div class="mb-4">
+        <label class="block text-xs text-[var(--theme-text-muted)] mb-1.5"><%= t('dialogs.customize.font_family') %></label>
+        <select
+          data-customize-target="fontSelect"
+          data-action="change->customize#onFontChange"
+          class="w-full px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
+        >
+          <option value="cascadia-code" style="font-family: 'Cascadia Code', monospace">Cascadia Code</option>
+          <option value="consolas" style="font-family: Consolas, monospace">Consolas</option>
+          <option value="dejavu-mono" style="font-family: 'DejaVu Mono', monospace">DejaVu Sans Mono</option>
+          <option value="fira-code" style="font-family: 'Fira Code', monospace">Fira Code</option>
+          <option value="hack" style="font-family: Hack, monospace">Hack</option>
+          <option value="jetbrains-mono" style="font-family: 'JetBrains Mono', monospace">JetBrains Mono</option>
+          <option value="roboto-mono" style="font-family: 'Roboto Mono', monospace">Roboto Mono</option>
+          <option value="source-code-pro" style="font-family: 'Source Code Pro', monospace">Source Code Pro</option>
+          <option value="ubuntu-mono" style="font-family: 'Ubuntu Mono', monospace">Ubuntu Mono</option>
+        </select>
+      </div>
 
-    <!-- Font Size -->
-    <div class="mb-4">
-      <label class="block text-xs text-[var(--theme-text-muted)] mb-1.5"><%= t('dialogs.customize.font_size') %></label>
-      <select
-        data-app-target="fontSizeSelect"
-        data-action="change->app#onFontSizeChange"
-        class="w-full px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
-      >
-        <option value="12">12px</option>
-        <option value="13">13px</option>
-        <option value="14" selected>14px</option>
-        <option value="15">15px</option>
-        <option value="16">16px</option>
-        <option value="18">18px</option>
-        <option value="20">20px</option>
-        <option value="22">22px</option>
-        <option value="24">24px</option>
-      </select>
-    </div>
+      <!-- Font Size -->
+      <div class="mb-4">
+        <label class="block text-xs text-[var(--theme-text-muted)] mb-1.5"><%= t('dialogs.customize.font_size') %></label>
+        <select
+          data-customize-target="fontSizeSelect"
+          data-action="change->customize#onFontSizeChange"
+          class="w-full px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
+        >
+          <option value="12">12px</option>
+          <option value="13">13px</option>
+          <option value="14" selected>14px</option>
+          <option value="15">15px</option>
+          <option value="16">16px</option>
+          <option value="18">18px</option>
+          <option value="20">20px</option>
+          <option value="22">22px</option>
+          <option value="24">24px</option>
+        </select>
+      </div>
 
-    <!-- Preview -->
-    <div class="mb-4">
-      <label class="block text-xs text-[var(--theme-text-muted)] mb-1.5"><%= t('dialogs.customize.preview') %></label>
-      <div
-        data-app-target="fontPreview"
-        class="p-3 border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] h-24 overflow-hidden"
-        style="font-family: 'Cascadia Code', monospace; font-size: 14px; line-height: 1.6;"
-      >
-        <div>// The quick brown fox</div>
-        <div>function hello() {</div>
-        <div>&nbsp;&nbsp;return "Hello, World!";</div>
-        <div>}</div>
+      <!-- Preview -->
+      <div class="mb-4">
+        <label class="block text-xs text-[var(--theme-text-muted)] mb-1.5"><%= t('dialogs.customize.preview') %></label>
+        <div
+          data-customize-target="preview"
+          class="p-3 border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] h-24 overflow-hidden"
+          style="font-family: 'Cascadia Code', monospace; font-size: 14px; line-height: 1.6;"
+        >
+          <div>// The quick brown fox</div>
+          <div>function hello() {</div>
+          <div>&nbsp;&nbsp;return "Hello, World!";</div>
+          <div>}</div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex justify-end gap-2">
+        <button
+          type="button"
+          data-action="click->customize#close"
+          class="px-3 py-1.5 text-sm rounded-md hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-secondary)]"
+        >
+          <%= t('common.cancel') %>
+        </button>
+        <button
+          type="button"
+          data-action="click->customize#apply"
+          class="px-3 py-1.5 text-sm rounded-md bg-[var(--theme-accent)] text-[var(--theme-accent-text)] hover:opacity-90"
+        >
+          <%= t('common.apply') %>
+        </button>
       </div>
     </div>
-
-    <!-- Footer -->
-    <div class="flex justify-end gap-2">
-      <button
-        type="button"
-        data-action="click->app#closeCustomizeDialog"
-        class="px-3 py-1.5 text-sm rounded-md hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-secondary)]"
-      >
-        <%= t('common.cancel') %>
-      </button>
-      <button
-        type="button"
-        data-action="click->app#applyCustomization"
-        class="px-3 py-1.5 text-sm rounded-md bg-[var(--theme-accent)] text-[var(--theme-accent-text)] hover:opacity-90"
-      >
-        <%= t('common.apply') %>
-      </button>
-    </div>
-  </div>
-</dialog>
+  </dialog>
+</div>

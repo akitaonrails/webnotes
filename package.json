@@ -9,6 +9,7 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "@hotwired/stimulus": "^3.2.2",
     "jsdom": "^27.4.0",
     "vitest": "^4.0.18"
   }

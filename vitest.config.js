@@ -9,6 +9,7 @@ export default defineConfig({
   resolve: {
     alias: {
       'lib': path.resolve(__dirname, 'app/javascript/lib'),
+      'marked': path.resolve(__dirname, 'test/javascript/mocks/marked.js'),
     },
   },
 })

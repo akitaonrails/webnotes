@@ -1,173 +1,189 @@
 <!-- AI Grammar Check Dialog -->
-<dialog
-  data-app-target="aiDiffDialog"
-  class="w-[90vw] max-w-6xl max-h-[80vh] p-0 rounded-lg shadow-xl bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] backdrop:bg-black/50 border border-[var(--theme-border)]"
->
-  <div class="flex flex-col h-full">
-    <!-- Header -->
-    <div class="flex items-center justify-between px-6 py-4 border-b border-[var(--theme-border)]">
-      <div class="flex items-center gap-3">
-        <h2 class="text-lg font-semibold"><%= t('dialogs.ai_diff.title') %></h2>
-        <span data-app-target="aiProviderBadge" class="hidden text-xs px-2 py-1 rounded bg-[var(--theme-bg-tertiary)] text-[var(--theme-text-muted)]"></span>
-      </div>
-      <button type="button" data-action="click->app#closeAiDiffDialog" class="p-2 rounded-md hover:bg-[var(--theme-bg-secondary)] text-[var(--theme-text-muted)]">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-        </svg>
-      </button>
-    </div>
-
-    <!-- Configuration Required Notice (shown when AI not configured) -->
-    <div class="hidden p-6 overflow-y-auto" data-app-target="aiConfigNotice">
-      <div class="p-6 bg-[var(--theme-bg-tertiary)] rounded-lg">
-        <div class="flex items-start gap-4">
-          <svg class="w-12 h-12 text-[var(--theme-text-muted)] flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/>
-            <circle cx="7.5" cy="14.5" r="1.5"/>
-            <circle cx="16.5" cy="14.5" r="1.5"/>
+<div data-controller="ai-grammar"
+     data-action="ai-grammar:accepted->app#onAiAccepted ai-grammar:processing-started->app#onAiProcessingStarted ai-grammar:processing-ended->app#onAiProcessingEnded">
+  <dialog
+    data-ai-grammar-target="dialog"
+    class="w-[90vw] max-w-6xl max-h-[80vh] p-0 rounded-lg shadow-xl bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] backdrop:bg-black/50 border border-[var(--theme-border)]"
+  >
+    <div class="flex flex-col h-full">
+      <!-- Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-[var(--theme-border)]">
+        <div class="flex items-center gap-3">
+          <h2 class="text-lg font-semibold"><%= t('dialogs.ai_diff.title') %></h2>
+          <span data-ai-grammar-target="providerBadge" class="hidden text-xs px-2 py-1 rounded bg-[var(--theme-bg-tertiary)] text-[var(--theme-text-muted)]"></span>
+        </div>
+        <button type="button" data-action="click->ai-grammar#close" class="p-2 rounded-md hover:bg-[var(--theme-bg-secondary)] text-[var(--theme-text-muted)]">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
           </svg>
-          <div class="flex-1">
-            <h3 class="text-base font-semibold mb-2"><%= t('dialogs.ai_diff.config_required') %></h3>
-            <p class="text-sm text-[var(--theme-text-muted)] mb-4">
-              <%= t('dialogs.ai_diff.config_description') %>
-              <br><span class="text-xs"><%= t('dialogs.ai_diff.priority_note') %></span>
-            </p>
+        </button>
+      </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <!-- Ollama (Local) -->
-              <div class="bg-[var(--theme-bg-primary)] p-4 rounded border border-[var(--theme-border)]">
-                <h4 class="font-semibold text-[var(--theme-accent)] mb-2"><%= t('dialogs.ai_diff.ollama_title') %></h4>
-                <p class="text-[var(--theme-text-muted)] text-xs mb-2"><%= t('dialogs.ai_diff.ollama_description') %></p>
-                <ol class="list-decimal list-inside space-y-1 text-[var(--theme-text-muted)] text-xs">
-                  <li>Install from <a href="https://ollama.com" target="_blank" class="text-[var(--theme-accent)] hover:underline">ollama.com</a></li>
-                  <li>Run: <code class="bg-[var(--theme-code-bg)] px-1 rounded">ollama pull llama3.2</code></li>
-                </ol>
-                <pre class="mt-2 bg-[var(--theme-code-bg)] p-2 rounded text-xs overflow-x-auto">ollama_api_base = http://localhost:11434
+      <!-- Configuration Required Notice (shown when AI not configured) -->
+      <div class="hidden p-6 overflow-y-auto" data-ai-grammar-target="configNotice">
+        <div class="p-6 bg-[var(--theme-bg-tertiary)] rounded-lg">
+          <div class="flex items-start gap-4">
+            <svg class="w-12 h-12 text-[var(--theme-text-muted)] flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/>
+              <circle cx="7.5" cy="14.5" r="1.5"/>
+              <circle cx="16.5" cy="14.5" r="1.5"/>
+            </svg>
+            <div class="flex-1">
+              <h3 class="text-base font-semibold mb-2"><%= t('dialogs.ai_diff.config_required') %></h3>
+              <p class="text-sm text-[var(--theme-text-muted)] mb-4">
+                <%= t('dialogs.ai_diff.config_description') %>
+                <br><span class="text-xs"><%= t('dialogs.ai_diff.priority_note') %></span>
+              </p>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <!-- Ollama (Local) -->
+                <div class="bg-[var(--theme-bg-primary)] p-4 rounded border border-[var(--theme-border)]">
+                  <h4 class="font-semibold text-[var(--theme-accent)] mb-2"><%= t('dialogs.ai_diff.ollama_title') %></h4>
+                  <p class="text-[var(--theme-text-muted)] text-xs mb-2"><%= t('dialogs.ai_diff.ollama_description') %></p>
+                  <ol class="list-decimal list-inside space-y-1 text-[var(--theme-text-muted)] text-xs">
+                    <li>Install from <a href="https://ollama.com" target="_blank" class="text-[var(--theme-accent)] hover:underline">ollama.com</a></li>
+                    <li>Run: <code class="bg-[var(--theme-code-bg)] px-1 rounded">ollama pull llama3.2</code></li>
+                  </ol>
+                  <pre class="mt-2 bg-[var(--theme-code-bg)] p-2 rounded text-xs overflow-x-auto">ollama_api_base = http://localhost:11434
 ollama_model = llama3.2</pre>
-              </div>
+                </div>
 
-              <!-- OpenRouter -->
-              <div class="bg-[var(--theme-bg-primary)] p-4 rounded border border-[var(--theme-border)]">
-                <h4 class="font-semibold mb-2"><%= t('dialogs.ai_diff.openrouter_title') %></h4>
-                <p class="text-[var(--theme-text-muted)] text-xs mb-2"><%= t('dialogs.ai_diff.openrouter_description') %></p>
-                <ol class="list-decimal list-inside space-y-1 text-[var(--theme-text-muted)] text-xs">
-                  <li>Get key from <a href="https://openrouter.ai/keys" target="_blank" class="text-[var(--theme-accent)] hover:underline">openrouter.ai</a></li>
-                </ol>
-                <pre class="mt-2 bg-[var(--theme-code-bg)] p-2 rounded text-xs overflow-x-auto">openrouter_api_key = sk-or-...
+                <!-- OpenRouter -->
+                <div class="bg-[var(--theme-bg-primary)] p-4 rounded border border-[var(--theme-border)]">
+                  <h4 class="font-semibold mb-2"><%= t('dialogs.ai_diff.openrouter_title') %></h4>
+                  <p class="text-[var(--theme-text-muted)] text-xs mb-2"><%= t('dialogs.ai_diff.openrouter_description') %></p>
+                  <ol class="list-decimal list-inside space-y-1 text-[var(--theme-text-muted)] text-xs">
+                    <li>Get key from <a href="https://openrouter.ai/keys" target="_blank" class="text-[var(--theme-accent)] hover:underline">openrouter.ai</a></li>
+                  </ol>
+                  <pre class="mt-2 bg-[var(--theme-code-bg)] p-2 rounded text-xs overflow-x-auto">openrouter_api_key = sk-or-...
 openrouter_model = openai/gpt-4o-mini</pre>
-              </div>
+                </div>
 
-              <!-- Anthropic -->
-              <div class="bg-[var(--theme-bg-primary)] p-4 rounded border border-[var(--theme-border)]">
-                <h4 class="font-semibold mb-2"><%= t('dialogs.ai_diff.anthropic_title') %></h4>
-                <p class="text-[var(--theme-text-muted)] text-xs mb-2"><%= t('dialogs.ai_diff.anthropic_description') %></p>
-                <ol class="list-decimal list-inside space-y-1 text-[var(--theme-text-muted)] text-xs">
-                  <li>Get key from <a href="https://console.anthropic.com/settings/keys" target="_blank" class="text-[var(--theme-accent)] hover:underline">console.anthropic.com</a></li>
-                </ol>
-                <pre class="mt-2 bg-[var(--theme-code-bg)] p-2 rounded text-xs overflow-x-auto">anthropic_api_key = sk-ant-...
+                <!-- Anthropic -->
+                <div class="bg-[var(--theme-bg-primary)] p-4 rounded border border-[var(--theme-border)]">
+                  <h4 class="font-semibold mb-2"><%= t('dialogs.ai_diff.anthropic_title') %></h4>
+                  <p class="text-[var(--theme-text-muted)] text-xs mb-2"><%= t('dialogs.ai_diff.anthropic_description') %></p>
+                  <ol class="list-decimal list-inside space-y-1 text-[var(--theme-text-muted)] text-xs">
+                    <li>Get key from <a href="https://console.anthropic.com/settings/keys" target="_blank" class="text-[var(--theme-accent)] hover:underline">console.anthropic.com</a></li>
+                  </ol>
+                  <pre class="mt-2 bg-[var(--theme-code-bg)] p-2 rounded text-xs overflow-x-auto">anthropic_api_key = sk-ant-...
 anthropic_model = claude-sonnet-4-20250514</pre>
-              </div>
+                </div>
 
-              <!-- Gemini -->
-              <div class="bg-[var(--theme-bg-primary)] p-4 rounded border border-[var(--theme-border)]">
-                <h4 class="font-semibold mb-2"><%= t('dialogs.ai_diff.gemini_title') %></h4>
-                <p class="text-[var(--theme-text-muted)] text-xs mb-2"><%= t('dialogs.ai_diff.gemini_description') %></p>
-                <ol class="list-decimal list-inside space-y-1 text-[var(--theme-text-muted)] text-xs">
-                  <li>Get key from <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[var(--theme-accent)] hover:underline">aistudio.google.com</a></li>
-                </ol>
-                <pre class="mt-2 bg-[var(--theme-code-bg)] p-2 rounded text-xs overflow-x-auto">gemini_api_key = ...
+                <!-- Gemini -->
+                <div class="bg-[var(--theme-bg-primary)] p-4 rounded border border-[var(--theme-border)]">
+                  <h4 class="font-semibold mb-2"><%= t('dialogs.ai_diff.gemini_title') %></h4>
+                  <p class="text-[var(--theme-text-muted)] text-xs mb-2"><%= t('dialogs.ai_diff.gemini_description') %></p>
+                  <ol class="list-decimal list-inside space-y-1 text-[var(--theme-text-muted)] text-xs">
+                    <li>Get key from <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[var(--theme-accent)] hover:underline">aistudio.google.com</a></li>
+                  </ol>
+                  <pre class="mt-2 bg-[var(--theme-code-bg)] p-2 rounded text-xs overflow-x-auto">gemini_api_key = ...
 gemini_model = gemini-2.0-flash</pre>
-              </div>
+                </div>
 
-              <!-- OpenAI -->
-              <div class="bg-[var(--theme-bg-primary)] p-4 rounded border border-[var(--theme-border)]">
-                <h4 class="font-semibold mb-2"><%= t('dialogs.ai_diff.openai_title') %></h4>
-                <p class="text-[var(--theme-text-muted)] text-xs mb-2"><%= t('dialogs.ai_diff.openai_description') %></p>
-                <ol class="list-decimal list-inside space-y-1 text-[var(--theme-text-muted)] text-xs">
-                  <li>Get key from <a href="https://platform.openai.com/api-keys" target="_blank" class="text-[var(--theme-accent)] hover:underline">platform.openai.com</a></li>
-                </ol>
-                <pre class="mt-2 bg-[var(--theme-code-bg)] p-2 rounded text-xs overflow-x-auto">openai_api_key = sk-...
+                <!-- OpenAI -->
+                <div class="bg-[var(--theme-bg-primary)] p-4 rounded border border-[var(--theme-border)]">
+                  <h4 class="font-semibold mb-2"><%= t('dialogs.ai_diff.openai_title') %></h4>
+                  <p class="text-[var(--theme-text-muted)] text-xs mb-2"><%= t('dialogs.ai_diff.openai_description') %></p>
+                  <ol class="list-decimal list-inside space-y-1 text-[var(--theme-text-muted)] text-xs">
+                    <li>Get key from <a href="https://platform.openai.com/api-keys" target="_blank" class="text-[var(--theme-accent)] hover:underline">platform.openai.com</a></li>
+                  </ol>
+                  <pre class="mt-2 bg-[var(--theme-code-bg)] p-2 rounded text-xs overflow-x-auto">openai_api_key = sk-...
 openai_model = gpt-4o-mini</pre>
-              </div>
+                </div>
 
-              <!-- Provider Selection -->
-              <div class="bg-[var(--theme-bg-primary)] p-4 rounded border border-[var(--theme-border)]">
-                <h4 class="font-semibold mb-2"><%= t('dialogs.ai_diff.provider_selection') %></h4>
-                <p class="text-[var(--theme-text-muted)] text-xs mb-2"><%= t('dialogs.ai_diff.provider_override') %></p>
-                <pre class="mt-2 bg-[var(--theme-code-bg)] p-2 rounded text-xs overflow-x-auto"># Force specific provider
+                <!-- Provider Selection -->
+                <div class="bg-[var(--theme-bg-primary)] p-4 rounded border border-[var(--theme-border)]">
+                  <h4 class="font-semibold mb-2"><%= t('dialogs.ai_diff.provider_selection') %></h4>
+                  <p class="text-[var(--theme-text-muted)] text-xs mb-2"><%= t('dialogs.ai_diff.provider_override') %></p>
+                  <pre class="mt-2 bg-[var(--theme-code-bg)] p-2 rounded text-xs overflow-x-auto"># Force specific provider
 ai_provider = anthropic
 
 # Override model for any provider
 ai_model = claude-sonnet-4-20250514</pre>
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <a
+                  href="https://github.com/akitaonrails/FrankMD#optional-ai-grammar-checking"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1 text-sm text-[var(--theme-accent)] hover:underline"
+                >
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+                  </svg>
+                  <%= t('dialogs.video.view_setup_instructions') %>
+                </a>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <div class="mt-4">
-              <a
-                href="https://github.com/akitaonrails/FrankMD#optional-ai-grammar-checking"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center gap-1 text-sm text-[var(--theme-accent)] hover:underline"
+      <!-- Diff Content (shown when AI is configured and processing complete) -->
+      <div class="hidden flex-1 flex flex-col overflow-hidden" data-ai-grammar-target="diffContent">
+        <div class="flex-1 flex overflow-hidden">
+          <!-- Original (Left) - with deletions highlighted -->
+          <div class="w-1/2 flex flex-col border-r border-[var(--theme-border)]">
+            <div class="px-4 py-2 bg-[var(--theme-bg-secondary)] text-sm font-medium border-b border-[var(--theme-border)] text-[var(--theme-text-muted)]">
+              <%= t('dialogs.ai_diff.original') %> <span class="text-xs opacity-70"><%= t('dialogs.ai_diff.deletions_hint') %></span>
+            </div>
+            <div class="flex-1 overflow-auto p-4">
+              <div data-ai-grammar-target="originalText" class="whitespace-pre-wrap font-mono text-sm leading-relaxed ai-diff-content"></div>
+            </div>
+          </div>
+
+          <!-- Corrected (Right) - with additions highlighted -->
+          <div class="w-1/2 flex flex-col">
+            <div class="px-4 py-2 bg-[var(--theme-bg-secondary)] text-sm font-medium border-b border-[var(--theme-border)] text-[var(--theme-text-muted)] flex items-center justify-between">
+              <span><%= t('dialogs.ai_diff.corrected') %> <span class="text-xs opacity-70"><%= t('dialogs.ai_diff.additions_hint') %></span></span>
+              <button
+                type="button"
+                data-action="click->ai-grammar#toggleEditMode"
+                data-ai-grammar-target="editToggle"
+                class="text-xs px-2 py-1 rounded bg-[var(--theme-bg-tertiary)] hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-secondary)]"
               >
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
-                </svg>
-                <%= t('dialogs.video.view_setup_instructions') %>
-              </a>
+                <%= t('common.edit') %>
+              </button>
+            </div>
+            <div class="flex-1 overflow-auto p-4 relative">
+              <!-- Diff view (shown by default) -->
+              <div data-ai-grammar-target="correctedDiff" class="whitespace-pre-wrap font-mono text-sm leading-relaxed ai-diff-content"></div>
+              <!-- Edit view (hidden by default) -->
+              <textarea
+                data-ai-grammar-target="correctedText"
+                class="hidden absolute inset-0 w-full h-full resize-none font-mono text-sm leading-relaxed bg-[var(--theme-bg-primary)] border-none outline-none text-[var(--theme-text-primary)] p-4"
+                spellcheck="false"
+              ></textarea>
             </div>
           </div>
         </div>
+
+        <!-- Footer (only shown with diff content) -->
+        <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-[var(--theme-border)]">
+          <button type="button" data-action="click->ai-grammar#close" class="px-4 py-2 rounded-md border border-[var(--theme-border)] hover:bg-[var(--theme-bg-secondary)] text-[var(--theme-text-secondary)]">
+            <%= t('common.cancel') %>
+          </button>
+          <button type="button" data-action="click->ai-grammar#accept" class="px-4 py-2 rounded-md bg-[var(--theme-accent)] text-[var(--theme-accent-text)] hover:bg-[var(--theme-accent-hover)]">
+            <%= t('dialogs.ai_diff.accept_changes') %>
+          </button>
+        </div>
       </div>
     </div>
+  </dialog>
 
-    <!-- Diff Content (shown when AI is configured and processing complete) -->
-    <div class="hidden flex-1 flex flex-col overflow-hidden" data-app-target="aiDiffContent">
-      <div class="flex-1 flex overflow-hidden">
-        <!-- Original (Left) - with deletions highlighted -->
-        <div class="w-1/2 flex flex-col border-r border-[var(--theme-border)]">
-          <div class="px-4 py-2 bg-[var(--theme-bg-secondary)] text-sm font-medium border-b border-[var(--theme-border)] text-[var(--theme-text-muted)]">
-            <%= t('dialogs.ai_diff.original') %> <span class="text-xs opacity-70"><%= t('dialogs.ai_diff.deletions_hint') %></span>
-          </div>
-          <div class="flex-1 overflow-auto p-4">
-            <div data-app-target="aiOriginalText" class="whitespace-pre-wrap font-mono text-sm leading-relaxed ai-diff-content"></div>
-          </div>
-        </div>
-
-        <!-- Corrected (Right) - with additions highlighted -->
-        <div class="w-1/2 flex flex-col">
-          <div class="px-4 py-2 bg-[var(--theme-bg-secondary)] text-sm font-medium border-b border-[var(--theme-border)] text-[var(--theme-text-muted)] flex items-center justify-between">
-            <span><%= t('dialogs.ai_diff.corrected') %> <span class="text-xs opacity-70"><%= t('dialogs.ai_diff.additions_hint') %></span></span>
-            <button
-              type="button"
-              data-action="click->app#toggleAiEditMode"
-              data-app-target="aiEditToggle"
-              class="text-xs px-2 py-1 rounded bg-[var(--theme-bg-tertiary)] hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-secondary)]"
-            >
-              <%= t('common.edit') %>
-            </button>
-          </div>
-          <div class="flex-1 overflow-auto p-4 relative">
-            <!-- Diff view (shown by default) -->
-            <div data-app-target="aiCorrectedDiff" class="whitespace-pre-wrap font-mono text-sm leading-relaxed ai-diff-content"></div>
-            <!-- Edit view (hidden by default) -->
-            <textarea
-              data-app-target="aiCorrectedText"
-              class="hidden absolute inset-0 w-full h-full resize-none font-mono text-sm leading-relaxed bg-[var(--theme-bg-primary)] border-none outline-none text-[var(--theme-text-primary)] p-4"
-              spellcheck="false"
-            ></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- Footer (only shown with diff content) -->
-      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-[var(--theme-border)]">
-        <button type="button" data-action="click->app#closeAiDiffDialog" class="px-4 py-2 rounded-md border border-[var(--theme-border)] hover:bg-[var(--theme-bg-secondary)] text-[var(--theme-text-secondary)]">
-          <%= t('common.cancel') %>
-        </button>
-        <button type="button" data-action="click->app#acceptAiCorrection" class="px-4 py-2 rounded-md bg-[var(--theme-accent)] text-[var(--theme-accent-text)] hover:bg-[var(--theme-accent-hover)]">
-          <%= t('dialogs.ai_diff.accept_changes') %>
-        </button>
-      </div>
+  <!-- Processing Overlay (shown while AI is working) -->
+  <div data-ai-grammar-target="processingOverlay" class="hidden fixed inset-0 z-40 bg-black/30 backdrop-blur-sm flex items-center justify-center">
+    <div class="bg-[var(--theme-bg-secondary)] rounded-lg p-6 shadow-xl border border-[var(--theme-border)] text-center">
+      <svg class="animate-spin w-12 h-12 mx-auto mb-4 text-[var(--theme-accent)]" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <p class="text-[var(--theme-text-primary)] font-medium mb-1"><%= t('editor.processing_with') %></p>
+      <p data-ai-grammar-target="processingProvider" class="text-[var(--theme-text-muted)] text-sm">AI</p>
+      <p class="text-[var(--theme-text-muted)] text-xs mt-3"><%= t('editor.press_esc_to_cancel') %></p>
     </div>
   </div>
-</dialog>
+</div>

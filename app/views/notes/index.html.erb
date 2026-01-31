@@ -14,12 +14,10 @@
     <%= render "notes/preview_panel" %>
   </div>
 
-  <%= render "notes/context_menu" %>
+  <!-- File Operations (context menu + dialogs) -->
+  <%= render "notes/dialogs/file_operations" %>
 
   <!-- Dialogs -->
-  <%= render "notes/dialogs/rename" %>
-  <%= render "notes/dialogs/note_type" %>
-  <%= render "notes/dialogs/new_item" %>
   <%= render "notes/dialogs/table_editor" %>
   <%= render "notes/dialogs/image_picker" %>
   <%= render "notes/dialogs/help" %>
@@ -29,5 +27,4 @@
   <%= render "notes/dialogs/code" %>
   <%= render "notes/dialogs/video" %>
   <%= render "notes/dialogs/ai_diff" %>
-  <%= render "notes/dialogs/about" %>
 </div>

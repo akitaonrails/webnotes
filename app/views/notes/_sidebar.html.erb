@@ -57,23 +57,26 @@
   </div>
 
   <!-- Document Stats Panel -->
-  <div class="flex-none border-t border-[var(--theme-border)] px-3 py-2 hidden" data-app-target="statsPanel">
+  <div data-controller="stats-panel"
+       class="flex-none border-t border-[var(--theme-border)] px-3 py-2 hidden"
+       data-stats-panel-target="panel"
+       data-app-target="statsPanel">
     <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
       <div class="flex justify-between">
         <span class="text-[var(--theme-text-muted)]"><%= t('sidebar.words') %></span>
-        <span class="text-[var(--theme-text-secondary)] font-medium" data-app-target="statsWords">0</span>
+        <span class="text-[var(--theme-text-secondary)] font-medium" data-stats-panel-target="words">0</span>
       </div>
       <div class="flex justify-between">
         <span class="text-[var(--theme-text-muted)]"><%= t('sidebar.characters') %></span>
-        <span class="text-[var(--theme-text-secondary)] font-medium" data-app-target="statsChars">0</span>
+        <span class="text-[var(--theme-text-secondary)] font-medium" data-stats-panel-target="chars">0</span>
       </div>
       <div class="flex justify-between">
         <span class="text-[var(--theme-text-muted)]"><%= t('sidebar.size') %></span>
-        <span class="text-[var(--theme-text-secondary)] font-medium" data-app-target="statsSize">0 B</span>
+        <span class="text-[var(--theme-text-secondary)] font-medium" data-stats-panel-target="size">0 B</span>
       </div>
       <div class="flex justify-between">
         <span class="text-[var(--theme-text-muted)]"><%= t('sidebar.read_time') %></span>
-        <span class="text-[var(--theme-text-secondary)] font-medium" data-app-target="statsReadTime">0 min</span>
+        <span class="text-[var(--theme-text-secondary)] font-medium" data-stats-panel-target="readTime">0 min</span>
       </div>
     </div>
   </div>

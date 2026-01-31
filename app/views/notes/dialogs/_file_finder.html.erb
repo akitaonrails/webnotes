@@ -1,36 +1,39 @@
 <!-- File Finder Dialog (Ctrl+P) -->
-<dialog
-  class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 w-[600px] max-h-[70vh]"
-  data-app-target="fileFinderDialog"
->
-  <div class="flex flex-col max-h-[70vh]">
-    <!-- Search Input -->
-    <div class="p-3 border-b border-[var(--theme-border)]">
-      <div class="flex items-center gap-2">
-        <svg class="w-5 h-5 text-[var(--theme-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-        <input
-          type="text"
-          data-app-target="fileFinderInput"
-          data-action="input->app#onFileFinderInput keydown->app#onFileFinderKeydown"
-          class="flex-1 bg-transparent border-0 text-[var(--theme-text-primary)] placeholder-[var(--theme-text-muted)] focus:outline-none text-sm"
-          placeholder="<%= t('dialogs.file_finder.placeholder') %>"
-          autocomplete="off"
-          spellcheck="false"
-        >
-        <span class="text-xs text-[var(--theme-text-faint)]"><%= t('dialogs.file_finder.esc_to_close') %></span>
+<div data-controller="file-finder"
+     data-action="file-finder:selected->app#onFileSelected">
+  <dialog
+    class="p-0 rounded-lg shadow-xl backdrop:bg-black/50 w-[600px] max-h-[70vh]"
+    data-file-finder-target="dialog"
+  >
+    <div class="flex flex-col max-h-[70vh]">
+      <!-- Search Input -->
+      <div class="p-3 border-b border-[var(--theme-border)]">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-[var(--theme-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            data-file-finder-target="input"
+            data-action="input->file-finder#onInput keydown->file-finder#onKeydown"
+            class="flex-1 bg-transparent border-0 text-[var(--theme-text-primary)] placeholder-[var(--theme-text-muted)] focus:outline-none text-sm"
+            placeholder="<%= t('dialogs.file_finder.placeholder') %>"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <span class="text-xs text-[var(--theme-text-faint)]"><%= t('dialogs.file_finder.esc_to_close') %></span>
+        </div>
+      </div>
+
+      <!-- Results List -->
+      <div class="flex-1 overflow-y-auto min-h-[200px] max-h-[300px]" data-file-finder-target="results">
+        <!-- Results rendered by JavaScript -->
+      </div>
+
+      <!-- Preview Panel -->
+      <div class="border-t border-[var(--theme-border)] p-3 bg-[var(--theme-bg-tertiary)] max-h-[200px] overflow-y-auto" data-file-finder-target="preview">
+        <!-- Preview rendered by JavaScript -->
       </div>
     </div>
-
-    <!-- Results List -->
-    <div class="flex-1 overflow-y-auto min-h-[200px] max-h-[300px]" data-app-target="fileFinderResults">
-      <!-- Results rendered by JavaScript -->
-    </div>
-
-    <!-- Preview Panel -->
-    <div class="border-t border-[var(--theme-border)] p-3 bg-[var(--theme-bg-tertiary)] max-h-[200px] overflow-y-auto" data-app-target="fileFinderPreview">
-      <!-- Preview rendered by JavaScript -->
-    </div>
-  </div>
-</dialog>
+  </dialog>
+</div>

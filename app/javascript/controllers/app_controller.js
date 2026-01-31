@@ -1,87 +1,25 @@
 import { Controller } from "@hotwired/stimulus"
 import { marked } from "marked"
-import { escapeHtml, fuzzyScore, levenshteinDistance } from "lib/text_utils"
-import { findTableAtPosition, findCodeBlockAtPosition, generateHugoBlogPost, slugify } from "lib/markdown_utils"
-import { encodePath, extractYouTubeId } from "lib/url_utils"
-import { calculateStats, formatFileSize, formatReadTime } from "lib/stats_utils"
-import { computeWordDiff } from "lib/diff_utils"
+import { escapeHtml } from "lib/text_utils"
+import { findTableAtPosition, findCodeBlockAtPosition } from "lib/markdown_utils"
+import { encodePath } from "lib/url_utils"
 import { flattenTree } from "lib/tree_utils"
 
 export default class extends Controller {
   static targets = [
     "fileTree",
-    "editorContainer",
     "editorPlaceholder",
     "editor",
     "textarea",
-    "previewPanel",
-    "previewContent",
-    "previewToggle",
     "currentPath",
     "saveStatus",
     "contextMenu",
-    "newNoteBtn",
-    "renameDialog",
-    "renameInput",
-    "noteTypeDialog",
-    "newItemDialog",
-    "newItemTitle",
-    "newItemInput",
     "editorToolbar",
     "helpDialog",
     "tableHint",
-    "codeDialog",
-    "codeLanguage",
-    "codeContent",
-    "codeIndentTabs",
-    "codeSuggestions",
-    "aboutDialog",
-    "customizeDialog",
-    "fontSelect",
-    "fontSizeSelect",
-    "fontPreview",
-    "previewZoomLevel",
     "sidebar",
     "sidebarToggle",
-    "editorWrapper",
-    "fileFinderDialog",
-    "fileFinderInput",
-    "fileFinderResults",
-    "fileFinderPreview",
-    "contentSearchDialog",
-    "contentSearchInput",
-    "contentSearchResults",
-    "contentSearchStatus",
-    "videoDialog",
-    "videoUrl",
-    "videoPreview",
-    "insertVideoBtn",
-    "videoTabUrl",
-    "videoTabSearch",
-    "videoUrlPanel",
-    "videoSearchPanel",
-    "youtubeSearchInput",
-    "youtubeSearchBtn",
-    "youtubeSearchStatus",
-    "youtubeSearchResults",
-    "youtubeConfigNotice",
-    "youtubeSearchForm",
-    "aiButton",
-    "aiDiffDialog",
-    "aiConfigNotice",
-    "aiDiffContent",
-    "aiOriginalText",
-    "aiCorrectedText",
-    "aiCorrectedDiff",
-    "aiProviderBadge",
-    "aiEditToggle",
-    "aiProcessingOverlay",
-    "aiProcessingProvider",
-    "statsPanel",
-    "statsWords",
-    "statsChars",
-    "statsSize",
-    "statsReadTime"
+    "aiButton"
   ]
 
   static values = {
@@ -96,18 +34,6 @@ export default class extends Controller {
     this.currentFileType = null  // "markdown", "config", or null
     this.expandedFolders = new Set()
     this.saveTimeout = null
-    this.contextItem = null
-    this.newItemType = null
-    this.newItemParent = ""
-
-    // Context menu click position (for positioning dialogs near click)
-    this.contextClickX = 0
-    this.contextClickY = 0
-
-    // Code snippet state
-    this.codeEditMode = false
-    this.codeStartPos = 0
-    this.codeEndPos = 0
 
     // Editor customization - fonts in alphabetical order, Cascadia Code as default
     this.editorFonts = [
@@ -128,8 +54,7 @@ export default class extends Controller {
     this.currentFont = settings.editor_font || "cascadia-code"
     this.currentFontSize = parseInt(settings.editor_font_size) || 14
 
-    // Preview zoom state
-    this.previewZoomLevels = [50, 75, 90, 100, 110, 125, 150, 175, 200]
+    // Preview zoom (tracked for config saving, actual state in preview controller)
     this.previewZoom = parseInt(settings.preview_zoom) || 100
 
     // Sidebar/Explorer visibility
@@ -141,45 +66,11 @@ export default class extends Controller {
     // Track pending config saves to debounce
     this.configSaveTimeout = null
 
-    // Document stats update timeout (debounced)
-    this.statsUpdateTimeout = null
-
-    // File finder state
-    this.allFiles = []
-    this.fileFinderResults = []
-    this.selectedFileIndex = 0
-
-    // Content search state
-    this.searchResultsData = []
-    this.selectedSearchIndex = 0
-    this.contentSearchTimeout = null
-    this.searchUsingKeyboard = false
-
-    // YouTube search state
-    this.youtubeSearchResults = []
-    this.selectedYoutubeIndex = -1
-    this.youtubeApiEnabled = false
-    this.checkYoutubeApiEnabled()
-
-    // AI state
-    this.aiEnabled = false
-    this.checkAiAvailability()
-
-    // Sync scroll state
+    // Sync scroll enabled flag
     this.syncScrollEnabled = true
-    this.syncScrollTimeout = null
-
-    this.codeLanguages = [
-      "javascript", "typescript", "python", "ruby", "go", "rust", "java", "c", "cpp", "csharp",
-      "php", "swift", "kotlin", "scala", "haskell", "elixir", "erlang", "clojure", "lua", "perl",
-      "html", "css", "scss", "sass", "less", "json", "yaml", "toml", "xml", "markdown",
-      "sql", "graphql", "bash", "shell", "powershell", "dockerfile", "makefile",
-      "nginx", "apache", "vim", "regex", "diff", "git", "plaintext"
-    ]
 
     this.renderTree()
     this.setupKeyboardShortcuts()
-    this.setupContextMenuClose()
     this.setupDialogClickOutside()
     this.setupSyncScroll()
     this.applyEditorSettings()
@@ -206,9 +97,6 @@ export default class extends Controller {
     // Clear all timeouts
     if (this.saveTimeout) clearTimeout(this.saveTimeout)
     if (this.configSaveTimeout) clearTimeout(this.configSaveTimeout)
-    if (this.contentSearchTimeout) clearTimeout(this.contentSearchTimeout)
-    if (this.statsUpdateTimeout) clearTimeout(this.statsUpdateTimeout)
-    if (this.syncScrollTimeout) clearTimeout(this.syncScrollTimeout)
 
     // Remove window/document event listeners
     if (this.boundPopstateHandler) {
@@ -219,9 +107,6 @@ export default class extends Controller {
     }
     if (this.boundConfigFileHandler) {
       window.removeEventListener("frankmd:config-file-modified", this.boundConfigFileHandler)
-    }
-    if (this.boundContextMenuClose) {
-      document.removeEventListener("click", this.boundContextMenuClose)
     }
     if (this.boundKeydownHandler) {
       document.removeEventListener("keydown", this.boundKeydownHandler)
@@ -670,10 +555,9 @@ export default class extends Controller {
       this.editorToolbarTarget.classList.add("hidden")
       this.editorToolbarTarget.classList.remove("flex")
       // Hide preview for non-markdown files
-      if (this.hasPreviewPanelTarget && !this.previewPanelTarget.classList.contains("hidden")) {
-        this.previewPanelTarget.classList.add("hidden")
-        this.previewPanelTarget.classList.remove("flex")
-        document.body.classList.remove("preview-visible")
+      const previewController = this.getPreviewController()
+      if (previewController && previewController.isVisible) {
+        previewController.hide()
       }
     }
 
@@ -797,7 +681,10 @@ export default class extends Controller {
         this.applyEditorSettings()
       }
       if (this.previewZoom !== oldZoom) {
-        this.applyPreviewZoom()
+        const previewController = this.getPreviewController()
+        if (previewController) {
+          previewController.zoomValue = this.previewZoom
+        }
       }
 
       // Notify theme controller to reload (dispatch custom event)
@@ -822,7 +709,7 @@ export default class extends Controller {
     this.saveStatusTarget.classList.toggle("dark:text-red-400", isError)
   }
 
-  // Preview Panel
+  // Preview Panel - Delegates to preview_controller
   togglePreview() {
     // Only allow preview for markdown files
     if (!this.isMarkdownFile()) {
@@ -830,37 +717,38 @@ export default class extends Controller {
       return
     }
 
-    const isHidden = this.previewPanelTarget.classList.contains("hidden")
-    this.previewPanelTarget.classList.toggle("hidden", !isHidden)
-    this.previewPanelTarget.classList.toggle("flex", isHidden)
-
-    // Toggle preview-visible class on body for CSS adjustments
-    document.body.classList.toggle("preview-visible", isHidden)
-
-    if (isHidden) {
-      this.updatePreview()
-      // Sync scroll position after a brief delay for DOM to settle
-      setTimeout(() => this.syncPreviewScrollToCursor(), 50)
+    const previewController = this.getPreviewController()
+    if (previewController) {
+      previewController.toggle()
     }
   }
 
+  // Get the preview controller instance
+  getPreviewController() {
+    const previewElement = document.querySelector('[data-controller~="preview"]')
+    if (previewElement) {
+      return this.application.getControllerForElementAndIdentifier(previewElement, "preview")
+    }
+    return null
+  }
+
   updatePreview() {
-    if (this.previewPanelTarget.classList.contains("hidden")) return
+    const previewController = this.getPreviewController()
+    if (!previewController || !previewController.isVisible) return
     if (!this.hasTextareaTarget) return
 
     const content = this.textareaTarget.value
-    this.previewContentTarget.innerHTML = marked.parse(content)
 
-    // Sync scroll after updating preview content
+    // Build scroll data for preview controller
+    const scrollData = { typewriterMode: this.typewriterModeEnabled }
+
     if (this.typewriterModeEnabled) {
-      // In typewriter mode, sync preview to cursor position
       const textBeforeCursor = content.substring(0, this.textareaTarget.selectionStart)
-      const linesBefore = textBeforeCursor.split("\n").length
-      const totalLines = content.split("\n").length
-      this.syncPreviewToTypewriter(linesBefore, totalLines)
-    } else {
-      this.syncPreviewScroll()
+      scrollData.currentLine = textBeforeCursor.split("\n").length
+      scrollData.totalLines = content.split("\n").length
     }
+
+    previewController.update(content, scrollData)
   }
 
   setupSyncScroll() {
@@ -896,66 +784,37 @@ export default class extends Controller {
 
   syncPreviewScroll() {
     if (!this.syncScrollEnabled) return
-    if (this.previewPanelTarget.classList.contains("hidden")) return
-    if (!this.hasTextareaTarget || !this.hasPreviewContentTarget) return
+    if (!this.hasTextareaTarget) return
 
-    // Debounce to avoid excessive updates
-    if (this.syncScrollTimeout) {
-      cancelAnimationFrame(this.syncScrollTimeout)
-    }
+    const previewController = this.getPreviewController()
+    if (!previewController || !previewController.isVisible) return
 
-    this.syncScrollTimeout = requestAnimationFrame(() => {
-      const textarea = this.textareaTarget
-      const preview = this.previewContentTarget
+    const textarea = this.textareaTarget
+    const scrollTop = textarea.scrollTop
+    const scrollHeight = textarea.scrollHeight - textarea.clientHeight
 
-      // Calculate scroll percentage in textarea
-      const scrollTop = textarea.scrollTop
-      const scrollHeight = textarea.scrollHeight - textarea.clientHeight
+    if (scrollHeight <= 0) return
 
-      if (scrollHeight <= 0) return
-
-      const scrollRatio = scrollTop / scrollHeight
-
-      // Apply same ratio to preview
-      const previewScrollHeight = preview.scrollHeight - preview.clientHeight
-      if (previewScrollHeight > 0) {
-        preview.scrollTop = scrollRatio * previewScrollHeight
-      }
-    })
+    const scrollRatio = scrollTop / scrollHeight
+    previewController.syncScrollRatio(scrollRatio)
   }
 
   syncPreviewScrollToCursor() {
     if (!this.syncScrollEnabled) return
-    if (this.previewPanelTarget.classList.contains("hidden")) return
-    if (!this.hasTextareaTarget || !this.hasPreviewContentTarget) return
+    if (!this.hasTextareaTarget) return
+
+    const previewController = this.getPreviewController()
+    if (!previewController || !previewController.isVisible) return
 
     const textarea = this.textareaTarget
     const content = textarea.value
     const cursorPos = textarea.selectionStart
 
-    // Find which line the cursor is on
     const textBeforeCursor = content.substring(0, cursorPos)
     const linesBefore = textBeforeCursor.split("\n").length
     const totalLines = content.split("\n").length
 
-    if (totalLines <= 1) return
-
-    // Calculate position ratio based on line number
-    const lineRatio = (linesBefore - 1) / (totalLines - 1)
-
-    // Apply to preview with smooth behavior
-    const preview = this.previewContentTarget
-    const previewScrollHeight = preview.scrollHeight - preview.clientHeight
-
-    if (previewScrollHeight > 0) {
-      const targetScroll = lineRatio * previewScrollHeight
-
-      // Smooth scroll for cursor-based sync
-      preview.scrollTo({
-        top: targetScroll,
-        behavior: "smooth"
-      })
-    }
+    previewController.syncToLine(linesBefore, totalLines)
   }
 
   // Table Editor - dispatches event for table_editor_controller to handle
@@ -1074,55 +933,35 @@ export default class extends Controller {
     }
   }
 
-  // Editor Customization
+  // Editor Customization - Delegates to customize_controller
   openCustomize() {
-    // Set current values in the selects
-    this.fontSelectTarget.value = this.currentFont
-    this.fontSizeSelectTarget.value = this.currentFontSize
-
-    // Update preview with current settings
-    this.updateFontPreview()
-
-    this.showDialogCentered(this.customizeDialogTarget)
-  }
-
-  closeCustomizeDialog() {
-    this.customizeDialogTarget.close()
-  }
-
-  onFontChange() {
-    this.updateFontPreview()
-  }
-
-  onFontSizeChange() {
-    this.updateFontPreview()
-  }
-
-  updateFontPreview() {
-    const fontId = this.fontSelectTarget.value
-    const fontSize = this.fontSizeSelectTarget.value
-    const font = this.editorFonts.find(f => f.id === fontId)
-
-    if (font && this.hasFontPreviewTarget) {
-      this.fontPreviewTarget.style.fontFamily = font.family
-      this.fontPreviewTarget.style.fontSize = `${fontSize}px`
+    const customizeElement = document.querySelector('[data-controller~="customize"]')
+    if (customizeElement) {
+      const customizeController = this.application.getControllerForElementAndIdentifier(
+        customizeElement,
+        "customize"
+      )
+      if (customizeController) {
+        customizeController.open(this.currentFont, this.currentFontSize)
+      }
     }
   }
 
-  applyCustomization() {
-    this.currentFont = this.fontSelectTarget.value
-    this.currentFontSize = parseInt(this.fontSizeSelectTarget.value)
+  // Handle customize:applied event from customize_controller
+  onCustomizeApplied(event) {
+    const { font, fontSize } = event.detail
+
+    this.currentFont = font
+    this.currentFontSize = fontSize
 
     // Save to server config
     this.saveConfig({
-      editor_font: this.currentFont,
-      editor_font_size: this.currentFontSize
+      editor_font: font,
+      editor_font_size: fontSize
     })
 
     // Apply to editor
     this.applyEditorSettings()
-
-    this.customizeDialogTarget.close()
   }
 
   applyEditorSettings() {
@@ -1200,31 +1039,26 @@ export default class extends Controller {
     window.addEventListener("frankmd:config-file-modified", this.boundConfigFileHandler)
   }
 
-  // Preview Zoom
+  // Preview Zoom - Delegates to preview_controller
+  // These methods are kept for backwards compatibility and keyboard shortcuts
   zoomPreviewIn() {
-    const currentIndex = this.previewZoomLevels.indexOf(this.previewZoom)
-    if (currentIndex < this.previewZoomLevels.length - 1) {
-      this.previewZoom = this.previewZoomLevels[currentIndex + 1]
-      this.applyPreviewZoom()
-      this.saveConfig({ preview_zoom: this.previewZoom })
+    const previewController = this.getPreviewController()
+    if (previewController) {
+      previewController.zoomIn()
     }
   }
 
   zoomPreviewOut() {
-    const currentIndex = this.previewZoomLevels.indexOf(this.previewZoom)
-    if (currentIndex > 0) {
-      this.previewZoom = this.previewZoomLevels[currentIndex - 1]
-      this.applyPreviewZoom()
-      this.saveConfig({ preview_zoom: this.previewZoom })
+    const previewController = this.getPreviewController()
+    if (previewController) {
+      previewController.zoomOut()
     }
   }
 
   applyPreviewZoom() {
-    if (this.hasPreviewContentTarget) {
-      this.previewContentTarget.style.fontSize = `${this.previewZoom}%`
-    }
-    if (this.hasPreviewZoomLevelTarget) {
-      this.previewZoomLevelTarget.textContent = `${this.previewZoom}%`
+    const previewController = this.getPreviewController()
+    if (previewController) {
+      previewController.applyZoom()
     }
   }
 
@@ -1284,9 +1118,10 @@ export default class extends Controller {
       this.textareaTarget.classList.toggle("typewriter-mode", this.typewriterModeEnabled)
     }
 
-    // Also toggle typewriter mode class on preview content for matching padding
-    if (this.hasPreviewContentTarget) {
-      this.previewContentTarget.classList.toggle("preview-typewriter-mode", this.typewriterModeEnabled)
+    // Toggle typewriter mode on preview controller
+    const previewController = this.getPreviewController()
+    if (previewController) {
+      previewController.setTypewriterMode(this.typewriterModeEnabled)
     }
 
     // Update toggle button state if exists
@@ -1303,10 +1138,8 @@ export default class extends Controller {
       this.applySidebarVisibility()
 
       // Show preview
-      if (this.hasPreviewPanelTarget && this.previewPanelTarget.classList.contains("hidden")) {
-        this.previewPanelTarget.classList.remove("hidden")
-        this.previewPanelTarget.classList.add("flex")
-        document.body.classList.add("preview-visible")
+      if (previewController && !previewController.isVisible) {
+        previewController.show()
         this.updatePreview()
         setTimeout(() => this.syncPreviewScrollToCursor(), 50)
       }
@@ -1316,10 +1149,8 @@ export default class extends Controller {
       this.applySidebarVisibility()
 
       // Hide preview
-      if (this.hasPreviewPanelTarget && !this.previewPanelTarget.classList.contains("hidden")) {
-        this.previewPanelTarget.classList.add("hidden")
-        this.previewPanelTarget.classList.remove("flex")
-        document.body.classList.remove("preview-visible")
+      if (previewController && previewController.isVisible) {
+        previewController.hide()
       }
     }
 
@@ -1350,8 +1181,9 @@ export default class extends Controller {
       textarea.scrollTop = Math.max(0, desiredScrollTop)
 
       // Also sync preview if visible
-      const linesBefore = text.substring(0, cursorPos).split("\n").length
-      if (!this.previewPanelTarget.classList.contains("hidden")) {
+      const previewController = this.getPreviewController()
+      if (previewController && previewController.isVisible) {
+        const linesBefore = text.substring(0, cursorPos).split("\n").length
         this.syncPreviewToTypewriter(linesBefore, text.split("\n").length)
       }
     }, 0)
@@ -1397,183 +1229,39 @@ export default class extends Controller {
     return cursorY
   }
 
-  // Sync preview scroll in typewriter mode
+  // Sync preview scroll in typewriter mode - Delegates to preview_controller
   syncPreviewToTypewriter(currentLine, totalLines) {
-    if (!this.hasPreviewContentTarget) return
-    if (totalLines <= 1) return
-
-    const preview = this.previewContentTarget
-    const lineRatio = (currentLine - 1) / (totalLines - 1)
-
-    // In typewriter mode, preview has 50vh padding at bottom (like editor)
-    // Calculate the actual content height (excluding the padding)
-    const style = window.getComputedStyle(preview)
-    const paddingBottom = parseFloat(style.paddingBottom) || 0
-    const actualContentHeight = preview.scrollHeight - paddingBottom
-
-    // Position in the actual content based on line ratio
-    const contentPosition = lineRatio * actualContentHeight
-
-    // We want this position to appear at 50% of visible area (center)
-    const targetY = preview.clientHeight * 0.5
-    const desiredScroll = contentPosition - targetY
-
-    // Max scroll is scrollHeight - clientHeight (browser handles the limit)
-    preview.scrollTop = Math.max(0, desiredScroll)
+    const previewController = this.getPreviewController()
+    if (previewController) {
+      previewController.syncToTypewriter(currentLine, totalLines)
+    }
   }
 
-  // File Finder (Ctrl+P)
+  // File Finder (Ctrl+P) - Delegates to file_finder_controller
   openFileFinder() {
     // Build flat list of all files from tree
-    this.allFiles = flattenTree(this.treeValue)
-    this.fileFinderResults = [...this.allFiles].slice(0, 10)
-    this.selectedFileIndex = 0
+    const files = flattenTree(this.treeValue)
 
-    this.fileFinderInputTarget.value = ""
-    this.renderFileFinderResults()
-    this.showDialogCentered(this.fileFinderDialogTarget)
-    this.fileFinderInputTarget.focus()
-  }
-
-  closeFileFinder() {
-    this.fileFinderDialogTarget.close()
-  }
-
-  onFileFinderInput() {
-    const query = this.fileFinderInputTarget.value.trim().toLowerCase()
-
-    if (!query) {
-      this.fileFinderResults = [...this.allFiles].slice(0, 10)
-    } else {
-      // Fuzzy search: search in full path (including directories)
-      this.fileFinderResults = this.allFiles
-        .map(file => {
-          const score = fuzzyScore(file.path.toLowerCase(), query)
-          return { ...file, score }
-        })
-        .filter(file => file.score > 0)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 10)
-    }
-
-    this.selectedFileIndex = 0
-    this.renderFileFinderResults()
-  }
-
-  renderFileFinderResults() {
-    if (this.fileFinderResults.length === 0) {
-      this.fileFinderResultsTarget.innerHTML = `
-        <div class="px-3 py-6 text-center text-[var(--theme-text-muted)] text-sm">
-          ${window.t("sidebar.no_files_found")}
-        </div>
-      `
-      this.fileFinderPreviewTarget.innerHTML = ""
-      return
-    }
-
-    this.fileFinderResultsTarget.innerHTML = this.fileFinderResults
-      .map((file, index) => {
-        const isSelected = index === this.selectedFileIndex
-        const name = file.name.replace(/\.md$/, "")
-        const path = file.path.replace(/\.md$/, "")
-        const displayPath = path !== name ? path.replace(new RegExp(`${name}$`), "").replace(/\/$/, "") : ""
-
-        return `
-          <button
-            type="button"
-            class="w-full px-3 py-2 text-left flex items-center gap-2 ${isSelected ? 'bg-[var(--theme-accent)] text-[var(--theme-accent-text)]' : 'hover:bg-[var(--theme-bg-hover)]'}"
-            data-index="${index}"
-            data-path="${escapeHtml(file.path)}"
-            data-action="click->app#selectFileFromFinder mouseenter->app#hoverFileFinderResult"
-          >
-            <svg class="w-4 h-4 flex-shrink-0 ${isSelected ? '' : 'text-[var(--theme-text-muted)]'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <div class="min-w-0 flex-1">
-              <div class="truncate font-medium">${escapeHtml(name)}</div>
-              ${displayPath ? `<div class="truncate text-xs ${isSelected ? 'opacity-75' : 'text-[var(--theme-text-muted)]'}">${escapeHtml(displayPath)}</div>` : ''}
-            </div>
-          </button>
-        `
-      })
-      .join("")
-
-    this.loadFilePreview()
-  }
-
-  async loadFilePreview() {
-    if (this.fileFinderResults.length === 0) {
-      this.fileFinderPreviewTarget.innerHTML = ""
-      return
-    }
-
-    const file = this.fileFinderResults[this.selectedFileIndex]
-    if (!file) return
-
-    try {
-      const response = await fetch(`/notes/${encodePath(file.path)}`, {
-        headers: { "Accept": "application/json" }
-      })
-
-      if (!response.ok) {
-        this.fileFinderPreviewTarget.innerHTML = `<div class="text-[var(--theme-text-muted)] text-sm">Unable to load preview</div>`
-        return
+    // Find the file-finder controller and call open
+    const fileFinderElement = document.querySelector('[data-controller~="file-finder"]')
+    if (fileFinderElement) {
+      const fileFinderController = this.application.getControllerForElementAndIdentifier(
+        fileFinderElement,
+        "file-finder"
+      )
+      if (fileFinderController) {
+        fileFinderController.open(files)
       }
-
-      const data = await response.json()
-      const lines = (data.content || "").split("\n").slice(0, 10)
-      const preview = lines.join("\n")
-
-      this.fileFinderPreviewTarget.innerHTML = `<pre class="text-xs font-mono whitespace-pre-wrap text-[var(--theme-text-secondary)] leading-relaxed">${escapeHtml(preview)}${lines.length >= 10 ? '\n...' : ''}</pre>`
-    } catch (error) {
-      this.fileFinderPreviewTarget.innerHTML = `<div class="text-[var(--theme-text-muted)] text-sm">Unable to load preview</div>`
     }
   }
 
-  onFileFinderKeydown(event) {
-    if (event.key === "ArrowDown") {
-      event.preventDefault()
-      if (this.selectedFileIndex < this.fileFinderResults.length - 1) {
-        this.selectedFileIndex++
-        this.renderFileFinderResults()
-      }
-    } else if (event.key === "ArrowUp") {
-      event.preventDefault()
-      if (this.selectedFileIndex > 0) {
-        this.selectedFileIndex--
-        this.renderFileFinderResults()
-      }
-    } else if (event.key === "Enter") {
-      event.preventDefault()
-      this.selectCurrentFile()
-    }
-  }
-
-  hoverFileFinderResult(event) {
-    const index = parseInt(event.currentTarget.dataset.index)
-    if (index !== this.selectedFileIndex) {
-      this.selectedFileIndex = index
-      this.renderFileFinderResults()
-    }
-  }
-
-  selectFileFromFinder(event) {
-    const path = event.currentTarget.dataset.path
+  // Handle file selected event from file_finder_controller
+  onFileSelected(event) {
+    const { path } = event.detail
     this.openFileAndRevealInTree(path)
   }
 
-  selectCurrentFile() {
-    if (this.fileFinderResults.length === 0) return
-    const file = this.fileFinderResults[this.selectedFileIndex]
-    if (file) {
-      this.openFileAndRevealInTree(file.path)
-    }
-  }
-
   async openFileAndRevealInTree(path) {
-    // Close the finder
-    this.fileFinderDialogTarget.close()
-
     // Expand all parent folders in the tree
     const parts = path.split("/")
     let currentPath = ""
@@ -1593,208 +1281,24 @@ export default class extends Controller {
     await this.loadFile(path)
   }
 
-  // Content Search (Ctrl+Shift+F)
+  // Content Search (Ctrl+Shift+F) - Delegates to content_search_controller
   openContentSearch() {
-    this.searchResultsData = []
-    this.selectedSearchIndex = 0
-    this.contentSearchInputTarget.value = ""
-    this.contentSearchResultsTarget.innerHTML = ""
-    this.contentSearchStatusTarget.textContent = window.t("status.type_to_search_regex")
-    this.showDialogCentered(this.contentSearchDialogTarget)
-    this.contentSearchInputTarget.focus()
-  }
-
-  closeContentSearch() {
-    this.contentSearchDialogTarget.close()
-  }
-
-  onContentSearchInput() {
-    const query = this.contentSearchInputTarget.value.trim()
-
-    // Debounce search
-    if (this.contentSearchTimeout) {
-      clearTimeout(this.contentSearchTimeout)
-    }
-
-    if (!query) {
-      this.searchResultsData = []
-      this.contentSearchResultsTarget.innerHTML = ""
-      this.contentSearchStatusTarget.textContent = window.t("status.type_to_search_regex")
-      return
-    }
-
-    this.contentSearchStatusTarget.textContent = window.t("status.searching")
-
-    this.contentSearchTimeout = setTimeout(async () => {
-      await this.performContentSearch(query)
-    }, 300)
-  }
-
-  async performContentSearch(query) {
-    try {
-      const response = await fetch(`/notes/search?q=${encodeURIComponent(query)}`, {
-        headers: { "Accept": "application/json" }
-      })
-
-      if (!response.ok) {
-        throw new Error(window.t("errors.search_failed"))
+    const contentSearchElement = document.querySelector('[data-controller~="content-search"]')
+    if (contentSearchElement) {
+      const contentSearchController = this.application.getControllerForElementAndIdentifier(
+        contentSearchElement,
+        "content-search"
+      )
+      if (contentSearchController) {
+        contentSearchController.open()
       }
-
-      this.searchResultsData = await response.json()
-      this.selectedSearchIndex = 0
-      this.renderContentSearchResults()
-
-      const count = this.searchResultsData.length
-      const maxMsg = count >= 20 ? " (showing first 20)" : ""
-      this.contentSearchStatusTarget.textContent = count === 0
-        ? window.t("status.no_matches")
-        : `${count} match${count === 1 ? "" : "es"} found${maxMsg} - use ↑↓ to navigate, Enter to open`
-    } catch (error) {
-      console.error("Search error:", error)
-      this.contentSearchStatusTarget.textContent = window.t("status.search_error")
-      this.contentSearchResultsTarget.innerHTML = ""
     }
   }
 
-  renderContentSearchResults() {
-    if (this.searchResultsData.length === 0) {
-      this.contentSearchResultsTarget.innerHTML = `
-        <div class="px-4 py-8 text-center text-[var(--theme-text-muted)] text-sm">
-          ${window.t("status.no_matches")}
-        </div>
-      `
-      return
-    }
-
-    this.contentSearchResultsTarget.innerHTML = this.searchResultsData
-      .map((result, index) => {
-        const isSelected = index === this.selectedSearchIndex
-        const contextHtml = result.context.map(line => {
-          const lineClass = line.is_match
-            ? "bg-[var(--theme-selection)] text-[var(--theme-selection-text)]"
-            : ""
-          const escapedContent = escapeHtml(line.content)
-          return `<div class="flex ${lineClass}">
-            <span class="w-10 flex-shrink-0 text-right pr-2 text-[var(--theme-text-faint)] select-none">${line.line_number}</span>
-            <span class="flex-1 overflow-hidden text-ellipsis">${escapedContent}</span>
-          </div>`
-        }).join("")
-
-        const selectedClass = isSelected
-          ? 'bg-[var(--theme-accent)] text-[var(--theme-accent-text)]'
-          : 'hover:bg-[var(--theme-bg-hover)]'
-
-        return `
-          <button
-            type="button"
-            class="w-full text-left border-b border-[var(--theme-border)] last:border-b-0 ${selectedClass}"
-            data-index="${index}"
-            data-path="${escapeHtml(result.path)}"
-            data-line="${result.line_number}"
-            data-action="click->app#selectContentSearchResult mouseenter->app#hoverContentSearchResult"
-          >
-            <div class="px-3 py-2">
-              <div class="flex items-center gap-2 mb-1">
-                <svg class="w-4 h-4 flex-shrink-0 ${isSelected ? '' : 'text-[var(--theme-text-muted)]'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span class="font-medium truncate">${escapeHtml(result.name)}</span>
-                <span class="text-xs ${isSelected ? 'opacity-80' : 'text-[var(--theme-text-muted)]'}">:${result.line_number}</span>
-                <span class="text-xs ${isSelected ? 'opacity-70' : 'text-[var(--theme-text-faint)]'} truncate ml-auto">${escapeHtml(result.path.replace(/\.md$/, ""))}</span>
-              </div>
-              <div class="font-mono text-xs leading-relaxed overflow-hidden ${isSelected ? 'bg-black/20' : 'bg-[var(--theme-bg-tertiary)]'} rounded p-2">
-                ${contextHtml}
-              </div>
-            </div>
-          </button>
-        `
-      })
-      .join("")
-  }
-
-  onContentSearchKeydown(event) {
-    if (event.key === "ArrowDown") {
-      event.preventDefault()
-      this.searchUsingKeyboard = true
-      if (this.selectedSearchIndex < this.searchResultsData.length - 1) {
-        this.selectedSearchIndex++
-        this.renderContentSearchResults()
-        this.scrollSearchResultIntoView()
-      }
-    } else if (event.key === "ArrowUp") {
-      event.preventDefault()
-      this.searchUsingKeyboard = true
-      if (this.selectedSearchIndex > 0) {
-        this.selectedSearchIndex--
-        this.renderContentSearchResults()
-        this.scrollSearchResultIntoView()
-      }
-    } else if (event.key === "Enter") {
-      event.preventDefault()
-      this.openSelectedSearchResult()
-    }
-  }
-
-  scrollSearchResultIntoView() {
-    const selected = this.contentSearchResultsTarget.querySelector(`[data-index="${this.selectedSearchIndex}"]`)
-    if (selected) {
-      selected.scrollIntoView({ block: "nearest" })
-    }
-  }
-
-  hoverContentSearchResult(event) {
-    // Ignore hover events when navigating with keyboard
-    if (this.searchUsingKeyboard) return
-
-    const index = parseInt(event.currentTarget.dataset.index)
-    if (index !== this.selectedSearchIndex) {
-      this.selectedSearchIndex = index
-      this.renderContentSearchResults()
-    }
-  }
-
-  onContentSearchMouseMove() {
-    // Re-enable mouse selection when mouse moves
-    this.searchUsingKeyboard = false
-  }
-
-  selectContentSearchResult(event) {
-    const path = event.currentTarget.dataset.path
-    const line = parseInt(event.currentTarget.dataset.line)
-    this.openSearchResultFile(path, line)
-  }
-
-  openSelectedSearchResult() {
-    if (this.searchResultsData.length === 0) return
-    const result = this.searchResultsData[this.selectedSearchIndex]
-    if (result) {
-      this.openSearchResultFile(result.path, result.line_number)
-    }
-  }
-
-  async openSearchResultFile(path, lineNumber) {
-    // Close the search dialog
-    this.contentSearchDialogTarget.close()
-
-    // Expand all parent folders in the tree
-    const parts = path.split("/")
-    let currentPath = ""
-    for (let i = 0; i < parts.length - 1; i++) {
-      currentPath = currentPath ? `${currentPath}/${parts[i]}` : parts[i]
-      this.expandedFolders.add(currentPath)
-    }
-
-    // Show sidebar if hidden
-    if (!this.sidebarVisible) {
-      this.sidebarVisible = true
-      this.saveConfig({ sidebar_visible: true })
-      this.applySidebarVisibility()
-    }
-
-    // Load the file
-    await this.loadFile(path)
-
-    // Jump to line after file loads
+  // Handle search result selected event from content_search_controller
+  async onSearchResultSelected(event) {
+    const { path, lineNumber } = event.detail
+    await this.openFileAndRevealInTree(path)
     this.jumpToLine(lineNumber)
   }
 
@@ -1823,271 +1327,71 @@ export default class extends Controller {
     textarea.scrollTop = Math.max(0, targetScroll)
   }
 
-  // Help Dialog
+  // Help Dialog - delegates to help controller
   openHelp() {
-    this.showDialogCentered(this.helpDialogTarget)
+    const helpController = this.getHelpController()
+    if (helpController) {
+      helpController.openHelp()
+    }
   }
 
-  closeHelp() {
-    this.helpDialogTarget.close()
+  getHelpController() {
+    const helpElement = document.querySelector('[data-controller~="help"]')
+    if (helpElement) {
+      return this.application.getControllerForElementAndIdentifier(helpElement, "help")
+    }
+    return null
   }
 
-  // Code Snippet Editor
+  // Code Snippet Editor - Delegates to code_dialog_controller
   openCodeEditor() {
-    if (this.hasTextareaTarget) {
-      const text = this.textareaTarget.value
-      const cursorPos = this.textareaTarget.selectionStart
-      const codeBlock = findCodeBlockAtPosition(text, cursorPos)
+    if (!this.hasTextareaTarget) return
 
-      if (codeBlock) {
-        // Edit existing code block
-        this.codeEditMode = true
-        this.codeStartPos = codeBlock.startPos
-        this.codeEndPos = codeBlock.endPos
-        this.codeLanguageTarget.value = codeBlock.language || ""
-        this.codeContentTarget.value = codeBlock.content || ""
-      } else {
-        // New code block
-        this.codeEditMode = false
-        this.codeLanguageTarget.value = ""
-        this.codeContentTarget.value = ""
-      }
-    } else {
-      this.codeEditMode = false
-      this.codeLanguageTarget.value = ""
-      this.codeContentTarget.value = ""
-    }
+    const text = this.textareaTarget.value
+    const cursorPos = this.textareaTarget.selectionStart
+    const codeBlock = findCodeBlockAtPosition(text, cursorPos)
 
-    this.hideSuggestions()
-    this.showDialogCentered(this.codeDialogTarget)
-    this.codeLanguageTarget.focus()
-  }
-
-  closeCodeDialog() {
-    this.codeDialogTarget.close()
-  }
-
-  // About Dialog
-  openAboutDialog() {
-    this.showDialogCentered(this.aboutDialogTarget)
-  }
-
-  closeAboutDialog() {
-    this.aboutDialogTarget.close()
-  }
-
-  onCodeLanguageInput() {
-    const value = this.codeLanguageTarget.value.toLowerCase().trim()
-
-    if (!value) {
-      this.hideSuggestions()
-      return
-    }
-
-    // Filter languages that start with or contain the input
-    const matches = this.codeLanguages.filter(lang =>
-      lang.startsWith(value) || lang.includes(value)
-    ).slice(0, 6)
-
-    if (matches.length > 0 && matches[0] !== value) {
-      this.showSuggestions(matches)
-    } else {
-      this.hideSuggestions()
-    }
-  }
-
-  onCodeLanguageKeydown(event) {
-    if (event.key === "Tab") {
-      const suggestions = this.codeSuggestionsTarget
-      if (!suggestions.classList.contains("hidden")) {
-        event.preventDefault()
-        const firstSuggestion = suggestions.querySelector("button")
-        if (firstSuggestion) {
-          this.codeLanguageTarget.value = firstSuggestion.dataset.language
-          this.hideSuggestions()
-        }
-      }
-    } else if (event.key === "Escape") {
-      this.hideSuggestions()
-    } else if (event.key === "ArrowDown") {
-      const suggestions = this.codeSuggestionsTarget
-      if (!suggestions.classList.contains("hidden")) {
-        event.preventDefault()
-        const firstBtn = suggestions.querySelector("button")
-        if (firstBtn) firstBtn.focus()
-      }
-    } else if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
-      event.preventDefault()
-      this.insertCode()
-    }
-  }
-
-  onCodeContentKeydown(event) {
-    if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
-      event.preventDefault()
-      this.insertCode()
-      return
-    }
-
-    // Handle Tab key for indentation
-    if (event.key === "Tab") {
-      event.preventDefault()
-      const textarea = this.codeContentTarget
-      const start = textarea.selectionStart
-      const end = textarea.selectionEnd
-      const value = textarea.value
-
-      // Determine indent character(s)
-      const useTabs = this.hasCodeIndentTabsTarget && this.codeIndentTabsTarget.checked
-      const indent = useTabs ? "\t" : "  "
-
-      if (start === end) {
-        // No selection - just insert indent at cursor
-        if (event.shiftKey) {
-          // Outdent: remove indent from start of current line
-          const lineStart = value.lastIndexOf("\n", start - 1) + 1
-          const lineContent = value.substring(lineStart, start)
-          if (lineContent.startsWith(indent)) {
-            textarea.value = value.substring(0, lineStart) + value.substring(lineStart + indent.length)
-            textarea.selectionStart = textarea.selectionEnd = start - indent.length
-          } else if (lineContent.startsWith("\t") || lineContent.startsWith(" ")) {
-            // Remove single space or tab if exact indent not found
-            const removeLen = lineContent.startsWith("\t") ? 1 : Math.min(lineContent.match(/^ */)[0].length, indent.length)
-            textarea.value = value.substring(0, lineStart) + value.substring(lineStart + removeLen)
-            textarea.selectionStart = textarea.selectionEnd = start - removeLen
-          }
-        } else {
-          // Indent: insert at cursor
-          textarea.value = value.substring(0, start) + indent + value.substring(end)
-          textarea.selectionStart = textarea.selectionEnd = start + indent.length
-        }
-      } else {
-        // Selection exists - indent/outdent all selected lines
-        const lineStart = value.lastIndexOf("\n", start - 1) + 1
-        const lineEnd = value.indexOf("\n", end)
-        const actualEnd = lineEnd === -1 ? value.length : lineEnd
-        const selectedLines = value.substring(lineStart, actualEnd)
-        const lines = selectedLines.split("\n")
-
-        let newLines
-        if (event.shiftKey) {
-          // Outdent
-          newLines = lines.map(line => {
-            if (line.startsWith(indent)) {
-              return line.substring(indent.length)
-            } else if (line.startsWith("\t")) {
-              return line.substring(1)
-            } else if (line.startsWith(" ")) {
-              const spaces = line.match(/^ */)[0].length
-              return line.substring(Math.min(spaces, indent.length))
-            }
-            return line
+    // Find the code-dialog controller and call open
+    const codeDialogElement = document.querySelector('[data-controller~="code-dialog"]')
+    if (codeDialogElement) {
+      const codeDialogController = this.application.getControllerForElementAndIdentifier(
+        codeDialogElement,
+        "code-dialog"
+      )
+      if (codeDialogController) {
+        if (codeBlock) {
+          codeDialogController.open({
+            language: codeBlock.language || "",
+            content: codeBlock.content || "",
+            editMode: true,
+            startPos: codeBlock.startPos,
+            endPos: codeBlock.endPos
           })
         } else {
-          // Indent
-          newLines = lines.map(line => indent + line)
+          codeDialogController.open()
         }
-
-        const newText = newLines.join("\n")
-        textarea.value = value.substring(0, lineStart) + newText + value.substring(actualEnd)
-
-        // Restore selection
-        textarea.selectionStart = lineStart
-        textarea.selectionEnd = lineStart + newText.length
-      }
-
-      // Trigger input event for any listeners
-      textarea.dispatchEvent(new Event("input", { bubbles: true }))
-    }
-  }
-
-  onSuggestionKeydown(event) {
-    if (event.key === "ArrowDown") {
-      event.preventDefault()
-      const next = event.target.nextElementSibling
-      if (next) next.focus()
-    } else if (event.key === "ArrowUp") {
-      event.preventDefault()
-      const prev = event.target.previousElementSibling
-      if (prev) {
-        prev.focus()
-      } else {
-        this.codeLanguageTarget.focus()
-      }
-    } else if (event.key === "Escape") {
-      this.hideSuggestions()
-      this.codeLanguageTarget.focus()
-    }
-  }
-
-  showSuggestions(matches) {
-    const container = this.codeSuggestionsTarget
-    container.innerHTML = matches.map(lang => `
-      <button
-        type="button"
-        class="w-full px-3 py-1.5 text-left text-sm hover:bg-[var(--theme-bg-hover)] focus:bg-[var(--theme-bg-hover)] focus:outline-none text-[var(--theme-text-primary)]"
-        data-language="${lang}"
-        data-action="click->app#selectLanguage keydown->app#onSuggestionKeydown"
-      >
-        ${lang}
-      </button>
-    `).join("")
-    container.classList.remove("hidden")
-  }
-
-  hideSuggestions() {
-    this.codeSuggestionsTarget.classList.add("hidden")
-  }
-
-  selectLanguage(event) {
-    this.codeLanguageTarget.value = event.currentTarget.dataset.language
-    this.hideSuggestions()
-    this.codeContentTarget.focus()
-  }
-
-  insertCode() {
-    if (!this.hasTextareaTarget) {
-      this.codeDialogTarget.close()
-      return
-    }
-
-    const language = this.codeLanguageTarget.value.trim()
-    const content = this.codeContentTarget.value
-
-    // Validate language if provided
-    if (language && !this.codeLanguages.includes(language.toLowerCase())) {
-      const isClose = this.codeLanguages.some(lang =>
-        lang.startsWith(language.toLowerCase()) ||
-        levenshteinDistance(lang, language.toLowerCase()) <= 2
-      )
-      if (!isClose) {
-        const proceed = confirm(window.t("dialogs.code.unrecognized_language", { language }))
-        if (!proceed) return
       }
     }
+  }
 
+  // Handle code insert event from code_dialog_controller
+  onCodeInsert(event) {
+    if (!this.hasTextareaTarget) return
+
+    const { codeBlock, language, editMode, startPos, endPos } = event.detail
     const textarea = this.textareaTarget
     const text = textarea.value
 
-    // Build the code fence - ensure there's always a line inside for cursor positioning
-    let codeBlock
-    if (content) {
-      codeBlock = "```" + language + "\n" + content + (content.endsWith("\n") ? "" : "\n") + "```"
-    } else {
-      // Empty content: add a blank line inside the fence
-      codeBlock = "```" + language + "\n\n```"
-    }
-
     let newCursorPos
 
-    if (this.codeEditMode) {
+    if (editMode) {
       // Replace existing code block
-      const before = text.substring(0, this.codeStartPos)
-      const after = text.substring(this.codeEndPos)
+      const before = text.substring(0, startPos)
+      const after = text.substring(endPos)
       textarea.value = before + codeBlock + after
 
       // Position cursor at first line of content (after ```language\n)
-      newCursorPos = this.codeStartPos + 3 + language.length + 1
+      newCursorPos = startPos + 3 + language.length + 1
     } else {
       // Insert at cursor
       const cursorPos = textarea.selectionStart
@@ -2106,436 +1410,39 @@ export default class extends Controller {
 
     // Focus first, then set cursor position
     textarea.focus()
-    // Use setTimeout to ensure the cursor positioning happens after focus
     setTimeout(() => {
       textarea.setSelectionRange(newCursorPos, newCursorPos)
     }, 0)
     this.scheduleAutoSave()
     this.updatePreview()
-    this.codeDialogTarget.close()
   }
 
-  // Simple Levenshtein distance for typo detection
-  // Video Dialog
+  // About Dialog - delegates to help controller
+  openAboutDialog() {
+    const helpController = this.getHelpController()
+    if (helpController) {
+      helpController.openAbout()
+    }
+  }
+
+  // Video Dialog - delegates to video-dialog controller
   openVideoDialog() {
-    // Reset URL tab
-    this.videoUrlTarget.value = ""
-    this.videoPreviewTarget.innerHTML = '<span class="text-[var(--theme-text-muted)]">Enter a URL to see preview</span>'
-    this.insertVideoBtnTarget.disabled = true
-    this.detectedVideoType = null
-    this.detectedVideoData = null
-
-    // Reset search tab
-    if (this.hasYoutubeSearchInputTarget) {
-      this.youtubeSearchInputTarget.value = ""
-    }
-    if (this.hasYoutubeSearchResultsTarget) {
-      this.youtubeSearchResultsTarget.innerHTML = ""
-    }
-    if (this.hasYoutubeSearchStatusTarget) {
-      this.youtubeSearchStatusTarget.textContent = window.t("status.enter_keywords_search")
-    }
-    this.youtubeSearchResults = []
-    this.selectedYoutubeIndex = -1
-
-    // Show/hide YouTube config notice based on feature availability
-    if (this.hasYoutubeConfigNoticeTarget && this.hasYoutubeSearchFormTarget) {
-      const youtubeConfigured = this.youtubeApiEnabled
-      this.youtubeConfigNoticeTarget.classList.toggle("hidden", youtubeConfigured)
-      this.youtubeSearchFormTarget.classList.toggle("hidden", !youtubeConfigured)
-    }
-
-    // Reset to URL tab
-    this.switchVideoTab({ currentTarget: { dataset: { tab: "url" } } })
-
-    this.showDialogCentered(this.videoDialogTarget)
-    this.videoUrlTarget.focus()
-  }
-
-  async checkYoutubeApiEnabled() {
-    try {
-      const response = await fetch("/youtube/config")
-      if (response.ok) {
-        const data = await response.json()
-        this.youtubeApiEnabled = data.enabled
-      }
-    } catch (error) {
-      this.youtubeApiEnabled = false
-    }
-  }
-
-  // AI Grammar Check Methods
-
-  async checkAiAvailability() {
-    try {
-      const response = await fetch("/ai/config")
-      if (response.ok) {
-        const data = await response.json()
-        this.aiEnabled = data.enabled
-        this.aiProvider = data.provider
-        this.aiModel = data.model
-        this.aiAvailableProviders = data.available_providers || []
-      }
-    } catch (e) {
-      console.debug("AI config check failed:", e)
-      this.aiEnabled = false
-      this.aiProvider = null
-      this.aiModel = null
-      this.aiAvailableProviders = []
-    }
-  }
-
-  async openAiDialog() {
-    // Hide provider badge initially
-    if (this.hasAiProviderBadgeTarget) {
-      this.aiProviderBadgeTarget.classList.add("hidden")
-    }
-
-    // If AI is not configured, show the config notice
-    if (!this.aiEnabled) {
-      this.aiConfigNoticeTarget.classList.remove("hidden")
-      this.aiDiffContentTarget.classList.add("hidden")
-      this.showDialogCentered(this.aiDiffDialogTarget)
-      return
-    }
-
-    if (!this.currentFile) {
-      alert(window.t("errors.no_file_open"))
-      return
-    }
-
-    const text = this.textareaTarget.value
-    if (!text.trim()) {
-      alert(window.t("errors.no_text_to_check"))
-      return
-    }
-
-    // Show loading state on button
-    const button = this.aiButtonTarget
-    const originalContent = button.innerHTML
-    button.innerHTML = `
-      <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>
-      <span>${window.t("status.processing")}</span>
-    `
-    button.disabled = true
-
-    // Save file first if there are pending changes (server reads from disk)
-    if (this.saveTimeout) {
-      await this.saveNow()
-    }
-
-    // Show processing overlay with provider/model info and disable editor
-    if (this.hasAiProcessingOverlayTarget) {
-      // Update the provider/model display
-      if (this.hasAiProcessingProviderTarget && this.aiProvider && this.aiModel) {
-        this.aiProcessingProviderTarget.textContent = `${this.aiProvider}: ${this.aiModel}`
-      } else if (this.hasAiProcessingProviderTarget) {
-        this.aiProcessingProviderTarget.textContent = "AI"
-      }
-      this.aiProcessingOverlayTarget.classList.remove("hidden")
-    }
-    this.textareaTarget.disabled = true
-
-    // Setup abort controller for ESC key cancellation
-    this.aiAbortController = new AbortController()
-    const handleEscKey = (e) => {
-      if (e.key === "Escape" && this.aiAbortController) {
-        this.aiAbortController.abort()
-      }
-    }
-    document.addEventListener("keydown", handleEscKey)
-
-    try {
-      // Send just the path - server reads the file directly
-      const response = await fetch("/ai/fix_grammar", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-Token": this.csrfToken
-        },
-        body: JSON.stringify({ path: this.currentFile }),
-        signal: this.aiAbortController.signal
-      })
-
-      const data = await response.json()
-
-      if (data.error) {
-        alert(`${window.t("errors.failed_to_process_ai")}: ${data.error}`)
-        return
-      }
-
-      // Show provider badge
-      if (this.hasAiProviderBadgeTarget && data.provider && data.model) {
-        this.aiProviderBadgeTarget.textContent = `${data.provider}: ${data.model}`
-        this.aiProviderBadgeTarget.classList.remove("hidden")
-      }
-
-      // Populate and show dialog with diff content
-      this.aiConfigNoticeTarget.classList.add("hidden")
-      this.aiDiffContentTarget.classList.remove("hidden")
-      this.aiDiffContentTarget.classList.add("flex")
-
-      // Compute and display diff (use original from server response)
-      const diff = computeWordDiff(data.original, data.corrected)
-      this.aiOriginalTextTarget.innerHTML = this.renderDiffOriginal(diff)
-      this.aiCorrectedDiffTarget.innerHTML = this.renderDiffCorrected(diff)
-      this.aiCorrectedTextTarget.value = data.corrected
-
-      // Reset to diff view mode
-      this.aiCorrectedDiffTarget.classList.remove("hidden")
-      this.aiCorrectedTextTarget.classList.add("hidden")
-      if (this.hasAiEditToggleTarget) {
-        this.aiEditToggleTarget.textContent = window.t("common.edit")
-      }
-
-      this.showDialogCentered(this.aiDiffDialogTarget)
-    } catch (e) {
-      if (e.name === "AbortError") {
-        console.log("AI request cancelled by user")
-      } else {
-        console.error("AI request failed:", e)
-        alert(window.t("errors.failed_to_process_ai"))
-      }
-    } finally {
-      // Cleanup
-      document.removeEventListener("keydown", handleEscKey)
-      this.aiAbortController = null
-      button.innerHTML = originalContent
-      button.disabled = false
-      this.textareaTarget.disabled = false
-      if (this.hasAiProcessingOverlayTarget) {
-        this.aiProcessingOverlayTarget.classList.add("hidden")
+    const videoDialogElement = document.querySelector('[data-controller~="video-dialog"]')
+    if (videoDialogElement) {
+      const videoDialogController = this.application.getControllerForElementAndIdentifier(
+        videoDialogElement,
+        "video-dialog"
+      )
+      if (videoDialogController) {
+        videoDialogController.open()
       }
     }
   }
 
-  closeAiDiffDialog() {
-    this.aiDiffDialogTarget.close()
-  }
-
-  toggleAiEditMode() {
-    const isEditing = !this.aiCorrectedTextTarget.classList.contains("hidden")
-
-    if (isEditing) {
-      // Switch to diff view
-      this.aiCorrectedTextTarget.classList.add("hidden")
-      this.aiCorrectedDiffTarget.classList.remove("hidden")
-      this.aiEditToggleTarget.textContent = window.t("common.edit")
-    } else {
-      // Switch to edit view
-      this.aiCorrectedDiffTarget.classList.add("hidden")
-      this.aiCorrectedTextTarget.classList.remove("hidden")
-      this.aiEditToggleTarget.textContent = window.t("preview.title")
-      this.aiCorrectedTextTarget.focus()
-    }
-  }
-
-  acceptAiCorrection() {
-    const correctedText = this.aiCorrectedTextTarget.value
-    this.textareaTarget.value = correctedText
-    this.closeAiDiffDialog()
-    this.onTextareaInput() // Trigger save and preview update
-  }
-
-  // Word-level diff computation using Myers' diff algorithm (simplified)
-  // Render diff for the original text column (shows deletions)
-  renderDiffOriginal(diff) {
-    const escapeHtml = (text) => {
-      return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;')
-    }
-
-    let html = ''
-    for (const item of diff) {
-      const escaped = escapeHtml(item.value)
-      if (item.type === 'equal') {
-        html += `<span class="ai-diff-equal">${escaped}</span>`
-      } else if (item.type === 'delete') {
-        html += `<span class="ai-diff-del">${escaped}</span>`
-      }
-      // Don't show insertions in original view
-    }
-    return html
-  }
-
-  // Render diff for the corrected text column (shows additions)
-  renderDiffCorrected(diff) {
-    const escapeHtml = (text) => {
-      return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;')
-    }
-
-    let html = ''
-    for (const item of diff) {
-      const escaped = escapeHtml(item.value)
-      if (item.type === 'equal') {
-        html += `<span class="ai-diff-equal">${escaped}</span>`
-      } else if (item.type === 'insert') {
-        html += `<span class="ai-diff-add">${escaped}</span>`
-      }
-      // Don't show deletions in corrected view
-    }
-    return html
-  }
-
-  switchVideoTab(event) {
-    const tab = event.currentTarget.dataset.tab
-
-    // Update tab buttons
-    const urlTabClasses = tab === "url"
-      ? "border-[var(--theme-accent)] text-[var(--theme-accent)]"
-      : "border-transparent text-[var(--theme-text-muted)] hover:text-[var(--theme-text-secondary)]"
-    const searchTabClasses = tab === "search"
-      ? "border-[var(--theme-accent)] text-[var(--theme-accent)]"
-      : "border-transparent text-[var(--theme-text-muted)] hover:text-[var(--theme-text-secondary)]"
-
-    this.videoTabUrlTarget.className = `px-4 py-2 text-sm font-medium border-b-2 ${urlTabClasses}`
-    this.videoTabSearchTarget.className = `px-4 py-2 text-sm font-medium border-b-2 ${searchTabClasses}`
-
-    // Show/hide panels
-    this.videoUrlPanelTarget.classList.toggle("hidden", tab !== "url")
-    this.videoSearchPanelTarget.classList.toggle("hidden", tab !== "search")
-
-    // Focus appropriate input
-    if (tab === "url") {
-      this.videoUrlTarget.focus()
-    } else if (tab === "search" && this.hasYoutubeSearchInputTarget && this.youtubeApiEnabled) {
-      this.youtubeSearchInputTarget.focus()
-    }
-  }
-
-  closeVideoDialog() {
-    this.videoDialogTarget.close()
-  }
-
-  onVideoUrlInput() {
-    const url = this.videoUrlTarget.value.trim()
-
-    if (!url) {
-      this.videoPreviewTarget.innerHTML = '<span class="text-[var(--theme-text-muted)]">Enter a URL to see preview</span>'
-      this.insertVideoBtnTarget.disabled = true
-      this.detectedVideoType = null
-      return
-    }
-
-    // Check for YouTube
-    const youtubeId = extractYouTubeId(url)
-    if (youtubeId) {
-      this.detectedVideoType = "youtube"
-      this.detectedVideoData = { id: youtubeId }
-      const thumbnailUrl = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
-      this.videoPreviewTarget.innerHTML = `
-        <div class="flex gap-3">
-          <div class="relative flex-shrink-0 w-32 h-18 rounded overflow-hidden bg-[var(--theme-bg-tertiary)]">
-            <img
-              src="${thumbnailUrl}"
-              alt="Video thumbnail"
-              class="w-full h-full object-cover"
-              onerror="this.style.display='none'"
-            >
-            <div class="absolute inset-0 flex items-center justify-center">
-              <svg class="w-10 h-10 text-red-600 drop-shadow-lg" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-              </svg>
-            </div>
-          </div>
-          <div class="flex flex-col justify-center">
-            <div class="font-medium text-[var(--theme-text-primary)]">YouTube Video</div>
-            <div class="text-xs text-[var(--theme-text-muted)]">ID: ${youtubeId}</div>
-          </div>
-        </div>
-      `
-      this.insertVideoBtnTarget.disabled = false
-      return
-    }
-
-    // Check for video file
-    const videoExtensions = [".mp4", ".webm", ".mkv", ".mov", ".avi", ".m4v", ".ogv"]
-    const isVideoFile = videoExtensions.some(ext => url.toLowerCase().endsWith(ext))
-
-    if (isVideoFile) {
-      this.detectedVideoType = "file"
-      this.detectedVideoData = { url: url }
-      const filename = url.split("/").pop()
-      this.videoPreviewTarget.innerHTML = `
-        <div class="flex items-center gap-3">
-          <svg class="w-8 h-8 text-[var(--theme-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div>
-            <div class="font-medium text-[var(--theme-text-primary)]">Video File</div>
-            <div class="text-xs text-[var(--theme-text-muted)] truncate max-w-[350px]">${escapeHtml(filename)}</div>
-          </div>
-        </div>
-      `
-      this.insertVideoBtnTarget.disabled = false
-      return
-    }
-
-    // Unknown format
-    this.detectedVideoType = null
-    this.detectedVideoData = null
-    this.videoPreviewTarget.innerHTML = '<span class="text-[var(--theme-warning)]">Unknown format. Enter a YouTube URL or video file path.</span>'
-    this.insertVideoBtnTarget.disabled = true
-  }
-
-  onVideoUrlKeydown(event) {
-    if (event.key === "Enter" && !this.insertVideoBtnTarget.disabled) {
-      event.preventDefault()
-      this.insertVideo()
-    }
-  }
-
-  insertVideo() {
-    if (!this.hasTextareaTarget || !this.detectedVideoType) {
-      this.videoDialogTarget.close()
-      return
-    }
-
-    let embedCode
-
-    if (this.detectedVideoType === "youtube") {
-      embedCode = `<div class="embed-container">
-  <iframe
-    src="https://www.youtube.com/embed/${this.detectedVideoData.id}"
-    title="YouTube video player"
-    frameborder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-    referrerpolicy="strict-origin-when-cross-origin"
-    allowfullscreen>
-  </iframe>
-</div>`
-    } else if (this.detectedVideoType === "file") {
-      const url = this.detectedVideoData.url
-      const ext = url.split(".").pop().toLowerCase()
-      const mimeTypes = {
-        mp4: "video/mp4",
-        webm: "video/webm",
-        mkv: "video/x-matroska",
-        mov: "video/quicktime",
-        avi: "video/x-msvideo",
-        m4v: "video/x-m4v",
-        ogv: "video/ogg"
-      }
-      const mimeType = mimeTypes[ext] || "video/mp4"
-
-      embedCode = `<video controls class="video-player">
-  <source src="${escapeHtml(url)}" type="${mimeType}">
-  Your browser does not support the video tag.
-</video>`
-    }
+  // Video Embed Event Handler - receives events from video_dialog_controller
+  insertVideoEmbed(event) {
+    const { embedCode } = event.detail
+    if (!embedCode || !this.hasTextareaTarget) return
 
     const textarea = this.textareaTarget
     const cursorPos = textarea.selectionStart
@@ -2555,494 +1462,172 @@ export default class extends Controller {
 
     this.scheduleAutoSave()
     this.updatePreview()
-    this.videoDialogTarget.close()
   }
 
-  // YouTube Search
-  onYoutubeSearchKeydown(event) {
-    if (event.key === "Enter") {
-      event.preventDefault()
-      this.searchYoutube()
-    } else if (event.key === "ArrowDown" && this.youtubeSearchResults.length > 0) {
-      event.preventDefault()
-      this.selectedYoutubeIndex = 0
-      this.renderYoutubeResults()
-      this.youtubeSearchResultsTarget.querySelector("[data-index='0']")?.focus()
-    }
-  }
+  // AI Grammar Check Methods - Delegates to ai_grammar_controller
 
-  async searchYoutube() {
-    const query = this.youtubeSearchInputTarget.value.trim()
-
-    if (!query) {
-      this.youtubeSearchStatusTarget.textContent = window.t("status.please_enter_keywords")
+  async openAiDialog() {
+    if (!this.currentFile) {
+      alert(window.t("errors.no_file_open"))
       return
     }
 
-    if (!this.youtubeApiEnabled) {
-      this.youtubeSearchStatusTarget.innerHTML = `<span class="text-amber-500">${window.t("status.youtube_not_configured_js")}</span>`
+    const text = this.textareaTarget.value
+    if (!text.trim()) {
+      alert(window.t("errors.no_text_to_check"))
       return
     }
 
-    this.youtubeSearchStatusTarget.textContent = window.t("status.searching")
-    this.youtubeSearchBtnTarget.disabled = true
-    this.youtubeSearchResultsTarget.innerHTML = ""
+    // Save file first if there are pending changes (server reads from disk)
+    if (this.saveTimeout) {
+      await this.saveNow()
+    }
 
-    try {
-      const response = await fetch(`/youtube/search?q=${encodeURIComponent(query)}`)
-      const data = await response.json()
-
-      if (data.error) {
-        this.youtubeSearchStatusTarget.innerHTML = `<span class="text-red-500">${data.error}</span>`
-        this.youtubeSearchResults = []
-      } else {
-        this.youtubeSearchResults = data.videos || []
-        if (this.youtubeSearchResults.length === 0) {
-          this.youtubeSearchStatusTarget.textContent = window.t("status.no_videos_found")
-        } else {
-          this.youtubeSearchStatusTarget.textContent = window.t("status.found_videos", { count: this.youtubeSearchResults.length })
-        }
-        this.selectedYoutubeIndex = -1
-        this.renderYoutubeResults()
+    // Find the ai-grammar controller and call open
+    const aiGrammarElement = document.querySelector('[data-controller~="ai-grammar"]')
+    if (aiGrammarElement) {
+      const aiGrammarController = this.application.getControllerForElementAndIdentifier(
+        aiGrammarElement,
+        "ai-grammar"
+      )
+      if (aiGrammarController) {
+        aiGrammarController.open(this.currentFile)
       }
-    } catch (error) {
-      console.error("YouTube search error:", error)
-      this.youtubeSearchStatusTarget.innerHTML = `<span class="text-red-500">${window.t("status.search_failed_retry")}</span>`
-      this.youtubeSearchResults = []
-    } finally {
-      this.youtubeSearchBtnTarget.disabled = false
     }
   }
 
-  renderYoutubeResults() {
-    if (this.youtubeSearchResults.length === 0) {
-      this.youtubeSearchResultsTarget.innerHTML = ""
-      return
-    }
+  // Handle AI processing started event - disable editor and show button loading state
+  onAiProcessingStarted() {
+    this.textareaTarget.disabled = true
 
-    this.youtubeSearchResultsTarget.innerHTML = this.youtubeSearchResults.map((video, index) => {
-      const isSelected = index === this.selectedYoutubeIndex
-      const selectedClass = isSelected ? "ring-2 ring-[var(--theme-accent)]" : ""
-
-      return `
-        <button
-          type="button"
-          data-index="${index}"
-          data-video-id="${video.id}"
-          data-video-title="${escapeHtml(video.title)}"
-          data-action="click->app#selectYoutubeVideo keydown->app#onYoutubeResultKeydown"
-          class="flex flex-col rounded-lg overflow-hidden bg-[var(--theme-bg-tertiary)] hover:bg-[var(--theme-bg-hover)] transition-colors ${selectedClass} focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
-        >
-          <div class="relative aspect-video bg-[var(--theme-bg-tertiary)]">
-            <img
-              src="${video.thumbnail}"
-              alt="${escapeHtml(video.title)}"
-              class="w-full h-full object-cover"
-              onerror="this.style.display='none'"
-            >
-            <div class="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/30">
-              <svg class="w-12 h-12 text-white drop-shadow-lg" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-              </svg>
-            </div>
-          </div>
-          <div class="p-2">
-            <div class="text-xs font-medium text-[var(--theme-text-primary)] line-clamp-2">${escapeHtml(video.title)}</div>
-            <div class="text-xs text-[var(--theme-text-muted)] truncate mt-0.5">${escapeHtml(video.channel)}</div>
-          </div>
-        </button>
+    if (this.hasAiButtonTarget) {
+      this.aiButtonOriginalContent = this.aiButtonTarget.innerHTML
+      this.aiButtonTarget.innerHTML = `
+        <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span>${window.t("status.processing")}</span>
       `
-    }).join("")
-  }
-
-  onYoutubeResultKeydown(event) {
-    const currentIndex = parseInt(event.currentTarget.dataset.index)
-
-    if (event.key === "ArrowRight" || event.key === "ArrowDown") {
-      event.preventDefault()
-      const nextIndex = Math.min(currentIndex + (event.key === "ArrowDown" ? 2 : 1), this.youtubeSearchResults.length - 1)
-      this.selectedYoutubeIndex = nextIndex
-      this.renderYoutubeResults()
-      this.youtubeSearchResultsTarget.querySelector(`[data-index='${nextIndex}']`)?.focus()
-    } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
-      event.preventDefault()
-      const prevIndex = Math.max(currentIndex - (event.key === "ArrowUp" ? 2 : 1), 0)
-      if (event.key === "ArrowUp" && currentIndex < 2) {
-        this.youtubeSearchInputTarget.focus()
-        this.selectedYoutubeIndex = -1
-        this.renderYoutubeResults()
-      } else {
-        this.selectedYoutubeIndex = prevIndex
-        this.renderYoutubeResults()
-        this.youtubeSearchResultsTarget.querySelector(`[data-index='${prevIndex}']`)?.focus()
-      }
-    } else if (event.key === "Enter") {
-      event.preventDefault()
-      this.selectYoutubeVideo(event)
-    } else if (event.key === "Escape") {
-      this.youtubeSearchInputTarget.focus()
-      this.selectedYoutubeIndex = -1
-      this.renderYoutubeResults()
+      this.aiButtonTarget.disabled = true
     }
   }
 
-  selectYoutubeVideo(event) {
-    const videoId = event.currentTarget.dataset.videoId
-    const videoTitle = event.currentTarget.dataset.videoTitle || "YouTube video"
+  // Handle AI processing ended event - re-enable editor and restore button
+  onAiProcessingEnded() {
+    this.textareaTarget.disabled = false
 
-    if (!videoId || !this.hasTextareaTarget) {
-      return
+    if (this.hasAiButtonTarget && this.aiButtonOriginalContent) {
+      this.aiButtonTarget.innerHTML = this.aiButtonOriginalContent
+      this.aiButtonTarget.disabled = false
     }
-
-    const embedCode = `<div class="embed-container">
-  <iframe
-    src="https://www.youtube.com/embed/${videoId}"
-    title="${videoTitle}"
-    frameborder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-    referrerpolicy="strict-origin-when-cross-origin"
-    allowfullscreen>
-  </iframe>
-</div>`
-
-    const textarea = this.textareaTarget
-    const cursorPos = textarea.selectionStart
-    const text = textarea.value
-    const before = text.substring(0, cursorPos)
-    const after = text.substring(cursorPos)
-
-    const prefix = before.length > 0 && !before.endsWith("\n\n") ? (before.endsWith("\n") ? "\n" : "\n\n") : ""
-    const suffix = after.length > 0 && !after.startsWith("\n\n") ? (after.startsWith("\n") ? "\n" : "\n\n") : ""
-
-    textarea.value = before + prefix + embedCode + suffix + after
-
-    const newCursorPos = before.length + prefix.length + embedCode.length
-    textarea.focus()
-    textarea.setSelectionRange(newCursorPos, newCursorPos)
-
-    this.scheduleAutoSave()
-    this.updatePreview()
-    this.videoDialogTarget.close()
   }
 
-  // New Note/Folder
+  // Handle AI correction accepted event - update textarea with corrected text
+  onAiAccepted(event) {
+    const { correctedText } = event.detail
+    this.textareaTarget.value = correctedText
+    this.onTextareaInput() // Trigger save and preview update
+  }
+
+  // Handle preview zoom changed event - save to config
+  onPreviewZoomChanged(event) {
+    const { zoom } = event.detail
+    this.previewZoom = zoom
+    this.saveConfig({ preview_zoom: zoom })
+  }
+
+  // Handle preview toggled event
+  onPreviewToggled(event) {
+    const { visible } = event.detail
+    if (visible) {
+      this.updatePreview()
+      setTimeout(() => this.syncPreviewScrollToCursor(), 50)
+    }
+  }
+
+  // File Operations Event Handlers
+  // These handle events dispatched by file_operations_controller
+
+  async onFileCreated(event) {
+    const { path } = event.detail
+
+    // Expand parent folders
+    const pathParts = path.split("/")
+    let expandPath = ""
+    for (let i = 0; i < pathParts.length - 1; i++) {
+      expandPath = expandPath ? `${expandPath}/${pathParts[i]}` : pathParts[i]
+      this.expandedFolders.add(expandPath)
+    }
+
+    await this.refreshTree()
+    await this.loadFile(path)
+  }
+
+  async onFolderCreated(event) {
+    const { path } = event.detail
+    this.expandedFolders.add(path)
+    await this.refreshTree()
+  }
+
+  async onFileRenamed(event) {
+    const { oldPath, newPath } = event.detail
+
+    // Update current file if it was the renamed file
+    if (this.currentFile === oldPath) {
+      this.currentFile = newPath
+      this.currentPathTarget.textContent = newPath.replace(/\.md$/, "")
+    }
+
+    await this.refreshTree()
+  }
+
+  async onFileDeleted(event) {
+    const { path } = event.detail
+
+    // Clear editor if deleted file was currently open
+    if (this.currentFile === path) {
+      this.currentFile = null
+      this.currentPathTarget.textContent = window.t("editor.select_note")
+      this.editorPlaceholderTarget.classList.remove("hidden")
+      this.editorTarget.classList.add("hidden")
+      this.hideStatsPanel()
+    }
+
+    await this.refreshTree()
+  }
+
+  // Helper to get file operations controller
+  getFileOperationsController() {
+    const element = document.querySelector('[data-controller~="file-operations"]')
+    return element ? this.application.getControllerForElementAndIdentifier(element, "file-operations") : null
+  }
+
+  // File Operations - delegate to file-operations controller
   newNote() {
-    // Show the note type selector dialog
-    this.newItemParent = ""
-    this.showDialogCentered(this.noteTypeDialogTarget)
-  }
-
-  closeNoteTypeDialog() {
-    this.noteTypeDialogTarget.close()
-  }
-
-  selectNoteTypeEmpty() {
-    this.noteTypeDialogTarget.close()
-    this.newItemType = "note"
-    this.newItemTitleTarget.textContent = window.t("dialogs.new_item.new_note")
-    this.newItemInputTarget.value = ""
-    this.newItemInputTarget.placeholder = window.t("dialogs.new_item.note_placeholder")
-    this.showNewItemDialogAtPosition()
-    this.newItemInputTarget.focus()
-  }
-
-  selectNoteTypeHugo() {
-    this.noteTypeDialogTarget.close()
-    this.newItemType = "hugo"
-    this.newItemTitleTarget.textContent = window.t("dialogs.note_type.new_hugo_post")
-    this.newItemInputTarget.value = ""
-    this.newItemInputTarget.placeholder = window.t("dialogs.new_item.note_placeholder")
-    this.showNewItemDialogAtPosition()
-    this.newItemInputTarget.focus()
-  }
-
-  showNewItemDialogAtPosition() {
-    // If coming from context menu, position near the click point
-    if (this.contextMenuContextX && this.contextMenuContextY) {
-      this.positionDialogNearPoint(this.newItemDialogTarget, this.contextMenuContextX, this.contextMenuContextY)
-      this.contextMenuContextX = null
-      this.contextMenuContextY = null
-    } else {
-      this.showDialogCentered(this.newItemDialogTarget)
-    }
+    const fileOps = this.getFileOperationsController()
+    if (fileOps) fileOps.newNote()
   }
 
   newFolder() {
-    this.newItemType = "folder"
-    this.newItemParent = ""
-    this.newItemTitleTarget.textContent = window.t("dialogs.new_item.new_folder")
-    this.newItemInputTarget.value = ""
-    this.newItemInputTarget.placeholder = window.t("dialogs.new_item.folder_placeholder")
-    this.showDialogCentered(this.newItemDialogTarget)
-    this.newItemInputTarget.focus()
+    const fileOps = this.getFileOperationsController()
+    if (fileOps) fileOps.newFolder()
   }
 
-  closeNewItemDialog() {
-    this.newItemDialogTarget.close()
-  }
-
-  async submitNewItem(event) {
-    event.preventDefault()
-    const name = this.newItemInputTarget.value.trim()
-    if (!name) return
-
-    const basePath = this.newItemParent ? `${this.newItemParent}/${name}` : name
-
-    try {
-      if (this.newItemType === "hugo") {
-        // Create Hugo blog post with directory structure YYYY/MM/DD/slug/index.md
-        const { notePath, content } = generateHugoBlogPost(name)
-
-        const response = await fetch(`/notes/${encodePath(notePath)}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-Token": this.csrfToken
-          },
-          body: JSON.stringify({ content, create_directories: true })
-        })
-
-        if (!response.ok) {
-          const data = await response.json()
-          throw new Error(data.error || window.t("errors.failed_to_create"))
-        }
-
-        // Expand the parent folders
-        const pathParts = notePath.split("/")
-        let expandPath = ""
-        for (let i = 0; i < pathParts.length - 1; i++) {
-          expandPath = expandPath ? `${expandPath}/${pathParts[i]}` : pathParts[i]
-          this.expandedFolders.add(expandPath)
-        }
-
-        await this.refreshTree()
-        await this.loadFile(notePath)
-      } else if (this.newItemType === "note") {
-        const notePath = basePath.endsWith(".md") ? basePath : `${basePath}.md`
-        const response = await fetch(`/notes/${encodePath(notePath)}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-Token": this.csrfToken
-          },
-          body: JSON.stringify({ content: `# ${name}\n\n` })
-        })
-
-        if (!response.ok) {
-          const data = await response.json()
-          throw new Error(data.error || window.t("errors.failed_to_create"))
-        }
-
-        await this.refreshTree()
-        await this.loadFile(notePath)
-      } else {
-        // Folder
-        const response = await fetch(`/folders/${encodePath(basePath)}`, {
-          method: "POST",
-          headers: {
-            "X-CSRF-Token": this.csrfToken
-          }
-        })
-
-        if (!response.ok) {
-          const data = await response.json()
-          throw new Error(data.error || window.t("errors.failed_to_create"))
-        }
-
-        this.expandedFolders.add(basePath)
-        await this.refreshTree()
-      }
-
-      this.newItemDialogTarget.close()
-    } catch (error) {
-      console.error("Error creating item:", error)
-      alert(error.message)
-    }
-  }
-
-  // Context Menu
   showContextMenu(event) {
-    event.preventDefault()
-    this.contextItem = {
-      path: event.currentTarget.dataset.path,
-      type: event.currentTarget.dataset.type
-    }
-
-    // Store click position for positioning dialogs near the click
-    this.contextClickX = event.clientX
-    this.contextClickY = event.clientY
-
-    // Show/hide "New Note" button based on item type
-    if (this.contextItem.type === "folder") {
-      this.newNoteBtnTarget.classList.remove("hidden")
-      this.newNoteBtnTarget.classList.add("flex")
-    } else {
-      this.newNoteBtnTarget.classList.add("hidden")
-      this.newNoteBtnTarget.classList.remove("flex")
-    }
-
-    const menu = this.contextMenuTarget
-    menu.classList.remove("hidden")
-    menu.style.left = `${event.clientX}px`
-    menu.style.top = `${event.clientY}px`
-
-    // Ensure menu doesn't go off-screen
-    const rect = menu.getBoundingClientRect()
-    if (rect.right > window.innerWidth) {
-      menu.style.left = `${window.innerWidth - rect.width - 10}px`
-    }
-    if (rect.bottom > window.innerHeight) {
-      menu.style.top = `${window.innerHeight - rect.height - 10}px`
-    }
-  }
-
-  newNoteInFolder() {
-    if (!this.contextItem || this.contextItem.type !== "folder") return
-
-    this.newItemParent = this.contextItem.path
-    this.contextMenuContextX = this.contextClickX
-    this.contextMenuContextY = this.contextClickY
-
-    // Expand the folder
-    this.expandedFolders.add(this.contextItem.path)
-    this.renderTree()
-
-    // Show note type selector
-    this.positionDialogNearPoint(this.noteTypeDialogTarget, this.contextClickX, this.contextClickY)
-  }
-
-  setupContextMenuClose() {
-    this.boundContextMenuClose = () => {
-      this.contextMenuTarget.classList.add("hidden")
-    }
-    document.addEventListener("click", this.boundContextMenuClose)
+    const fileOps = this.getFileOperationsController()
+    if (fileOps) fileOps.showContextMenu(event)
   }
 
   setupDialogClickOutside() {
     // Close dialog when clicking on backdrop (outside the dialog content)
-    const dialogs = [
-      this.renameDialogTarget,
-      this.newItemDialogTarget,
-      this.tableDialogTarget,
-      this.imageDialogTarget,
-      this.helpDialogTarget,
-      this.codeDialogTarget,
-      this.customizeDialogTarget,
-      this.fileFinderDialogTarget,
-      this.contentSearchDialogTarget,
-      this.videoDialogTarget
-    ]
-
-    dialogs.forEach(dialog => {
-      if (!dialog) return
-
-      dialog.addEventListener("click", (event) => {
-        // If click is directly on the dialog (backdrop area), close it
-        if (event.target === dialog) {
-          dialog.close()
+    // Note: Most dialogs are now extracted to separate controllers that handle their own click-outside
+    if (this.hasHelpDialogTarget) {
+      this.helpDialogTarget.addEventListener("click", (event) => {
+        if (event.target === this.helpDialogTarget) {
+          this.helpDialogTarget.close()
         }
       })
-    })
-  }
-
-  renameItem() {
-    if (!this.contextItem) return
-
-    const name = this.contextItem.path.split("/").pop().replace(/\.md$/, "")
-    this.renameInputTarget.value = name
-    this.positionDialogNearPoint(this.renameDialogTarget, this.contextClickX, this.contextClickY)
-    this.renameInputTarget.focus()
-    this.renameInputTarget.select()
-  }
-
-  closeRenameDialog() {
-    this.renameDialogTarget.close()
-  }
-
-  async submitRename(event) {
-    event.preventDefault()
-    if (!this.contextItem) return
-
-    const newName = this.renameInputTarget.value.trim()
-    if (!newName) return
-
-    const oldPath = this.contextItem.path
-    const pathParts = oldPath.split("/")
-    pathParts.pop()
-
-    let newPath
-    if (this.contextItem.type === "file") {
-      newPath = [...pathParts, `${newName}.md`].join("/")
-      if (pathParts.length === 0) newPath = `${newName}.md`
-    } else {
-      newPath = [...pathParts, newName].join("/")
-      if (pathParts.length === 0) newPath = newName
-    }
-
-    try {
-      const endpoint = this.contextItem.type === "file" ? "notes" : "folders"
-      const response = await fetch(`/${endpoint}/${encodePath(oldPath)}/rename`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-Token": this.csrfToken
-        },
-        body: JSON.stringify({ new_path: newPath })
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || window.t("errors.failed_to_rename"))
-      }
-
-      if (this.currentFile === oldPath) {
-        this.currentFile = newPath
-        this.currentPathTarget.textContent = newPath.replace(/\.md$/, "")
-      }
-
-      await this.refreshTree()
-      this.renameDialogTarget.close()
-    } catch (error) {
-      console.error("Error renaming:", error)
-      alert(error.message)
-    }
-  }
-
-  async deleteItem() {
-    if (!this.contextItem) return
-
-    const confirmMsg = this.contextItem.type === "file"
-      ? window.t("confirm.delete_note")
-      : window.t("confirm.delete_folder")
-
-    if (!confirm(confirmMsg)) return
-
-    try {
-      const endpoint = this.contextItem.type === "file" ? "notes" : "folders"
-      const response = await fetch(`/${endpoint}/${encodePath(this.contextItem.path)}`, {
-        method: "DELETE",
-        headers: {
-          "X-CSRF-Token": this.csrfToken
-        }
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || window.t("errors.failed_to_delete"))
-      }
-
-      if (this.currentFile === this.contextItem.path) {
-        this.currentFile = null
-        this.currentPathTarget.textContent = window.t("editor.select_note")
-        this.editorPlaceholderTarget.classList.remove("hidden")
-        this.editorTarget.classList.add("hidden")
-        this.hideStatsPanel()
-      }
-
-      await this.refreshTree()
-    } catch (error) {
-      console.error("Error deleting:", error)
-      alert(error.message)
     }
   }
 
@@ -3063,10 +1648,11 @@ export default class extends Controller {
   // Keyboard Shortcuts
   setupKeyboardShortcuts() {
     this.boundKeydownHandler = (event) => {
-      // Ctrl/Cmd + N: New note
+      // Ctrl/Cmd + N: New note (delegate to file-operations controller)
       if ((event.ctrlKey || event.metaKey) && event.key === "n") {
         event.preventDefault()
-        this.newNote()
+        const fileOps = this.getFileOperationsController()
+        if (fileOps) fileOps.newNote()
       }
 
       // Ctrl/Cmd + S: Save
@@ -3105,44 +1691,17 @@ export default class extends Controller {
         this.toggleTypewriterMode()
       }
 
-      // Escape: Close menus and dialogs
+      // Escape: Close menus and dialogs managed by app_controller
+      // Note: Extracted controllers (file-finder, content-search, code-dialog, customize, file-operations, etc.) handle their own Escape key
       if (event.key === "Escape") {
-        // Close context menus
-        this.contextMenuTarget.classList.add("hidden")
-        if (this.hasTableCellMenuTarget) {
-          this.tableCellMenuTarget.classList.add("hidden")
+        // Close context menu (delegated to file-operations controller via target)
+        if (this.hasContextMenuTarget) {
+          this.contextMenuTarget.classList.add("hidden")
         }
 
-        // Close any open dialogs
-        if (this.hasRenameDialogTarget && this.renameDialogTarget.open) {
-          this.renameDialogTarget.close()
-        }
-        if (this.hasNewItemDialogTarget && this.newItemDialogTarget.open) {
-          this.newItemDialogTarget.close()
-        }
-        if (this.hasTableDialogTarget && this.tableDialogTarget.open) {
-          this.tableDialogTarget.close()
-        }
-        if (this.hasImageDialogTarget && this.imageDialogTarget.open) {
-          this.imageDialogTarget.close()
-        }
+        // Close help dialog
         if (this.hasHelpDialogTarget && this.helpDialogTarget.open) {
           this.helpDialogTarget.close()
-        }
-        if (this.hasCodeDialogTarget && this.codeDialogTarget.open) {
-          this.codeDialogTarget.close()
-        }
-        if (this.hasCustomizeDialogTarget && this.customizeDialogTarget.open) {
-          this.customizeDialogTarget.close()
-        }
-        if (this.hasFileFinderDialogTarget && this.fileFinderDialogTarget.open) {
-          this.fileFinderDialogTarget.close()
-        }
-        if (this.hasContentSearchDialogTarget && this.contentSearchDialogTarget.open) {
-          this.contentSearchDialogTarget.close()
-        }
-        if (this.hasVideoDialogTarget && this.videoDialogTarget.open) {
-          this.videoDialogTarget.close()
         }
       }
 
@@ -3203,46 +1762,41 @@ export default class extends Controller {
     dialog.showModal()
   }
 
-  // === Document Stats ===
+  // === Document Stats - delegates to stats-panel controller ===
+
+  getStatsPanelController() {
+    const statsPanelElement = document.querySelector('[data-controller~="stats-panel"]')
+    if (statsPanelElement) {
+      return this.application.getControllerForElementAndIdentifier(statsPanelElement, "stats-panel")
+    }
+    return null
+  }
 
   showStatsPanel() {
-    if (this.hasStatsPanelTarget) {
-      this.statsPanelTarget.classList.remove("hidden")
+    const statsController = this.getStatsPanelController()
+    if (statsController) {
+      statsController.show()
     }
   }
 
   hideStatsPanel() {
-    if (this.hasStatsPanelTarget) {
-      this.statsPanelTarget.classList.add("hidden")
+    const statsController = this.getStatsPanelController()
+    if (statsController) {
+      statsController.hide()
     }
   }
 
   scheduleStatsUpdate() {
-    // Debounce stats update to avoid slowing down typing
-    if (this.statsUpdateTimeout) {
-      clearTimeout(this.statsUpdateTimeout)
+    const statsController = this.getStatsPanelController()
+    if (statsController && this.hasTextareaTarget) {
+      statsController.scheduleUpdate(this.textareaTarget.value)
     }
-    this.statsUpdateTimeout = setTimeout(() => this.updateStats(), 500)
   }
 
   updateStats() {
-    if (!this.hasTextareaTarget || !this.hasStatsPanelTarget) return
-
-    const text = this.textareaTarget.value
-    const stats = calculateStats(text)
-
-    // Update display
-    if (this.hasStatsWordsTarget) {
-      this.statsWordsTarget.textContent = stats.wordCount.toLocaleString()
-    }
-    if (this.hasStatsCharsTarget) {
-      this.statsCharsTarget.textContent = stats.charCount.toLocaleString()
-    }
-    if (this.hasStatsSizeTarget) {
-      this.statsSizeTarget.textContent = formatFileSize(stats.byteSize)
-    }
-    if (this.hasStatsReadTimeTarget) {
-      this.statsReadTimeTarget.textContent = formatReadTime(stats.readTimeMinutes)
+    const statsController = this.getStatsPanelController()
+    if (statsController && this.hasTextareaTarget) {
+      statsController.update(this.textareaTarget.value)
     }
   }
 
