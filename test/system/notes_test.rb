@@ -49,16 +49,16 @@ class NotesTest < ApplicationSystemTestCase
     page.execute_script("document.querySelector('button[title=\"New Note (Ctrl+N)\"]').click()")
 
     # Wait for note type dialog to open
-    assert_selector "[data-app-target='noteTypeDialog'][open]", wait: 3
+    assert_selector "[data-file-operations-target='noteTypeDialog'][open]", wait: 3
 
     # Select "Empty Document" type
     click_button "Empty Document"
 
     # Wait for name input dialog to open
-    assert_selector "[data-app-target='newItemDialog'][open]", wait: 2
+    assert_selector "[data-file-operations-target='newItemDialog'][open]", wait: 2
 
     # Fill in the dialog (placeholder is set dynamically to "Note name")
-    within "[data-app-target='newItemDialog']" do
+    within "[data-file-operations-target='newItemDialog']" do
       fill_in placeholder: "Note name", with: "brand_new_note"
       click_button "Create"
     end
@@ -554,7 +554,7 @@ class NotesTest < ApplicationSystemTestCase
     sleep 0.3
 
     # Image button should be visible (web search always available)
-    assert_selector "[data-app-target='imageBtn']:not(.hidden)"
+    assert_selector "button[title='Insert Image']"
 
     Rails.application.config.frankmd_images.enabled = original_enabled
   end
@@ -673,11 +673,11 @@ class NotesWithImagesTest < ApplicationSystemTestCase
     find(".image-grid-item").click
 
     # Options should appear
-    assert_selector "[data-app-target='imageOptions']:not(.hidden)"
-    assert_selector "[data-app-target='selectedImageName']", text: "myimage.png"
+    assert_selector "[data-image-picker-target='options']:not(.hidden)"
+    assert_selector "[data-image-picker-target='selectedName']", text: "myimage.png"
 
     # Alt text should be pre-filled
-    alt_input = find("[data-app-target='imageAlt']")
+    alt_input = find("[data-image-picker-target='alt']")
     assert_equal "myimage", alt_input.value
   end
 
@@ -698,7 +698,7 @@ class NotesWithImagesTest < ApplicationSystemTestCase
 
     # Click insert button using JavaScript (avoids viewport issues)
     sleep 0.5
-    page.execute_script("document.querySelector('[data-app-target=\"insertImageBtn\"]').click()")
+    page.execute_script("document.querySelector('[data-image-picker-target=\"insertBtn\"]').click()")
 
     # Dialog should close
     assert_no_selector "dialog[open]", wait: 2
@@ -726,12 +726,12 @@ class NotesWithImagesTest < ApplicationSystemTestCase
 
     # Wait for options panel to appear and add link URL (use JS for visibility issues)
     sleep 0.5
-    page.execute_script("document.querySelector('[data-app-target=\"imageLink\"]').value = 'https://example.com'")
-    page.execute_script("document.querySelector('[data-app-target=\"imageLink\"]').dispatchEvent(new Event('input'))")
+    page.execute_script("document.querySelector('[data-image-picker-target=\"link\"]').value = 'https://example.com'")
+    page.execute_script("document.querySelector('[data-image-picker-target=\"link\"]').dispatchEvent(new Event('input'))")
 
     # Click insert button using JavaScript
     sleep 0.3
-    page.execute_script("document.querySelector('[data-app-target=\"insertImageBtn\"]').click()")
+    page.execute_script("document.querySelector('[data-image-picker-target=\"insertBtn\"]').click()")
 
     # Dialog should close
     assert_no_selector "dialog[open]", wait: 2
@@ -759,12 +759,12 @@ class NotesWithImagesTest < ApplicationSystemTestCase
 
     # Set alt text using JavaScript for reliability
     sleep 0.5
-    page.execute_script("document.querySelector('[data-app-target=\"imageAlt\"]').value = 'A beautiful sunset'")
-    page.execute_script("document.querySelector('[data-app-target=\"imageAlt\"]').dispatchEvent(new Event('input'))")
+    page.execute_script("document.querySelector('[data-image-picker-target=\"alt\"]').value = 'A beautiful sunset'")
+    page.execute_script("document.querySelector('[data-image-picker-target=\"alt\"]').dispatchEvent(new Event('input'))")
 
     # Click insert button using JavaScript
     sleep 0.3
-    page.execute_script("document.querySelector('[data-app-target=\"insertImageBtn\"]').click()")
+    page.execute_script("document.querySelector('[data-image-picker-target=\"insertBtn\"]').click()")
 
     # Dialog should close
     assert_no_selector "dialog[open]", wait: 2
