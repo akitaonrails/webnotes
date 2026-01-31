@@ -23,7 +23,7 @@ services:
     # Run as host user for proper volume permissions
     user: "${UID:-1000}:${GID:-1000}"
     ports:
-      - "${PORT:-3000}:80"
+      - "${PORT:-7591}:80"
     volumes:
       # Notes directory - default to ./notes, override with NOTES_PATH env var
       - ${NOTES_PATH:-./notes}:/rails/notes

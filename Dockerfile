@@ -3,7 +3,7 @@
 # FrankMD - Simple, self-hosted markdown note-taking
 #
 # Build:  docker build -t frankmd .
-# Run:    docker run -p 3000:80 -v ~/notes:/rails/notes frankmd
+# Run:    docker run -p 7591:80 -v ~/notes:/rails/notes frankmd
 #
 # Build with custom UID/GID (to match host user):
 #   docker build --build-arg UID=$(id -u) --build-arg GID=$(id -g) -t frankmd .

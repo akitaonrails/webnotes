@@ -115,7 +115,7 @@ fed() {
 
   local uid="${FRANKMD_UID:-$(id -u)}"
   local gid="${FRANKMD_GID:-$(id -g)}"
-  local args=(-d -p 3000:80 --user "${uid}:${gid}" -v "$(realpath "${1:-.}"):/rails/notes")
+  local args=(-d -p 7591:80 --user "${uid}:${gid}" -v "$(realpath "${1:-.}"):/rails/notes")
 
   [[ -n "$FRANKMD_LOCALE" ]] && args+=(-e "FRANKMD_LOCALE=$FRANKMD_LOCALE")
   [[ -n "$IMAGES_PATH" ]] && args+=(-v "$(realpath "$IMAGES_PATH"):/rails/images" -e IMAGES_PATH=/rails/images)
@@ -142,7 +142,7 @@ fed() {
   docker run --name frankmd --rm "${args[@]}" akitaonrails/frankmd:latest
 
   sleep 2
-  brave --app=http://localhost:3000
+  brave --app=http://localhost:7591
 }
 ```
 
@@ -163,16 +163,16 @@ The `fed` function opens Brave by default. To use a different browser, change th
 
 ```bash
 # Chromium
-chromium --app=http://localhost:3000
+chromium --app=http://localhost:7591
 
 # Google Chrome
-google-chrome --app=http://localhost:3000
+google-chrome --app=http://localhost:7591
 
 # Microsoft Edge
-microsoft-edge --app=http://localhost:3000
+microsoft-edge --app=http://localhost:7591
 
 # Firefox (requires about:config → browser.ssb.enabled = true)
-firefox --ssb http://localhost:3000
+firefox --ssb http://localhost:7591
 ```
 
 ### Running in Background
@@ -181,7 +181,7 @@ To run as a persistent service:
 
 ```bash
 # Start in background
-docker run -d --name frankmd -p 3000:80 \
+docker run -d --name frankmd -p 7591:80 \
   -v ~/notes:/rails/notes \
   --restart unless-stopped \
   akitaonrails/frankmd:latest
@@ -207,7 +207,7 @@ services:
     container_name: frankmd
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "7591:80"
     volumes:
       - ./notes:/rails/notes
     environment:
@@ -755,7 +755,7 @@ app/
 docker build -t frankmd .
 
 # Run locally
-docker run -p 3000:80 -v $(pwd)/notes:/rails/notes frankmd
+docker run -p 7591:80 -v $(pwd)/notes:/rails/notes frankmd
 ```
 
 ## License
