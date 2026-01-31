@@ -13,7 +13,7 @@ class AiController < ApplicationController
     path = params[:path].to_s
 
     if path.blank?
-      return render json: { error: "No file path provided" }, status: :bad_request
+      return render json: { error: t("errors.no_file_provided") }, status: :bad_request
     end
 
     # Read the file content from disk
@@ -21,11 +21,11 @@ class AiController < ApplicationController
       note = Note.find(path)
       text = note.content
     rescue NotesService::NotFoundError
-      return render json: { error: "Note not found" }, status: :not_found
+      return render json: { error: t("errors.note_not_found") }, status: :not_found
     end
 
     if text.blank?
-      return render json: { error: "Note is empty" }, status: :bad_request
+      return render json: { error: t("errors.note_is_empty") }, status: :bad_request
     end
 
     result = AiService.fix_grammar(text)
@@ -53,7 +53,7 @@ class AiController < ApplicationController
     reference_image_path = params[:reference_image_path].to_s.presence
 
     if prompt.blank?
-      return render json: { error: "No prompt provided" }, status: :bad_request
+      return render json: { error: t("errors.no_prompt_provided") }, status: :bad_request
     end
 
     result = AiService.generate_image(prompt, reference_image_path: reference_image_path)

@@ -258,7 +258,7 @@ export default class extends Controller {
 
       if (!exists) {
         // File was requested but doesn't exist
-        this.showFileNotFoundMessage(path, error || "This file no longer exists or was deleted.")
+        this.showFileNotFoundMessage(path, error || window.t("errors.file_not_found"))
         // Update URL to root without adding history entry
         this.updateUrl(null, { replace: true })
         return
@@ -306,7 +306,7 @@ export default class extends Controller {
       } else {
         // No file - show placeholder
         this.currentFile = null
-        this.currentPathTarget.textContent = "Select or create a note"
+        this.currentPathTarget.textContent = window.t("editor.select_note")
         this.editorPlaceholderTarget.classList.remove("hidden")
         this.editorTarget.classList.add("hidden")
         this.editorToolbarTarget.classList.add("hidden")
@@ -345,7 +345,7 @@ export default class extends Controller {
     // Clear after a moment and return to normal state
     setTimeout(() => {
       this.textareaTarget.disabled = false
-      this.currentPathTarget.textContent = "Select or create a note"
+      this.currentPathTarget.textContent = window.t("editor.select_note")
       this.editorPlaceholderTarget.classList.remove("hidden")
       this.editorTarget.classList.add("hidden")
       this.hideStatsPanel()
@@ -360,7 +360,7 @@ export default class extends Controller {
   buildTreeHTML(items, depth = 0) {
     if (!items || items.length === 0) {
       if (depth === 0) {
-        return `<div class="text-sm text-[var(--theme-text-muted)] p-2">No notes yet</div>`
+        return `<div class="text-sm text-[var(--theme-text-muted)] p-2">${window.t("sidebar.no_notes_yet")}</div>`
       }
       return ""
     }
@@ -576,7 +576,7 @@ export default class extends Controller {
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || "Failed to move")
+        throw new Error(data.error || window.t("errors.failed_to_move"))
       }
 
       // Update current file reference if it was moved
@@ -618,13 +618,13 @@ export default class extends Controller {
 
       if (!response.ok) {
         if (response.status === 404) {
-          this.showFileNotFoundMessage(path, "Note not found")
+          this.showFileNotFoundMessage(path, window.t("errors.note_not_found"))
           if (updateHistory) {
             this.updateUrl(null)
           }
           return
         }
-        throw new Error("Failed to load note")
+        throw new Error(window.t("errors.failed_to_load"))
       }
 
       const data = await response.json()
@@ -648,7 +648,7 @@ export default class extends Controller {
       }
     } catch (error) {
       console.error("Error loading file:", error)
-      this.showSaveStatus("Error loading note", true)
+      this.showSaveStatus(window.t("status.error_loading"), true)
     }
   }
 
@@ -726,7 +726,7 @@ export default class extends Controller {
     if (this.saveTimeout) {
       clearTimeout(this.saveTimeout)
     }
-    this.showSaveStatus("Unsaved changes")
+    this.showSaveStatus(window.t("status.unsaved"))
     this.saveTimeout = setTimeout(() => this.saveNow(), 1000)
   }
 
@@ -752,10 +752,10 @@ export default class extends Controller {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to save")
+        throw new Error(window.t("errors.failed_to_save"))
       }
 
-      this.showSaveStatus("Saved")
+      this.showSaveStatus(window.t("status.saved"))
       setTimeout(() => this.showSaveStatus(""), 2000)
 
       // If config file was saved, reload the configuration
@@ -764,7 +764,7 @@ export default class extends Controller {
       }
     } catch (error) {
       console.error("Error saving:", error)
-      this.showSaveStatus("Error saving", true)
+      this.showSaveStatus(window.t("status.error_saving"), true)
     }
   }
 
@@ -808,7 +808,7 @@ export default class extends Controller {
         }))
       }
 
-      this.showSaveStatus("Config applied")
+      this.showSaveStatus(window.t("status.config_applied"))
       setTimeout(() => this.showSaveStatus(""), 2000)
     } catch (error) {
       console.warn("Error reloading config:", error)
@@ -1464,7 +1464,7 @@ export default class extends Controller {
     if (this.fileFinderResults.length === 0) {
       this.fileFinderResultsTarget.innerHTML = `
         <div class="px-3 py-6 text-center text-[var(--theme-text-muted)] text-sm">
-          No files found
+          ${window.t("sidebar.no_files_found")}
         </div>
       `
       this.fileFinderPreviewTarget.innerHTML = ""
@@ -1599,7 +1599,7 @@ export default class extends Controller {
     this.selectedSearchIndex = 0
     this.contentSearchInputTarget.value = ""
     this.contentSearchResultsTarget.innerHTML = ""
-    this.contentSearchStatusTarget.textContent = "Type to search in file contents (supports regex)"
+    this.contentSearchStatusTarget.textContent = window.t("status.type_to_search_regex")
     this.showDialogCentered(this.contentSearchDialogTarget)
     this.contentSearchInputTarget.focus()
   }
@@ -1619,11 +1619,11 @@ export default class extends Controller {
     if (!query) {
       this.searchResultsData = []
       this.contentSearchResultsTarget.innerHTML = ""
-      this.contentSearchStatusTarget.textContent = "Type to search in file contents (supports regex)"
+      this.contentSearchStatusTarget.textContent = window.t("status.type_to_search_regex")
       return
     }
 
-    this.contentSearchStatusTarget.textContent = "Searching..."
+    this.contentSearchStatusTarget.textContent = window.t("status.searching")
 
     this.contentSearchTimeout = setTimeout(async () => {
       await this.performContentSearch(query)
@@ -1637,7 +1637,7 @@ export default class extends Controller {
       })
 
       if (!response.ok) {
-        throw new Error("Search failed")
+        throw new Error(window.t("errors.search_failed"))
       }
 
       this.searchResultsData = await response.json()
@@ -1647,11 +1647,11 @@ export default class extends Controller {
       const count = this.searchResultsData.length
       const maxMsg = count >= 20 ? " (showing first 20)" : ""
       this.contentSearchStatusTarget.textContent = count === 0
-        ? "No matches found"
+        ? window.t("status.no_matches")
         : `${count} match${count === 1 ? "" : "es"} found${maxMsg} - use ↑↓ to navigate, Enter to open`
     } catch (error) {
       console.error("Search error:", error)
-      this.contentSearchStatusTarget.textContent = "Search error"
+      this.contentSearchStatusTarget.textContent = window.t("status.search_error")
       this.contentSearchResultsTarget.innerHTML = ""
     }
   }
@@ -1660,7 +1660,7 @@ export default class extends Controller {
     if (this.searchResultsData.length === 0) {
       this.contentSearchResultsTarget.innerHTML = `
         <div class="px-4 py-8 text-center text-[var(--theme-text-muted)] text-sm">
-          No matches found
+          ${window.t("status.no_matches")}
         </div>
       `
       return
@@ -2061,7 +2061,7 @@ export default class extends Controller {
         levenshteinDistance(lang, language.toLowerCase()) <= 2
       )
       if (!isClose) {
-        const proceed = confirm(`"${language}" is not a recognized language. Insert anyway?`)
+        const proceed = confirm(window.t("dialogs.code.unrecognized_language", { language }))
         if (!proceed) return
       }
     }
@@ -2133,7 +2133,7 @@ export default class extends Controller {
       this.youtubeSearchResultsTarget.innerHTML = ""
     }
     if (this.hasYoutubeSearchStatusTarget) {
-      this.youtubeSearchStatusTarget.textContent = "Enter keywords and click Search or press Enter"
+      this.youtubeSearchStatusTarget.textContent = window.t("status.enter_keywords_search")
     }
     this.youtubeSearchResults = []
     this.selectedYoutubeIndex = -1
@@ -2200,13 +2200,13 @@ export default class extends Controller {
     }
 
     if (!this.currentFile) {
-      alert("No file open")
+      alert(window.t("errors.no_file_open"))
       return
     }
 
     const text = this.textareaTarget.value
     if (!text.trim()) {
-      alert("No text to check")
+      alert(window.t("errors.no_text_to_check"))
       return
     }
 
@@ -2218,7 +2218,7 @@ export default class extends Controller {
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
       </svg>
-      <span>Processing...</span>
+      <span>${window.t("status.processing")}</span>
     `
     button.disabled = true
 
@@ -2263,7 +2263,7 @@ export default class extends Controller {
       const data = await response.json()
 
       if (data.error) {
-        alert(`AI Error: ${data.error}`)
+        alert(`${window.t("errors.failed_to_process_ai")}: ${data.error}`)
         return
       }
 
@@ -2288,7 +2288,7 @@ export default class extends Controller {
       this.aiCorrectedDiffTarget.classList.remove("hidden")
       this.aiCorrectedTextTarget.classList.add("hidden")
       if (this.hasAiEditToggleTarget) {
-        this.aiEditToggleTarget.textContent = "Edit"
+        this.aiEditToggleTarget.textContent = window.t("common.edit")
       }
 
       this.showDialogCentered(this.aiDiffDialogTarget)
@@ -2297,7 +2297,7 @@ export default class extends Controller {
         console.log("AI request cancelled by user")
       } else {
         console.error("AI request failed:", e)
-        alert("Failed to process text with AI")
+        alert(window.t("errors.failed_to_process_ai"))
       }
     } finally {
       // Cleanup
@@ -2323,12 +2323,12 @@ export default class extends Controller {
       // Switch to diff view
       this.aiCorrectedTextTarget.classList.add("hidden")
       this.aiCorrectedDiffTarget.classList.remove("hidden")
-      this.aiEditToggleTarget.textContent = "Edit"
+      this.aiEditToggleTarget.textContent = window.t("common.edit")
     } else {
       // Switch to edit view
       this.aiCorrectedDiffTarget.classList.add("hidden")
       this.aiCorrectedTextTarget.classList.remove("hidden")
-      this.aiEditToggleTarget.textContent = "View Diff"
+      this.aiEditToggleTarget.textContent = window.t("preview.title")
       this.aiCorrectedTextTarget.focus()
     }
   }
@@ -2575,16 +2575,16 @@ export default class extends Controller {
     const query = this.youtubeSearchInputTarget.value.trim()
 
     if (!query) {
-      this.youtubeSearchStatusTarget.textContent = "Please enter search keywords"
+      this.youtubeSearchStatusTarget.textContent = window.t("status.please_enter_keywords")
       return
     }
 
     if (!this.youtubeApiEnabled) {
-      this.youtubeSearchStatusTarget.innerHTML = '<span class="text-amber-500">YouTube API not configured. Set YOUTUBE_API_KEY env variable.</span>'
+      this.youtubeSearchStatusTarget.innerHTML = `<span class="text-amber-500">${window.t("status.youtube_not_configured_js")}</span>`
       return
     }
 
-    this.youtubeSearchStatusTarget.textContent = "Searching..."
+    this.youtubeSearchStatusTarget.textContent = window.t("status.searching")
     this.youtubeSearchBtnTarget.disabled = true
     this.youtubeSearchResultsTarget.innerHTML = ""
 
@@ -2598,16 +2598,16 @@ export default class extends Controller {
       } else {
         this.youtubeSearchResults = data.videos || []
         if (this.youtubeSearchResults.length === 0) {
-          this.youtubeSearchStatusTarget.textContent = "No videos found"
+          this.youtubeSearchStatusTarget.textContent = window.t("status.no_videos_found")
         } else {
-          this.youtubeSearchStatusTarget.textContent = `Found ${this.youtubeSearchResults.length} videos - click to insert or use arrow keys`
+          this.youtubeSearchStatusTarget.textContent = window.t("status.found_videos", { count: this.youtubeSearchResults.length })
         }
         this.selectedYoutubeIndex = -1
         this.renderYoutubeResults()
       }
     } catch (error) {
       console.error("YouTube search error:", error)
-      this.youtubeSearchStatusTarget.innerHTML = '<span class="text-red-500">Search failed. Please try again.</span>'
+      this.youtubeSearchStatusTarget.innerHTML = `<span class="text-red-500">${window.t("status.search_failed_retry")}</span>`
       this.youtubeSearchResults = []
     } finally {
       this.youtubeSearchBtnTarget.disabled = false
@@ -2739,9 +2739,9 @@ export default class extends Controller {
   selectNoteTypeEmpty() {
     this.noteTypeDialogTarget.close()
     this.newItemType = "note"
-    this.newItemTitleTarget.textContent = "New Note"
+    this.newItemTitleTarget.textContent = window.t("dialogs.new_item.new_note")
     this.newItemInputTarget.value = ""
-    this.newItemInputTarget.placeholder = "Note name"
+    this.newItemInputTarget.placeholder = window.t("dialogs.new_item.note_placeholder")
     this.showNewItemDialogAtPosition()
     this.newItemInputTarget.focus()
   }
@@ -2749,9 +2749,9 @@ export default class extends Controller {
   selectNoteTypeHugo() {
     this.noteTypeDialogTarget.close()
     this.newItemType = "hugo"
-    this.newItemTitleTarget.textContent = "New Hugo Blog Post"
+    this.newItemTitleTarget.textContent = window.t("dialogs.note_type.new_hugo_post")
     this.newItemInputTarget.value = ""
-    this.newItemInputTarget.placeholder = "Post title"
+    this.newItemInputTarget.placeholder = window.t("dialogs.new_item.note_placeholder")
     this.showNewItemDialogAtPosition()
     this.newItemInputTarget.focus()
   }
@@ -2770,9 +2770,9 @@ export default class extends Controller {
   newFolder() {
     this.newItemType = "folder"
     this.newItemParent = ""
-    this.newItemTitleTarget.textContent = "New Folder"
+    this.newItemTitleTarget.textContent = window.t("dialogs.new_item.new_folder")
     this.newItemInputTarget.value = ""
-    this.newItemInputTarget.placeholder = "Folder name"
+    this.newItemInputTarget.placeholder = window.t("dialogs.new_item.folder_placeholder")
     this.showDialogCentered(this.newItemDialogTarget)
     this.newItemInputTarget.focus()
   }
@@ -2804,7 +2804,7 @@ export default class extends Controller {
 
         if (!response.ok) {
           const data = await response.json()
-          throw new Error(data.error || "Failed to create Hugo post")
+          throw new Error(data.error || window.t("errors.failed_to_create"))
         }
 
         // Expand the parent folders
@@ -2830,7 +2830,7 @@ export default class extends Controller {
 
         if (!response.ok) {
           const data = await response.json()
-          throw new Error(data.error || "Failed to create note")
+          throw new Error(data.error || window.t("errors.failed_to_create"))
         }
 
         await this.refreshTree()
@@ -2846,7 +2846,7 @@ export default class extends Controller {
 
         if (!response.ok) {
           const data = await response.json()
-          throw new Error(data.error || "Failed to create folder")
+          throw new Error(data.error || window.t("errors.failed_to_create"))
         }
 
         this.expandedFolders.add(basePath)
@@ -2992,7 +2992,7 @@ export default class extends Controller {
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || "Failed to rename")
+        throw new Error(data.error || window.t("errors.failed_to_rename"))
       }
 
       if (this.currentFile === oldPath) {
@@ -3012,8 +3012,8 @@ export default class extends Controller {
     if (!this.contextItem) return
 
     const confirmMsg = this.contextItem.type === "file"
-      ? `Delete "${this.contextItem.path.replace(/\.md$/, "")}"?`
-      : `Delete folder "${this.contextItem.path}"? (must be empty)`
+      ? window.t("confirm.delete_note")
+      : window.t("confirm.delete_folder")
 
     if (!confirm(confirmMsg)) return
 
@@ -3028,12 +3028,12 @@ export default class extends Controller {
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || "Failed to delete")
+        throw new Error(data.error || window.t("errors.failed_to_delete"))
       }
 
       if (this.currentFile === this.contextItem.path) {
         this.currentFile = null
-        this.currentPathTarget.textContent = "Select or create a note"
+        this.currentPathTarget.textContent = window.t("editor.select_note")
         this.editorPlaceholderTarget.classList.remove("hidden")
         this.editorTarget.classList.add("hidden")
         this.hideStatsPanel()

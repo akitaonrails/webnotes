@@ -7,12 +7,12 @@ class FoldersController < ApplicationController
     @folder = Folder.new(path: params[:path].to_s)
 
     if @folder.exists?
-      render json: { error: "Folder already exists" }, status: :unprocessable_entity
+      render json: { error: t("errors.folder_already_exists") }, status: :unprocessable_entity
       return
     end
 
     if @folder.create
-      render json: { path: @folder.path, message: "Folder created" }, status: :created
+      render json: { path: @folder.path, message: t("success.folder_created") }, status: :created
     else
       render json: { error: @folder.errors.full_messages.join(", ") }, status: :unprocessable_entity
     end
@@ -20,7 +20,7 @@ class FoldersController < ApplicationController
 
   def destroy
     if @folder.destroy
-      render json: { message: "Folder deleted" }
+      render json: { message: t("success.folder_deleted") }
     else
       error_message = @folder.errors.full_messages.join(", ")
       status = error_message.include?("not found") ? :not_found : :unprocessable_entity
@@ -33,7 +33,7 @@ class FoldersController < ApplicationController
     new_path = params[:new_path].to_s
 
     if @folder.rename(new_path)
-      render json: { old_path: old_path, new_path: @folder.path, message: "Folder renamed" }
+      render json: { old_path: old_path, new_path: @folder.path, message: t("success.folder_renamed") }
     else
       error_message = @folder.errors.full_messages.join(", ")
       status = error_message.include?("not found") ? :not_found : :unprocessable_entity

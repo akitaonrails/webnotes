@@ -261,7 +261,7 @@ class NotesControllerTest < ActionDispatch::IntegrationTest
     assert_select "div[data-controller='app']"
 
     # Initial note should indicate not found (HTML-escaped JSON)
-    assert_match "not found", response.body.downcase
+    assert_match(/no longer exists|was deleted/i, response.body)
     # Check for exists:false in HTML-escaped JSON (the : is not escaped)
     assert_includes response.body, ":false"
   end

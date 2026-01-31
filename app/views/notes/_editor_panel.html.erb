@@ -2,7 +2,7 @@
   <!-- Editor Header -->
   <div class="flex-none h-10 border-b border-[var(--theme-border)] flex items-center px-4 bg-[var(--theme-bg-primary)]">
     <span class="text-sm text-[var(--theme-text-muted)] truncate" data-app-target="currentPath">
-      Select or create a note
+      <%= t('editor.select_note') %>
     </span>
     <span class="ml-2 text-xs text-[var(--theme-text-faint)] hidden" data-app-target="saveStatus"></span>
   </div>
@@ -13,71 +13,71 @@
       type="button"
       data-action="click->app#openHelp"
       class="px-2 py-1 text-xs rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] flex items-center gap-1"
-      title="Markdown Help (F1)"
+      title="<%= t('editor.toolbar.help_title') %>"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
-      Help
+      <%= t('editor.toolbar.help') %>
     </button>
     <div class="h-5 w-px bg-[var(--theme-border)] mx-1"></div>
     <button
       type="button"
       data-action="click->app#openTableEditor"
       class="px-2 py-1 text-xs rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] flex items-center gap-1"
-      title="Insert/Edit Table"
+      title="<%= t('editor.toolbar.table_title') %>"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M10 3v18M14 3v18M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6z" />
       </svg>
-      Table
+      <%= t('editor.toolbar.table') %>
     </button>
     <button
       type="button"
       data-action="click->app#openImagePicker"
       class="px-2 py-1 text-xs rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] flex items-center gap-1"
-      title="Insert Image"
+      title="<%= t('editor.toolbar.image_title') %>"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>
-      Image
+      <%= t('editor.toolbar.image') %>
     </button>
     <button
       type="button"
       data-action="click->app#openVideoDialog"
       class="px-2 py-1 text-xs rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] flex items-center gap-1"
-      title="Insert Video"
+      title="<%= t('editor.toolbar.video_title') %>"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
-      Video
+      <%= t('editor.toolbar.video') %>
     </button>
     <button
       type="button"
       data-action="click->app#openCodeEditor"
       class="px-2 py-1 text-xs rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] flex items-center gap-1"
-      title="Insert/Edit Code Block"
+      title="<%= t('editor.toolbar.code_title') %>"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
       </svg>
-      Code
+      <%= t('editor.toolbar.code') %>
     </button>
     <div class="h-5 w-px bg-[var(--theme-border)] mx-1"></div>
     <button
       type="button"
       data-action="click->app#openCustomize"
       class="px-2 py-1 text-xs rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] flex items-center gap-1"
-      title="Editor Settings"
+      title="<%= t('editor.toolbar.font_title') %>"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
-      Font
+      <%= t('editor.toolbar.font') %>
     </button>
     <div class="h-5 w-px bg-[var(--theme-border)] mx-1"></div>
     <button
@@ -85,18 +85,18 @@
       data-action="click->app#openAiDialog"
       data-app-target="aiButton"
       class="px-2 py-1 text-xs rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)] flex items-center gap-1"
-      title="AI Grammar Check"
+      title="<%= t('editor.toolbar.ai_title') %>"
     >
       <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/>
         <circle cx="7.5" cy="14.5" r="1.5"/>
         <circle cx="16.5" cy="14.5" r="1.5"/>
       </svg>
-      AI
+      <%= t('editor.toolbar.ai') %>
     </button>
     <div class="h-5 w-px bg-[var(--theme-border)] mx-1"></div>
     <span class="text-xs text-[var(--theme-text-faint)] hidden" data-app-target="tableHint">
-      Cursor in table - click to edit
+      <%= t('editor.cursor_in_table') %>
     </span>
   </div>
 
@@ -107,8 +107,8 @@
         <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
-        <p class="text-sm">Select a note to edit</p>
-        <p class="text-xs mt-1">or press Ctrl+N to create a new one</p>
+        <p class="text-sm"><%= t('editor.select_note_description') %></p>
+        <p class="text-xs mt-1"><%= t('editor.select_note_hint') %></p>
       </div>
     </div>
     <div class="h-full hidden relative" data-app-target="editor">
@@ -118,7 +118,7 @@
           data-app-target="textarea"
           data-action="input->app#onTextareaInput"
           class="editor-textarea w-full h-full p-4 resize-none bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] font-mono text-sm leading-relaxed focus:outline-none"
-          placeholder="Start writing..."
+          placeholder="<%= t('editor.start_writing') %>"
           spellcheck="false"
         ></textarea>
       </div>
@@ -132,8 +132,8 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <p class="text-sm text-[var(--theme-text-secondary)] mb-1">Processing with <span data-app-target="aiProcessingProvider" class="font-medium text-[var(--theme-accent)]"></span></p>
-          <p class="text-xs text-[var(--theme-text-muted)]">Press <kbd class="px-1.5 py-0.5 rounded bg-[var(--theme-bg-tertiary)] text-[var(--theme-text-primary)] font-mono">ESC</kbd> to cancel</p>
+          <p class="text-sm text-[var(--theme-text-secondary)] mb-1"><%= t('editor.processing_with') %> <span data-app-target="aiProcessingProvider" class="font-medium text-[var(--theme-accent)]"></span></p>
+          <p class="text-xs text-[var(--theme-text-muted)]"><%= t('editor.press_esc_to_cancel') %></p>
         </div>
       </div>
     </div>

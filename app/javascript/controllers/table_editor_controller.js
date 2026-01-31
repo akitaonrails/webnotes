@@ -44,12 +44,12 @@ export default class extends Controller {
       this.tableData = parseMarkdownTable(existingTable)
 
       if (this.tableData.length === 0) {
-        this.tableData = [["Header 1", "Header 2", "Header 3"]]
+        this.tableData = [[window.t("dialogs.table_editor.header_n", { n: 1 }), window.t("dialogs.table_editor.header_n", { n: 2 }), window.t("dialogs.table_editor.header_n", { n: 3 })]]
       }
     } else {
       this.editMode = false
       this.tableData = [
-        ["Header 1", "Header 2", "Header 3"],
+        [window.t("dialogs.table_editor.header_n", { n: 1 }), window.t("dialogs.table_editor.header_n", { n: 2 }), window.t("dialogs.table_editor.header_n", { n: 3 })],
         ["", "", ""],
         ["", "", ""]
       ]
@@ -93,7 +93,7 @@ export default class extends Controller {
               data-col="${c}"
               data-action="input->table-editor#onCellInput contextmenu->table-editor#showCellMenu"
               class="w-full px-2 py-1 text-sm bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-[var(--theme-accent)] text-[var(--theme-text-primary)]"
-              placeholder="${isHeader ? 'Header' : ''}"
+              placeholder="${isHeader ? window.t("dialogs.table_editor.header") : ''}"
             >
           </td>
         `
@@ -129,7 +129,7 @@ export default class extends Controller {
   addColumn() {
     const cols = this.tableData[0]?.length || 0
     for (let i = 0; i < this.tableData.length; i++) {
-      this.tableData[i].push(i === 0 ? `Header ${cols + 1}` : "")
+      this.tableData[i].push(i === 0 ? window.t("dialogs.table_editor.header_n", { n: cols + 1 }) : "")
     }
     this.renderGrid()
   }

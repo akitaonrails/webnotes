@@ -8,7 +8,7 @@
   <div class="text-[var(--theme-text-primary)] flex flex-col h-full max-h-[90vh]">
     <!-- Header -->
     <div class="flex-shrink-0 flex items-center justify-between px-4 pt-4">
-      <h3 class="text-sm font-semibold">Insert Image</h3>
+      <h3 class="text-sm font-semibold"><%= t('dialogs.image_picker.title') %></h3>
       <button
         type="button"
         data-action="click->image-picker#closeDialog"
@@ -29,7 +29,7 @@
         data-image-picker-target="tabLocal"
         class="px-4 py-2 text-sm font-medium border-b-2 border-[var(--theme-accent)] text-[var(--theme-accent)]"
       >
-        Local
+        <%= t('dialogs.image_picker.tab_local') %>
       </button>
       <button
         type="button"
@@ -38,7 +38,7 @@
         data-image-picker-target="tabFolder"
         class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-[var(--theme-text-muted)] hover:text-[var(--theme-text-secondary)]"
       >
-        Folder
+        <%= t('dialogs.image_picker.tab_folder') %>
       </button>
       <button
         type="button"
@@ -47,7 +47,7 @@
         data-image-picker-target="tabWeb"
         class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-[var(--theme-text-muted)] hover:text-[var(--theme-text-secondary)]"
       >
-        Web Search
+        <%= t('dialogs.image_picker.tab_web') %>
       </button>
       <button
         type="button"
@@ -56,7 +56,7 @@
         data-image-picker-target="tabGoogle"
         class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-[var(--theme-text-muted)] hover:text-[var(--theme-text-secondary)]"
       >
-        Google
+        <%= t('dialogs.image_picker.tab_google') %>
       </button>
       <button
         type="button"
@@ -65,7 +65,7 @@
         data-image-picker-target="tabPinterest"
         class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-[var(--theme-text-muted)] hover:text-[var(--theme-text-secondary)]"
       >
-        Pinterest
+        <%= t('dialogs.image_picker.tab_pinterest') %>
       </button>
       <button
         type="button"
@@ -74,7 +74,7 @@
         data-image-picker-target="tabAi"
         class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-[var(--theme-text-muted)] hover:text-[var(--theme-text-secondary)]"
       >
-        AI Generate
+        <%= t('dialogs.image_picker.tab_ai') %>
       </button>
     </div>
 
@@ -94,15 +94,15 @@
           <svg class="w-10 h-10 mx-auto mb-3 text-[var(--theme-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          <h4 class="text-sm font-semibold mb-2">Local Images Path Required</h4>
+          <h4 class="text-sm font-semibold mb-2"><%= t('dialogs.image_picker.local_path_required') %></h4>
           <p class="text-xs text-[var(--theme-text-muted)] mb-3">
-            To browse local images, configure an images directory path.
+            <%= t('dialogs.image_picker.local_path_description') %>
           </p>
           <div class="text-xs text-left bg-[var(--theme-bg-primary)] p-3 rounded border border-[var(--theme-border)] mb-3">
-            <p class="mb-2"><strong>Quick setup:</strong></p>
+            <p class="mb-2"><strong><%= t('dialogs.video.quick_setup') %></strong></p>
             <ol class="list-decimal list-inside space-y-1 text-[var(--theme-text-muted)]">
-              <li>Edit <code class="bg-[var(--theme-code-bg)] px-1 rounded">.fed</code> in your notes folder</li>
-              <li>Add: <code class="bg-[var(--theme-code-bg)] px-1 rounded">images_path = /path/to/images</code></li>
+              <li><%= t('dialogs.image_picker.local_setup_step_1') %></li>
+              <li><%= t('dialogs.image_picker.local_setup_step_2') %></li>
             </ol>
           </div>
         </div>
@@ -116,7 +116,7 @@
             data-local-images-target="search"
             data-action="input->local-images#onSearch"
             class="w-full px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
-            placeholder="Search images by filename..."
+            placeholder="<%= t('dialogs.image_picker.search_images_placeholder') %>"
           >
         </div>
 
@@ -142,21 +142,21 @@
           <svg class="w-10 h-10 mx-auto mb-3 text-[var(--theme-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
           </svg>
-          <h4 class="text-sm font-semibold mb-2">File System Access API Required</h4>
+          <h4 class="text-sm font-semibold mb-2"><%= t('dialogs.image_picker.filesystem_api_required') %></h4>
           <p class="text-xs text-[var(--theme-text-muted)] mb-3">
-            This feature requires the File System Access API, which may be disabled in your browser.
+            <%= t('dialogs.image_picker.filesystem_api_description') %>
           </p>
           <div class="text-xs text-left bg-[var(--theme-bg-primary)] p-3 rounded border border-[var(--theme-border)] mb-3">
-            <p class="mb-2"><strong>To enable in Brave:</strong></p>
+            <p class="mb-2"><strong><%= t('dialogs.image_picker.enable_in_brave') %></strong></p>
             <ol class="list-decimal list-inside space-y-1 text-[var(--theme-text-muted)]">
-              <li>Go to <code class="bg-[var(--theme-code-bg)] px-1 rounded">brave://flags</code></li>
-              <li>Search for <code class="bg-[var(--theme-code-bg)] px-1 rounded">File System Access API</code></li>
-              <li>Set to <code class="bg-[var(--theme-code-bg)] px-1 rounded">Enabled</code></li>
-              <li>Restart your browser</li>
+              <li><%= t('dialogs.image_picker.brave_step_1') %></li>
+              <li><%= t('dialogs.image_picker.brave_step_2') %></li>
+              <li><%= t('dialogs.image_picker.brave_step_3') %></li>
+              <li><%= t('dialogs.image_picker.brave_step_4') %></li>
             </ol>
-            <p class="mt-3 mb-2"><strong>Supported browsers:</strong></p>
-            <p class="text-[var(--theme-text-muted)]">Chrome 86+, Edge 86+, Opera 72+, Brave (with flag)</p>
-            <p class="mt-2 text-[var(--theme-text-muted)]">Firefox and Safari do not support this API.</p>
+            <p class="mt-3 mb-2"><strong><%= t('dialogs.image_picker.supported_browsers') %></strong></p>
+            <p class="text-[var(--theme-text-muted)]"><%= t('dialogs.image_picker.supported_browsers_list') %></p>
+            <p class="mt-2 text-[var(--theme-text-muted)]"><%= t('dialogs.image_picker.not_supported_note') %></p>
           </div>
         </div>
       </div>
@@ -168,14 +168,14 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
           </svg>
           <p class="text-sm text-[var(--theme-text-muted)] mb-3 text-center">
-            Select a folder from your computer to browse images
+            <%= t('dialogs.image_picker.select_folder_prompt') %>
           </p>
           <button
             type="button"
             data-action="click->folder-images#browse"
             class="px-4 py-2 bg-[var(--theme-accent)] text-[var(--theme-accent-text)] rounded-md hover:bg-[var(--theme-accent-hover)] text-sm font-medium"
           >
-            Browse Folder...
+            <%= t('dialogs.image_picker.browse_folder') %>
           </button>
         </div>
       </div>
@@ -183,13 +183,13 @@
       <!-- Grid for folder images (shown after folder selected) -->
       <div class="hidden" data-folder-images-target="container">
         <div class="flex items-center justify-between mb-3">
-          <span class="text-xs text-[var(--theme-text-muted)]" data-folder-images-target="status">No folder selected</span>
+          <span class="text-xs text-[var(--theme-text-muted)]" data-folder-images-target="status"><%= t('dialogs.image_picker.no_folder_selected') %></span>
           <button
             type="button"
             data-action="click->folder-images#browse"
             class="text-xs text-[var(--theme-accent)] hover:underline"
           >
-            Change folder...
+            <%= t('dialogs.image_picker.change_folder') %>
           </button>
         </div>
         <!-- Search -->
@@ -199,7 +199,7 @@
             data-folder-images-target="search"
             data-action="input->folder-images#onSearch"
             class="w-full px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
-            placeholder="Search images by filename..."
+            placeholder="<%= t('dialogs.image_picker.search_images_placeholder') %>"
           >
         </div>
         <div class="grid grid-cols-5 gap-2 mb-4 min-h-[200px] max-h-[300px] overflow-y-auto" data-folder-images-target="grid">
@@ -207,7 +207,7 @@
         </div>
       </div>
 
-      <%= render "notes/dialogs/s3_option", mode: "upload", description: "Image will be uploaded to S3 (cloud URL). Otherwise saves to notes/images/ directory." %>
+      <%= render "notes/dialogs/s3_option", mode: "upload", description: t('dialogs.s3_option.upload_description') %>
     </div>
 
     <!-- Tab Content: Web Search (Bing/DuckDuckGo) -->
@@ -225,7 +225,7 @@
             data-web-images-target="search"
             data-action="keydown->web-images#onSearchKeydown"
             class="flex-1 px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
-            placeholder="Search web images..."
+            placeholder="<%= t('dialogs.image_picker.search_web_placeholder') %>"
           >
           <button
             type="button"
@@ -236,14 +236,14 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            Search
+            <%= t('common.search') %>
           </button>
         </div>
       </div>
 
       <!-- Status -->
       <div class="mb-2 text-xs text-[var(--theme-text-muted)]" data-web-images-target="status">
-        Enter keywords and click Search or press Enter
+        <%= t('dialogs.image_picker.search_status') %>
       </div>
 
       <!-- Image Grid -->
@@ -267,16 +267,16 @@
           <svg class="w-10 h-10 mx-auto mb-3 text-[var(--theme-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
-          <h4 class="text-sm font-semibold mb-2">Google API Configuration Required</h4>
+          <h4 class="text-sm font-semibold mb-2"><%= t('dialogs.image_picker.google_api_required') %></h4>
           <p class="text-xs text-[var(--theme-text-muted)] mb-3">
-            To search Google Images, you need to configure a Google API key and Custom Search Engine ID.
+            <%= t('dialogs.image_picker.google_api_description') %>
           </p>
           <div class="text-xs text-left bg-[var(--theme-bg-primary)] p-3 rounded border border-[var(--theme-border)] mb-3">
-            <p class="mb-2"><strong>Quick setup:</strong></p>
+            <p class="mb-2"><strong><%= t('dialogs.video.quick_setup') %></strong></p>
             <ol class="list-decimal list-inside space-y-1 text-[var(--theme-text-muted)]">
-              <li>Edit the <code class="bg-[var(--theme-code-bg)] px-1 rounded">.fed</code> file in your notes folder</li>
-              <li>Add: <code class="bg-[var(--theme-code-bg)] px-1 rounded">google_api_key = YOUR_KEY</code></li>
-              <li>Add: <code class="bg-[var(--theme-code-bg)] px-1 rounded">google_cse_id = YOUR_CSE_ID</code></li>
+              <li><%= t('dialogs.video.setup_step_1') %></li>
+              <li><%= t('dialogs.image_picker.google_setup_step_2') %></li>
+              <li><%= t('dialogs.image_picker.google_setup_step_3') %></li>
             </ol>
           </div>
           <a
@@ -288,7 +288,7 @@
             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
             </svg>
-            View full setup instructions on GitHub
+            <%= t('dialogs.video.view_setup_instructions') %>
           </a>
         </div>
       </div>
@@ -303,7 +303,7 @@
               data-google-images-target="search"
               data-action="keydown->google-images#onSearchKeydown"
               class="flex-1 px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
-              placeholder="Search Google Images..."
+              placeholder="<%= t('dialogs.image_picker.search_google_placeholder') %>"
             >
             <button
               type="button"
@@ -314,14 +314,14 @@
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              Search
+              <%= t('common.search') %>
             </button>
           </div>
         </div>
 
         <!-- Status -->
         <div class="mb-2 text-xs text-[var(--theme-text-muted)]" data-google-images-target="status">
-          Enter keywords and click Search or press Enter
+          <%= t('dialogs.image_picker.search_status') %>
         </div>
 
         <!-- Image Grid with infinite scroll -->
@@ -352,7 +352,7 @@
             data-pinterest-images-target="search"
             data-action="keydown->pinterest-images#onSearchKeydown"
             class="flex-1 px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
-            placeholder="Search Pinterest..."
+            placeholder="<%= t('dialogs.image_picker.search_pinterest_placeholder') %>"
           >
           <button
             type="button"
@@ -363,14 +363,14 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            Search
+            <%= t('common.search') %>
           </button>
         </div>
       </div>
 
       <!-- Status -->
       <div class="mb-2 text-xs text-[var(--theme-text-muted)]" data-pinterest-images-target="status">
-        Enter keywords and click Search or press Enter
+        <%= t('dialogs.image_picker.search_status') %>
       </div>
 
       <!-- Image Grid -->
@@ -394,16 +394,16 @@
           <svg class="w-10 h-10 mx-auto mb-3 text-[var(--theme-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          <h4 class="text-sm font-semibold mb-2">Gemini API Key Required</h4>
+          <h4 class="text-sm font-semibold mb-2"><%= t('dialogs.image_picker.gemini_api_required') %></h4>
           <p class="text-xs text-[var(--theme-text-muted)] mb-3">
-            AI image generation uses Google's Imagen models and requires a Gemini API key.
+            <%= t('dialogs.image_picker.gemini_api_description') %>
           </p>
           <div class="text-xs text-left bg-[var(--theme-bg-primary)] p-3 rounded border border-[var(--theme-border)] mb-3">
-            <p class="mb-2"><strong>Quick setup:</strong></p>
+            <p class="mb-2"><strong><%= t('dialogs.video.quick_setup') %></strong></p>
             <ol class="list-decimal list-inside space-y-1 text-[var(--theme-text-muted)]">
-              <li>Get an API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[var(--theme-accent)] hover:underline">aistudio.google.com</a></li>
-              <li>Edit <code class="bg-[var(--theme-code-bg)] px-1 rounded">.fed</code> in your notes folder</li>
-              <li>Add: <code class="bg-[var(--theme-code-bg)] px-1 rounded">gemini_api_key = YOUR_KEY</code></li>
+              <li><%= t('dialogs.image_picker.gemini_setup_step_1') %></li>
+              <li><%= t('dialogs.image_picker.gemini_setup_step_2') %></li>
+              <li><%= t('dialogs.image_picker.gemini_setup_step_3') %></li>
             </ol>
           </div>
         </div>
@@ -413,13 +413,13 @@
       <div data-ai-images-target="form" class="hidden">
         <!-- Model Display -->
         <div class="mb-3 text-xs text-[var(--theme-text-muted)]">
-          Model: <span data-ai-images-target="model" class="font-medium text-[var(--theme-text-secondary)]"></span>
+          <%= t('dialogs.image_picker.model_label') %> <span data-ai-images-target="model" class="font-medium text-[var(--theme-text-secondary)]"></span>
         </div>
 
         <!-- Reference Image Section (optional) -->
         <div class="mb-3 hidden" data-ai-images-target="refSection">
           <label class="block text-xs text-[var(--theme-text-muted)] mb-1">
-            Reference image (optional) - guide the generation with an existing image
+            <%= t('dialogs.image_picker.reference_image_label') %>
           </label>
 
           <!-- Selected Reference Preview -->
@@ -433,7 +433,7 @@
                   data-action="click->ai-images#clearRefImage"
                   class="text-xs text-[var(--theme-error)] hover:underline"
                 >
-                  Remove reference
+                  <%= t('dialogs.image_picker.remove_reference') %>
                 </button>
               </div>
             </div>
@@ -446,7 +446,7 @@
               data-ai-images-target="refSearch"
               data-action="input->ai-images#onRefSearch"
               class="w-full px-3 py-1.5 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)] mb-2"
-              placeholder="Search reference images..."
+              placeholder="<%= t('dialogs.image_picker.search_reference_placeholder') %>"
             >
             <div class="grid grid-cols-6 gap-1.5 max-h-[120px] overflow-y-auto" data-ai-images-target="refGrid">
               <!-- Reference images will be rendered by JavaScript -->
@@ -456,13 +456,13 @@
 
         <!-- Prompt Input -->
         <div class="mb-3">
-          <label class="block text-xs text-[var(--theme-text-muted)] mb-1">Describe the image you want to generate</label>
+          <label class="block text-xs text-[var(--theme-text-muted)] mb-1"><%= t('dialogs.image_picker.prompt_label') %></label>
           <textarea
             data-ai-images-target="prompt"
             data-action="keydown->ai-images#onPromptKeydown"
             class="w-full px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)] resize-none"
             rows="2"
-            placeholder="A photorealistic image of a mountain landscape at sunset with dramatic clouds..."
+            placeholder="<%= t('dialogs.image_picker.prompt_placeholder') %>"
           ></textarea>
         </div>
 
@@ -477,7 +477,7 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
-            Generate Image
+            <%= t('dialogs.image_picker.generate_image') %>
           </button>
         </div>
 
@@ -488,8 +488,8 @@
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <p class="text-sm text-[var(--theme-text-secondary)] mb-1">Generating image with <span data-ai-images-target="processingModel" class="font-medium text-[var(--theme-accent)]"></span></p>
-            <p class="text-xs text-[var(--theme-text-muted)]">Press <kbd class="px-1.5 py-0.5 rounded bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] font-mono">ESC</kbd> to cancel</p>
+            <p class="text-sm text-[var(--theme-text-secondary)] mb-1"><%= t('dialogs.image_picker.generating_with') %> <span data-ai-images-target="processingModel" class="font-medium text-[var(--theme-accent)]"></span></p>
+            <p class="text-xs text-[var(--theme-text-muted)]"><%= t('editor.press_esc_to_cancel') %></p>
           </div>
         </div>
 
@@ -498,7 +498,7 @@
           <div class="flex gap-4">
             <!-- Image Preview (left side) -->
             <div class="flex-shrink-0">
-              <label class="block text-xs text-[var(--theme-text-muted)] mb-1">Generated Image</label>
+              <label class="block text-xs text-[var(--theme-text-muted)] mb-1"><%= t('dialogs.image_picker.generated_image') %></label>
               <div class="border border-[var(--theme-border)] rounded-lg overflow-hidden bg-[var(--theme-bg-tertiary)]">
                 <img data-ai-images-target="preview" class="max-w-[200px] max-h-[150px] object-contain" alt="Generated image" />
               </div>
@@ -508,13 +508,13 @@
             <div class="flex-1 min-w-0">
               <!-- Revised Prompt (if available) -->
               <div class="hidden mb-3" data-ai-images-target="revisedPromptContainer">
-                <label class="block text-xs text-[var(--theme-text-muted)] mb-1">AI-revised prompt</label>
+                <label class="block text-xs text-[var(--theme-text-muted)] mb-1"><%= t('dialogs.image_picker.revised_prompt') %></label>
                 <p class="text-xs text-[var(--theme-text-secondary)] bg-[var(--theme-bg-tertiary)] p-2 rounded line-clamp-2" data-ai-images-target="revisedPrompt"></p>
               </div>
 
               <!-- Save Options -->
               <div class="space-y-2" data-ai-images-target="s3Option">
-                <label class="block text-xs text-[var(--theme-text-muted)] mb-1">Save to:</label>
+                <label class="block text-xs text-[var(--theme-text-muted)] mb-1"><%= t('dialogs.image_picker.save_to') %></label>
                 <label class="flex items-center gap-2 text-sm cursor-pointer">
                   <input
                     type="radio"
@@ -523,7 +523,7 @@
                     checked
                     class="text-[var(--theme-accent)] focus:ring-[var(--theme-accent)]"
                   >
-                  <span>notes/images/ directory</span>
+                  <span><%= t('dialogs.image_picker.save_local') %></span>
                 </label>
                 <label class="flex items-center gap-2 text-sm cursor-pointer">
                   <input
@@ -533,7 +533,7 @@
                     data-ai-images-target="saveS3"
                     class="text-[var(--theme-accent)] focus:ring-[var(--theme-accent)]"
                   >
-                  <span>AWS S3</span>
+                  <span><%= t('dialogs.image_picker.save_s3') %></span>
                 </label>
               </div>
             </div>
@@ -546,7 +546,7 @@
     <!-- Selected Image Options (shared across all tabs) -->
     <div class="flex-shrink-0 border-t border-[var(--theme-border)] px-4 pt-3 hidden max-h-[200px] overflow-y-auto" data-image-picker-target="options">
       <div class="flex items-center gap-2 mb-3 text-sm">
-        <span class="text-[var(--theme-text-muted)]">Selected:</span>
+        <span class="text-[var(--theme-text-muted)]"><%= t('dialogs.image_picker.selected') %></span>
         <span class="font-medium truncate max-w-md" data-image-picker-target="selectedName"></span>
       </div>
 
@@ -554,23 +554,23 @@
       <div class="space-y-3">
         <!-- Alt Text -->
         <div>
-          <label class="block text-xs text-[var(--theme-text-muted)] mb-1">Alt Text (optional)</label>
+          <label class="block text-xs text-[var(--theme-text-muted)] mb-1"><%= t('dialogs.image_picker.alt_label') %></label>
           <input
             type="text"
             data-image-picker-target="alt"
             class="w-full px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
-            placeholder="Describe the image..."
+            placeholder="<%= t('dialogs.image_picker.alt_placeholder') %>"
           >
         </div>
 
         <!-- Link URL -->
         <div>
-          <label class="block text-xs text-[var(--theme-text-muted)] mb-1">Link URL (optional, makes image clickable)</label>
+          <label class="block text-xs text-[var(--theme-text-muted)] mb-1"><%= t('dialogs.image_picker.link_label') %></label>
           <input
             type="text"
             data-image-picker-target="link"
             class="w-full px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
-            placeholder="https://..."
+            placeholder="<%= t('dialogs.image_picker.link_placeholder') %>"
           >
         </div>
       </div>
@@ -582,7 +582,7 @@
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
       </svg>
-      <span class="ml-2 text-sm text-[var(--theme-text-muted)]" data-image-picker-target="loadingText">Uploading to S3...</span>
+      <span class="ml-2 text-sm text-[var(--theme-text-muted)]" data-image-picker-target="loadingText"><%= t('dialogs.image_picker.uploading_to_s3') %></span>
     </div>
 
     <!-- Footer -->
@@ -592,7 +592,7 @@
         data-action="click->image-picker#closeDialog"
         class="px-3 py-1.5 text-sm rounded-md hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-secondary)]"
       >
-        Cancel
+        <%= t('common.cancel') %>
       </button>
       <button
         type="button"
@@ -601,7 +601,7 @@
         class="px-3 py-1.5 text-sm rounded-md bg-[var(--theme-accent)] text-[var(--theme-accent-text)] hover:bg-[var(--theme-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
         disabled
       >
-        Insert Image
+        <%= t('dialogs.image_picker.insert_image') %>
       </button>
     </div>
   </div>

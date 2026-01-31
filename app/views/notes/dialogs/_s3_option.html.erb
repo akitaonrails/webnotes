@@ -5,10 +5,10 @@
 %>
 <% mode ||= "upload" %>
 <%
-  label = mode == "reupload" ? "Download and re-upload to AWS S3" : "Upload to AWS S3"
+  label = mode == "reupload" ? t('dialogs.s3_option.reupload_to_s3') : t('dialogs.s3_option.upload_to_s3')
   description ||= mode == "reupload" ?
-    "Image will be downloaded and uploaded to your S3, using your URL instead of the original" :
-    "Image will be uploaded to S3 and the URL will be used instead of local path"
+    t('dialogs.s3_option.reupload_description') :
+    t('dialogs.s3_option.upload_description')
 %>
 
 <div class="hidden" data-controller="s3-option">
@@ -27,17 +27,17 @@
   <!-- Resize option (only when S3 is checked) -->
   <div class="hidden mt-2 ml-6" data-s3-option-target="resizeOption">
     <label class="flex items-center gap-2 text-sm">
-      <span>Resize:</span>
+      <span><%= t('dialogs.s3_option.resize') %></span>
       <select
         data-s3-option-target="resizeSelect"
         class="px-2 py-1 text-sm border border-[var(--theme-border)] rounded bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
       >
-        <option value="">None (original size)</option>
-        <option value="0.25">1/4 size (25%)</option>
-        <option value="0.5" selected>1/2 size (50%)</option>
-        <option value="0.67">2/3 size (67%)</option>
+        <option value=""><%= t('dialogs.s3_option.none') %></option>
+        <option value="0.25"><%= t('dialogs.s3_option.quarter_size') %></option>
+        <option value="0.5" selected><%= t('dialogs.s3_option.half_size') %></option>
+        <option value="0.67"><%= t('dialogs.s3_option.two_thirds_size') %></option>
       </select>
-      <span class="text-[var(--theme-text-muted)]">+ compress</span>
+      <span class="text-[var(--theme-text-muted)]"><%= t('dialogs.s3_option.compress') %></span>
     </label>
   </div>
 </div>

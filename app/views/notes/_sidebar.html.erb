@@ -1,13 +1,13 @@
 <aside class="flex-none w-64 border-r border-[var(--theme-border)] flex flex-col bg-[var(--theme-bg-secondary)]" data-app-target="sidebar">
   <!-- Sidebar Header -->
   <div class="flex-none h-10 border-b border-[var(--theme-border)] flex items-center justify-between px-3">
-    <span class="text-xs font-medium text-[var(--theme-text-muted)] uppercase tracking-wide">Explorer</span>
+    <span class="text-xs font-medium text-[var(--theme-text-muted)] uppercase tracking-wide"><%= t('sidebar.explorer') %></span>
     <div class="flex items-center gap-1">
       <button
         type="button"
         data-action="click->app#newNote"
         class="p-1 rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]"
-        title="New Note (Ctrl+N)"
+        title="<%= t('sidebar.new_note') %>"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -17,7 +17,7 @@
         type="button"
         data-action="click->app#newFolder"
         class="p-1 rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]"
-        title="New Folder"
+        title="<%= t('sidebar.new_folder') %>"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
@@ -28,7 +28,7 @@
         type="button"
         data-action="click->app#openFileFinder"
         class="p-1 rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]"
-        title="Find File (Ctrl+P)"
+        title="<%= t('sidebar.find_file') %>"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -38,7 +38,7 @@
         type="button"
         data-action="click->app#openContentSearch"
         class="p-1 rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]"
-        title="Search in Files (Ctrl+Shift+F)"
+        title="<%= t('sidebar.search_in_files') %>"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -60,19 +60,19 @@
   <div class="flex-none border-t border-[var(--theme-border)] px-3 py-2 hidden" data-app-target="statsPanel">
     <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
       <div class="flex justify-between">
-        <span class="text-[var(--theme-text-muted)]">Words</span>
+        <span class="text-[var(--theme-text-muted)]"><%= t('sidebar.words') %></span>
         <span class="text-[var(--theme-text-secondary)] font-medium" data-app-target="statsWords">0</span>
       </div>
       <div class="flex justify-between">
-        <span class="text-[var(--theme-text-muted)]">Characters</span>
+        <span class="text-[var(--theme-text-muted)]"><%= t('sidebar.characters') %></span>
         <span class="text-[var(--theme-text-secondary)] font-medium" data-app-target="statsChars">0</span>
       </div>
       <div class="flex justify-between">
-        <span class="text-[var(--theme-text-muted)]">Size</span>
+        <span class="text-[var(--theme-text-muted)]"><%= t('sidebar.size') %></span>
         <span class="text-[var(--theme-text-secondary)] font-medium" data-app-target="statsSize">0 B</span>
       </div>
       <div class="flex justify-between">
-        <span class="text-[var(--theme-text-muted)]">Read time</span>
+        <span class="text-[var(--theme-text-muted)]"><%= t('sidebar.read_time') %></span>
         <span class="text-[var(--theme-text-secondary)] font-medium" data-app-target="statsReadTime">0 min</span>
       </div>
     </div>

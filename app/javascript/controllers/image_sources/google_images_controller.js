@@ -54,7 +54,7 @@ export default class extends Controller {
   }
 
   async search() {
-    if (this.hasStatusTarget) this.statusTarget.textContent = "Searching..."
+    if (this.hasStatusTarget) this.statusTarget.textContent = window.t("status.searching")
     if (this.hasSearchBtnTarget) this.searchBtnTarget.disabled = true
     if (this.hasGridTarget) this.gridTarget.innerHTML = ""
 
@@ -142,7 +142,7 @@ export default class extends Controller {
     this.selectedImage = null
     if (this.hasSearchTarget) this.searchTarget.value = ""
     if (this.hasGridTarget) this.gridTarget.innerHTML = ""
-    if (this.hasStatusTarget) this.statusTarget.textContent = "Enter keywords and click Search or press Enter"
+    if (this.hasStatusTarget) this.statusTarget.textContent = window.t("status.enter_keywords_search")
     this.s3Option?.hide()
   }
 }

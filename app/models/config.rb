@@ -10,6 +10,7 @@ class Config
   SCHEMA = {
     # UI Settings
     "theme" => { default: nil, type: :string, env: nil },
+    "locale" => { default: "en", type: :string, env: "FRANKMD_LOCALE" },
     "editor_font" => { default: "cascadia-code", type: :string, env: nil },
     "editor_font_size" => { default: 14, type: :integer, env: nil },
     "preview_zoom" => { default: 100, type: :integer, env: nil },
@@ -65,6 +66,7 @@ class Config
   # Keys that are UI settings (saved from frontend)
   UI_KEYS = %w[
     theme
+    locale
     editor_font
     editor_font_size
     preview_zoom

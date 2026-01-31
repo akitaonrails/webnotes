@@ -12,12 +12,12 @@ class YoutubeController < ApplicationController
     query = params[:q].to_s.strip
 
     if query.blank?
-      render json: { error: "Query is required" }, status: :bad_request
+      render json: { error: t("errors.query_required") }, status: :bad_request
       return
     end
 
     unless youtube_api_key.present?
-      render json: { error: "YouTube API key not configured" }, status: :service_unavailable
+      render json: { error: t("errors.youtube_not_configured") }, status: :service_unavailable
       return
     end
 
@@ -25,7 +25,7 @@ class YoutubeController < ApplicationController
     render json: results
   rescue StandardError => e
     Rails.logger.error("YouTube search error: #{e.message}")
-    render json: { error: "Search failed" }, status: :internal_server_error
+    render json: { error: t("errors.search_failed") }, status: :internal_server_error
   end
 
   private

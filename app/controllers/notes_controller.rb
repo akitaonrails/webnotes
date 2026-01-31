@@ -23,7 +23,7 @@ class NotesController < ApplicationController
         note = Note.find(path)
         render json: { path: note.path, content: note.content }
       rescue NotesService::NotFoundError
-        render json: { error: "Note not found" }, status: :not_found
+        render json: { error: t("errors.note_not_found") }, status: :not_found
       end
       return
     end
@@ -41,12 +41,12 @@ class NotesController < ApplicationController
     @note = Note.new(path: path, content: params[:content] || "")
 
     if @note.exists?
-      render json: { error: "Note already exists" }, status: :unprocessable_entity
+      render json: { error: t("errors.note_already_exists") }, status: :unprocessable_entity
       return
     end
 
     if @note.save
-      render json: { path: @note.path, message: "Note created" }, status: :created
+      render json: { path: @note.path, message: t("success.note_created") }, status: :created
     else
       render json: { error: @note.errors.full_messages.join(", ") }, status: :unprocessable_entity
     end
@@ -56,7 +56,7 @@ class NotesController < ApplicationController
     @note.content = params[:content] || ""
 
     if @note.save
-      render json: { path: @note.path, message: "Note saved" }
+      render json: { path: @note.path, message: t("success.note_saved") }
     else
       render json: { error: @note.errors.full_messages.join(", ") }, status: :unprocessable_entity
     end
@@ -64,7 +64,7 @@ class NotesController < ApplicationController
 
   def destroy
     if @note.destroy
-      render json: { message: "Note deleted" }
+      render json: { message: t("success.note_deleted") }
     else
       render json: { error: @note.errors.full_messages.join(", ") }, status: :not_found
     end
@@ -72,7 +72,7 @@ class NotesController < ApplicationController
 
   def rename
     unless @note.exists?
-      render json: { error: "Note not found" }, status: :not_found
+      render json: { error: t("errors.note_not_found") }, status: :not_found
       return
     end
 
@@ -80,7 +80,7 @@ class NotesController < ApplicationController
     old_path = @note.path
 
     if @note.rename(new_path)
-      render json: { old_path: old_path, new_path: @note.path, message: "Note renamed" }
+      render json: { old_path: old_path, new_path: @note.path, message: t("success.note_renamed") }
     else
       render json: { error: @note.errors.full_messages.join(", ") }, status: :unprocessable_entity
     end
@@ -123,7 +123,7 @@ class NotesController < ApplicationController
         path: path,
         content: nil,
         exists: false,
-        error: "Note not found or was deleted"
+        error: t("errors.file_not_found")
       }
     end
   rescue NotesService::NotFoundError
@@ -131,7 +131,7 @@ class NotesController < ApplicationController
       path: path,
       content: nil,
       exists: false,
-      error: "Note not found or was deleted"
+      error: t("errors.file_not_found")
     }
   end
 

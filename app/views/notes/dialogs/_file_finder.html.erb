@@ -15,11 +15,11 @@
           data-app-target="fileFinderInput"
           data-action="input->app#onFileFinderInput keydown->app#onFileFinderKeydown"
           class="flex-1 bg-transparent border-0 text-[var(--theme-text-primary)] placeholder-[var(--theme-text-muted)] focus:outline-none text-sm"
-          placeholder="Type to search files..."
+          placeholder="<%= t('dialogs.file_finder.placeholder') %>"
           autocomplete="off"
           spellcheck="false"
         >
-        <span class="text-xs text-[var(--theme-text-faint)]">esc to close</span>
+        <span class="text-xs text-[var(--theme-text-faint)]"><%= t('dialogs.file_finder.esc_to_close') %></span>
       </div>
     </div>
 

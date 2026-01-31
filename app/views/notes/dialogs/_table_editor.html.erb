@@ -6,13 +6,13 @@
   >
     <div class="p-4 text-[var(--theme-text-primary)]">
       <div class="flex items-center justify-between mb-3">
-        <h3 class="text-sm font-semibold">Table Editor</h3>
+        <h3 class="text-sm font-semibold"><%= t('dialogs.table_editor.title') %></h3>
         <div class="flex items-center gap-1">
           <button
             type="button"
             data-action="click->table-editor#addColumn"
             class="p-1.5 rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]"
-            title="Add Column"
+            title="<%= t('dialogs.table_editor.add_column') %>"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -22,7 +22,7 @@
             type="button"
             data-action="click->table-editor#removeColumn"
             class="p-1.5 rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]"
-            title="Remove Column"
+            title="<%= t('dialogs.table_editor.remove_column') %>"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
@@ -33,7 +33,7 @@
             type="button"
             data-action="click->table-editor#addRow"
             class="p-1.5 rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]"
-            title="Add Row"
+            title="<%= t('dialogs.table_editor.add_row') %>"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -43,7 +43,7 @@
             type="button"
             data-action="click->table-editor#removeRow"
             class="p-1.5 rounded hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-muted)]"
-            title="Remove Row"
+            title="<%= t('dialogs.table_editor.remove_row') %>"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
@@ -57,7 +57,7 @@
         class="fixed hidden bg-[var(--theme-bg-secondary)] border border-[var(--theme-border)] rounded-lg shadow-lg py-1 min-w-[140px] z-[60] text-[var(--theme-text-primary)]"
         data-table-editor-target="cellMenu"
       >
-        <div class="px-2 py-1 text-xs font-semibold text-[var(--theme-text-muted)] uppercase">Column</div>
+        <div class="px-2 py-1 text-xs font-semibold text-[var(--theme-text-muted)] uppercase"><%= t('dialogs.table_editor.column') %></div>
         <button
           type="button"
           data-action="click->table-editor#moveColumnLeft"
@@ -67,7 +67,7 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
-          Move Left
+          <%= t('dialogs.table_editor.move_left') %>
         </button>
         <button
           type="button"
@@ -78,7 +78,7 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
           </svg>
-          Move Right
+          <%= t('dialogs.table_editor.move_right') %>
         </button>
         <button
           type="button"
@@ -89,10 +89,10 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
-          Delete Column
+          <%= t('dialogs.table_editor.delete_column') %>
         </button>
         <div class="border-t border-[var(--theme-border)] my-1"></div>
-        <div class="px-2 py-1 text-xs font-semibold text-[var(--theme-text-muted)] uppercase">Row</div>
+        <div class="px-2 py-1 text-xs font-semibold text-[var(--theme-text-muted)] uppercase"><%= t('dialogs.table_editor.row') %></div>
         <button
           type="button"
           data-action="click->table-editor#moveRowUp"
@@ -102,7 +102,7 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
           </svg>
-          Move Up
+          <%= t('dialogs.table_editor.move_up') %>
         </button>
         <button
           type="button"
@@ -113,7 +113,7 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
-          Move Down
+          <%= t('dialogs.table_editor.move_down') %>
         </button>
         <button
           type="button"
@@ -124,7 +124,7 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
-          Delete Row
+          <%= t('dialogs.table_editor.delete_row') %>
         </button>
       </div>
 
@@ -141,14 +141,14 @@
             data-action="click->table-editor#close"
             class="px-3 py-1.5 text-sm rounded-md hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-secondary)]"
           >
-            Cancel
+            <%= t('common.cancel') %>
           </button>
           <button
             type="button"
             data-action="click->table-editor#insert"
             class="px-3 py-1.5 text-sm rounded-md bg-[var(--theme-accent)] text-[var(--theme-accent-text)] hover:bg-[var(--theme-accent-hover)]"
           >
-            Insert Table
+            <%= t('dialogs.table_editor.insert_table') %>
           </button>
         </div>
       </div>

@@ -44,7 +44,7 @@ class ImagesController < ApplicationController
     upload_to_s3 = params[:upload_to_s3] == "true"
 
     unless file.present?
-      return render json: { error: "No file provided" }, status: :unprocessable_entity
+      return render json: { error: t("errors.no_file_upload") }, status: :unprocessable_entity
     end
 
     resize_ratio = parse_resize_ratio(resize)
@@ -53,7 +53,7 @@ class ImagesController < ApplicationController
     if result[:url]
       render json: { url: result[:url] }
     else
-      render json: { error: result[:error] || "Upload failed" }, status: :unprocessable_entity
+      render json: { error: result[:error] || t("errors.upload_failed") }, status: :unprocessable_entity
     end
   rescue StandardError => e
     Rails.logger.error "File upload error: #{e.class} - #{e.message}"
@@ -64,7 +64,7 @@ class ImagesController < ApplicationController
   # POST /images/upload_to_s3
   def upload_to_s3
     unless ImagesService.s3_enabled?
-      return render json: { error: "S3 not configured" }, status: :unprocessable_entity
+      return render json: { error: t("errors.s3_not_configured") }, status: :unprocessable_entity
     end
 
     path = params[:path]
@@ -74,7 +74,7 @@ class ImagesController < ApplicationController
     if s3_url
       render json: { url: s3_url }
     else
-      render json: { error: "Failed to upload" }, status: :unprocessable_entity
+      render json: { error: t("errors.failed_to_upload") }, status: :unprocessable_entity
     end
   rescue StandardError => e
     Rails.logger.error "S3 upload error: #{e.class} - #{e.message}"
@@ -85,12 +85,12 @@ class ImagesController < ApplicationController
   # POST /images/upload_external_to_s3
   def upload_external_to_s3
     unless ImagesService.s3_enabled?
-      return render json: { error: "S3 not configured" }, status: :unprocessable_entity
+      return render json: { error: t("errors.s3_not_configured") }, status: :unprocessable_entity
     end
 
     url = params[:url].to_s.strip
     if url.blank?
-      return render json: { error: "URL is required" }, status: :bad_request
+      return render json: { error: t("errors.url_required") }, status: :bad_request
     end
 
     resize_ratio = parse_resize_ratio(params[:resize])
@@ -98,7 +98,7 @@ class ImagesController < ApplicationController
     if s3_url
       render json: { url: s3_url }
     else
-      render json: { error: "Failed to upload" }, status: :unprocessable_entity
+      render json: { error: t("errors.failed_to_upload") }, status: :unprocessable_entity
     end
   rescue StandardError => e
     Rails.logger.error "External S3 upload error: #{e.class} - #{e.message}"
@@ -114,7 +114,7 @@ class ImagesController < ApplicationController
     upload_to_s3 = params[:upload_to_s3] == true || params[:upload_to_s3] == "true"
 
     if data.blank?
-      return render json: { error: "No image data provided" }, status: :bad_request
+      return render json: { error: t("errors.no_image_data") }, status: :bad_request
     end
 
     result = ImagesService.upload_base64_data(
@@ -127,7 +127,7 @@ class ImagesController < ApplicationController
     if result[:url]
       render json: { url: result[:url] }
     else
-      render json: { error: result[:error] || "Upload failed" }, status: :unprocessable_entity
+      render json: { error: result[:error] || t("errors.upload_failed") }, status: :unprocessable_entity
     end
   rescue StandardError => e
     Rails.logger.error "Base64 upload error: #{e.class} - #{e.message}"
@@ -140,14 +140,14 @@ class ImagesController < ApplicationController
     query = params[:q].to_s.strip
 
     if query.blank?
-      return render json: { error: "Query is required" }, status: :bad_request
+      return render json: { error: t("errors.query_required") }, status: :bad_request
     end
 
     results = search_duckduckgo_images(query, nil)
     render json: results
   rescue StandardError => e
     Rails.logger.error "Web search error: #{e.message}"
-    render json: { error: "Search failed" }, status: :internal_server_error
+    render json: { error: t("errors.search_failed") }, status: :internal_server_error
   end
 
   # GET /images/search_google (uses Google Custom Search API)
@@ -156,18 +156,18 @@ class ImagesController < ApplicationController
     start = params[:start].to_i
 
     if query.blank?
-      return render json: { error: "Query is required" }, status: :bad_request
+      return render json: { error: t("errors.query_required") }, status: :bad_request
     end
 
     unless google_api_configured?
-      return render json: { error: "Google Custom Search not configured" }, status: :service_unavailable
+      return render json: { error: t("errors.google_not_configured") }, status: :service_unavailable
     end
 
     results = search_google_images(query, start)
     render json: results
   rescue StandardError => e
     Rails.logger.error "Google search error: #{e.message}"
-    render json: { error: "Search failed" }, status: :internal_server_error
+    render json: { error: t("errors.search_failed") }, status: :internal_server_error
   end
 
   # GET /images/search_pinterest
@@ -175,7 +175,7 @@ class ImagesController < ApplicationController
     query = params[:q].to_s.strip
 
     if query.blank?
-      return render json: { error: "Query is required" }, status: :bad_request
+      return render json: { error: t("errors.query_required") }, status: :bad_request
     end
 
     # Pinterest doesn't have a public API, so we'll use DuckDuckGo image search
@@ -184,14 +184,14 @@ class ImagesController < ApplicationController
     render json: results
   rescue StandardError => e
     Rails.logger.error "Pinterest search error: #{e.message}"
-    render json: { error: "Search failed" }, status: :internal_server_error
+    render json: { error: t("errors.search_failed") }, status: :internal_server_error
   end
 
   private
 
   def require_images_enabled
     unless ImagesService.enabled?
-      render json: { error: "Images not configured" }, status: :not_found
+      render json: { error: t("errors.images_not_configured") }, status: :not_found
     end
   end
 

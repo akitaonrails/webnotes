@@ -5,7 +5,7 @@
 >
   <div class="p-4">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-sm font-semibold">Editor Settings</h3>
+      <h3 class="text-sm font-semibold"><%= t('dialogs.customize.title') %></h3>
       <button
         type="button"
         data-action="click->app#closeCustomizeDialog"
@@ -19,7 +19,7 @@
 
     <!-- Font Family -->
     <div class="mb-4">
-      <label class="block text-xs text-[var(--theme-text-muted)] mb-1.5">Font Family</label>
+      <label class="block text-xs text-[var(--theme-text-muted)] mb-1.5"><%= t('dialogs.customize.font_family') %></label>
       <select
         data-app-target="fontSelect"
         data-action="change->app#onFontChange"
@@ -39,7 +39,7 @@
 
     <!-- Font Size -->
     <div class="mb-4">
-      <label class="block text-xs text-[var(--theme-text-muted)] mb-1.5">Font Size</label>
+      <label class="block text-xs text-[var(--theme-text-muted)] mb-1.5"><%= t('dialogs.customize.font_size') %></label>
       <select
         data-app-target="fontSizeSelect"
         data-action="change->app#onFontSizeChange"
@@ -59,7 +59,7 @@
 
     <!-- Preview -->
     <div class="mb-4">
-      <label class="block text-xs text-[var(--theme-text-muted)] mb-1.5">Preview</label>
+      <label class="block text-xs text-[var(--theme-text-muted)] mb-1.5"><%= t('dialogs.customize.preview') %></label>
       <div
         data-app-target="fontPreview"
         class="p-3 border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] h-24 overflow-hidden"
@@ -79,14 +79,14 @@
         data-action="click->app#closeCustomizeDialog"
         class="px-3 py-1.5 text-sm rounded-md hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-secondary)]"
       >
-        Cancel
+        <%= t('common.cancel') %>
       </button>
       <button
         type="button"
         data-action="click->app#applyCustomization"
         class="px-3 py-1.5 text-sm rounded-md bg-[var(--theme-accent)] text-[var(--theme-accent-text)] hover:opacity-90"
       >
-        Apply
+        <%= t('common.apply') %>
       </button>
     </div>
   </div>

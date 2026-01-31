@@ -1,4 +1,5 @@
 ENV["RAILS_ENV"] ||= "test"
+ENV["FRANKMD_LOCALE"] ||= "en"  # Force English locale for tests
 require_relative "../config/environment"
 require "rails/test_help"
 require "fileutils"
@@ -7,6 +8,10 @@ require "webmock/minitest"
 
 # Allow real network connections in tests by default
 WebMock.allow_net_connect!
+
+# Ensure tests run with English locale
+I18n.default_locale = :en
+I18n.locale = :en
 
 module ActiveSupport
   class TestCase

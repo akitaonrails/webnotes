@@ -41,6 +41,9 @@ Rails.application.routes.draw do
   get "config", to: "config#show"
   patch "config", to: "config#update"
 
+  # Translations API (for JavaScript i18n)
+  get "translations", to: "translations#show"
+
   # Health check
   get "up" => "rails/health#show", as: :rails_health_check
 end

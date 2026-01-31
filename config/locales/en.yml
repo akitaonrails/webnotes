@@ -1,31 +1,385 @@
-# Files in the config/locales directory are used for internationalization and
-# are automatically loaded by Rails. If you want to use locales other than
-# English, add the necessary files in this directory.
-#
-# To use the locales, use `I18n.t`:
-#
-#     I18n.t "hello"
-#
-# In views, this is aliased to just `t`:
-#
-#     <%= t("hello") %>
-#
-# To use a different locale, set it with `I18n.locale`:
-#
-#     I18n.locale = :es
-#
-# This would use the information in config/locales/es.yml.
-#
-# To learn more about the API, please read the Rails Internationalization guide
-# at https://guides.rubyonrails.org/i18n.html.
-#
-# Be aware that YAML interprets the following case-insensitive strings as
-# booleans: `true`, `false`, `on`, `off`, `yes`, `no`. Therefore, these strings
-# must be quoted to be interpreted as strings. For example:
-#
-#     en:
-#       "yes": yup
-#       enabled: "ON"
-
 en:
-  hello: "Hello world"
+  # Application metadata
+  app:
+    name: "FrankMD"
+    tagline: "A modern markdown editor for your notes"
+
+  # Common actions used across the app
+  common:
+    cancel: "Cancel"
+    apply: "Apply"
+    save: "Save"
+    create: "Create"
+    delete: "Delete"
+    rename: "Rename"
+    close: "Close"
+    search: "Search"
+    insert: "Insert"
+    edit: "Edit"
+    ok: "OK"
+
+  # Languages
+  languages:
+    en: "English"
+    pt_BR: "Portugues (Brasil)"
+
+  # Header section
+  header:
+    toggle_explorer: "Toggle Explorer (Ctrl+E)"
+    toggle_typewriter: "Toggle Typewriter Mode (Ctrl+B)"
+    toggle_preview: "Toggle Preview (Ctrl+Shift+P)"
+    change_theme: "Change Theme"
+    change_language: "Change Language"
+    about_app: "About FrankMD"
+    view_github: "View on GitHub"
+
+  # Sidebar/Explorer section
+  sidebar:
+    explorer: "Explorer"
+    new_note: "New Note (Ctrl+N)"
+    new_folder: "New Folder"
+    find_file: "Find File (Ctrl+P)"
+    search_in_files: "Search in Files (Ctrl+Shift+F)"
+    no_notes_yet: "No notes yet"
+    no_files_found: "No files found"
+    # Document stats
+    words: "Words"
+    characters: "Characters"
+    size: "Size"
+    read_time: "Read time"
+
+  # Editor section
+  editor:
+    select_note: "Select or create a note"
+    select_note_description: "Select a note to edit"
+    select_note_hint: "or press Ctrl+N to create a new one"
+    start_writing: "Start writing..."
+    cursor_in_table: "Cursor in table - click to edit"
+    # Editor toolbar
+    toolbar:
+      help: "Help"
+      help_title: "Markdown Help (F1)"
+      table: "Table"
+      table_title: "Insert/Edit Table"
+      image: "Image"
+      image_title: "Insert Image"
+      video: "Video"
+      video_title: "Insert Video"
+      code: "Code"
+      code_title: "Insert/Edit Code Block"
+      font: "Font"
+      font_title: "Editor Settings"
+      ai: "AI"
+      ai_title: "AI Grammar Check"
+    # AI processing overlay
+    processing_with: "Processing with"
+    press_esc_to_cancel: "Press ESC to cancel"
+
+  # Preview panel
+  preview:
+    title: "Preview"
+    zoom_in: "Zoom In"
+    zoom_out: "Zoom Out"
+
+  # Context menu
+  context_menu:
+    new_note: "New Note"
+    rename: "Rename"
+    delete: "Delete"
+
+  # Status messages
+  status:
+    saved: "Saved"
+    unsaved: "Unsaved changes"
+    error_saving: "Error saving"
+    error_loading: "Error loading note"
+    searching: "Searching..."
+    no_matches: "No matches found"
+    search_error: "Search error"
+    matches_found: "%{count} matches in %{files} files"
+    config_applied: "Config applied"
+    found_videos: "Found %{count} videos - click to insert or use arrow keys"
+    please_enter_keywords: "Please enter search keywords"
+    youtube_not_configured_js: "YouTube API not configured. Set YOUTUBE_API_KEY env variable."
+    no_videos_found: "No videos found"
+    search_failed_retry: "Search failed. Please try again."
+    enter_keywords_search: "Enter keywords and click Search or press Enter"
+    type_to_search_regex: "Type to search in file contents (supports regex)"
+    processing: "Processing..."
+
+  # Dialog titles and content
+  dialogs:
+    # Rename dialog
+    rename:
+      title: "Rename"
+      placeholder: "New name"
+
+    # New item dialog
+    new_item:
+      new_note: "New Note"
+      new_folder: "New Folder"
+      placeholder: "Name"
+      note_placeholder: "Note name"
+      folder_placeholder: "Folder name"
+
+    # Note type dialog
+    note_type:
+      title: "New Note"
+      empty_document: "Empty Document"
+      empty_description: "Plain markdown file"
+      hugo_post: "Hugo Blog Post"
+      hugo_description: "YYYY/MM/DD/slug/index.md"
+      new_hugo_post: "New Hugo Blog Post"
+
+    # Table editor dialog
+    table_editor:
+      title: "Table Editor"
+      add_column: "Add Column"
+      remove_column: "Remove Column"
+      add_row: "Add Row"
+      remove_row: "Remove Row"
+      column: "Column"
+      row: "Row"
+      move_left: "Move Left"
+      move_right: "Move Right"
+      move_up: "Move Up"
+      move_down: "Move Down"
+      delete_column: "Delete Column"
+      delete_row: "Delete Row"
+      insert_table: "Insert Table"
+      header: "Header"
+      header_n: "Header %{n}"
+
+    # Code dialog
+    code:
+      title: "Code Block"
+      language_label: "Language (Tab to autocomplete)"
+      language_placeholder: "javascript, python, ruby..."
+      code_label: "Code (optional) — Tab to indent, Ctrl+Enter to insert"
+      use_tabs: "Use tabs"
+      code_placeholder: "Paste or type your code here..."
+      insert_code: "Insert Code"
+      unrecognized_language: "\"%{language}\" is not a recognized language. Insert anyway?"
+
+    # Video dialog
+    video:
+      title: "Insert Video"
+      tab_url: "URL / File"
+      tab_search: "YouTube Search"
+      url_label: "Video URL or Path"
+      url_placeholder: "YouTube URL or video file path..."
+      url_hint_youtube: "YouTube: https://youtube.com/watch?v=... or https://youtu.be/..."
+      url_hint_file: "Video file: /path/to/video.mp4, .webm, .mkv, .mov, .avi"
+      preview_hint: "Enter a URL to see preview"
+      insert_video: "Insert Video"
+      # YouTube search
+      youtube_api_required: "YouTube API Key Required"
+      youtube_api_description: "To search YouTube videos, you need to configure a YouTube Data API key."
+      quick_setup: "Quick setup:"
+      setup_step_1: "Edit the .fed file in your notes folder"
+      setup_step_2: "Add: youtube_api_key = YOUR_KEY"
+      view_setup_instructions: "View full setup instructions on GitHub"
+      search_youtube: "Search YouTube"
+      search_placeholder: "Enter keywords..."
+      search_status: "Enter keywords and click Search or press Enter"
+      no_videos_found: "No videos found"
+
+    # Image picker dialog
+    image_picker:
+      title: "Insert Image"
+      tab_local: "Local"
+      tab_folder: "Folder"
+      tab_web: "Web Search"
+      tab_google: "Google"
+      tab_pinterest: "Pinterest"
+      tab_ai: "AI Generate"
+      insert_image: "Insert Image"
+      selected: "Selected:"
+      alt_label: "Alt Text (optional)"
+      alt_placeholder: "Describe the image..."
+      link_label: "Link URL (optional, makes image clickable)"
+      link_placeholder: "https://..."
+      uploading_to_s3: "Uploading to S3..."
+      # Local images
+      local_path_required: "Local Images Path Required"
+      local_path_description: "To browse local images, configure an images directory path."
+      local_setup_step_1: "Edit .fed in your notes folder"
+      local_setup_step_2: "Add: images_path = /path/to/images"
+      search_images_placeholder: "Search images by filename..."
+      # Folder images
+      filesystem_api_required: "File System Access API Required"
+      filesystem_api_description: "This feature requires the File System Access API, which may be disabled in your browser."
+      enable_in_brave: "To enable in Brave:"
+      brave_step_1: "Go to brave://flags"
+      brave_step_2: "Search for File System Access API"
+      brave_step_3: "Set to Enabled"
+      brave_step_4: "Restart your browser"
+      supported_browsers: "Supported browsers:"
+      supported_browsers_list: "Chrome 86+, Edge 86+, Opera 72+, Brave (with flag)"
+      not_supported_note: "Firefox and Safari do not support this API."
+      select_folder_prompt: "Select a folder from your computer to browse images"
+      browse_folder: "Browse Folder..."
+      no_folder_selected: "No folder selected"
+      change_folder: "Change folder..."
+      # Web search
+      search_web_placeholder: "Search web images..."
+      search_status: "Enter keywords and click Search or press Enter"
+      # Google images
+      google_api_required: "Google API Configuration Required"
+      google_api_description: "To search Google Images, you need to configure a Google API key and Custom Search Engine ID."
+      google_setup_step_2: "Add: google_api_key = YOUR_KEY"
+      google_setup_step_3: "Add: google_cse_id = YOUR_CSE_ID"
+      search_google_placeholder: "Search Google Images..."
+      # Pinterest
+      search_pinterest_placeholder: "Search Pinterest..."
+      # AI Generate
+      gemini_api_required: "Gemini API Key Required"
+      gemini_api_description: "AI image generation uses Google's Imagen models and requires a Gemini API key."
+      gemini_setup_step_1: "Get an API key from aistudio.google.com"
+      gemini_setup_step_2: "Edit .fed in your notes folder"
+      gemini_setup_step_3: "Add: gemini_api_key = YOUR_KEY"
+      model_label: "Model:"
+      reference_image_label: "Reference image (optional) - guide the generation with an existing image"
+      remove_reference: "Remove reference"
+      search_reference_placeholder: "Search reference images..."
+      prompt_label: "Describe the image you want to generate"
+      prompt_placeholder: "A photorealistic image of a mountain landscape at sunset with dramatic clouds..."
+      generate_image: "Generate Image"
+      generating_with: "Generating image with"
+      generated_image: "Generated Image"
+      revised_prompt: "AI-revised prompt"
+      save_to: "Save to:"
+      save_local: "notes/images/ directory"
+      save_s3: "AWS S3"
+
+    # S3 option
+    s3_option:
+      upload_to_s3: "Upload to AWS S3"
+      reupload_to_s3: "Download and re-upload to AWS S3"
+      upload_description: "Image will be uploaded to S3 and the URL will be used instead of local path"
+      reupload_description: "Image will be downloaded and uploaded to your S3, using your URL instead of the original"
+      resize: "Resize:"
+      none: "None (original size)"
+      quarter_size: "1/4 size (25%)"
+      half_size: "1/2 size (50%)"
+      two_thirds_size: "2/3 size (67%)"
+      compress: "+ compress"
+
+    # Help dialog
+    help:
+      title: "Markdown Cheatsheet"
+      toggle_hint: "Press F1 or Ctrl+H to toggle"
+      headings: "Headings"
+      emphasis: "Emphasis"
+      lists: "Lists"
+      task_list: "Task List"
+      links_images: "Links & Images"
+      blockquote: "Blockquote"
+      code_block: "Code Block"
+      table: "Table"
+      horizontal_rule: "Horizontal Rule"
+      keyboard_shortcuts: "Keyboard Shortcuts:"
+      shortcuts_list: "Ctrl+S save, Ctrl+N new note, Ctrl+P find file, Ctrl+Shift+F search content, Ctrl+E explorer, Ctrl+B typewriter, Ctrl+Shift+P preview, F1 help"
+
+    # Customize dialog (editor settings)
+    customize:
+      title: "Editor Settings"
+      font_family: "Font Family"
+      font_size: "Font Size"
+      preview: "Preview"
+
+    # About dialog
+    about:
+      description: "A modern markdown editor for your notes"
+      copyright: "All rights reserved."
+      view_github: "View on GitHub"
+
+    # AI diff dialog
+    ai_diff:
+      title: "AI Grammar Check"
+      config_required: "AI Configuration Required"
+      config_description: "Configure one of the following providers in your .fed file."
+      priority_note: "Priority (auto mode): Ollama → OpenRouter → Anthropic → Gemini → OpenAI"
+      ollama_title: "Ollama (Local, Free)"
+      ollama_description: "Run AI locally on your machine:"
+      openrouter_title: "OpenRouter"
+      openrouter_description: "Access multiple AI providers:"
+      anthropic_title: "Anthropic (Claude)"
+      anthropic_description: "Use Claude models:"
+      gemini_title: "Google Gemini"
+      gemini_description: "Use Gemini models:"
+      openai_title: "OpenAI"
+      openai_description: "Use GPT models:"
+      provider_selection: "Provider Selection"
+      provider_override: "Override auto-detection:"
+      original: "Original"
+      deletions_hint: "(deletions in red)"
+      corrected: "Corrected"
+      additions_hint: "(additions in green)"
+      accept_changes: "Accept Changes"
+
+    # File finder dialog
+    file_finder:
+      placeholder: "Type to search files..."
+      esc_to_close: "esc to close"
+
+    # Content search dialog
+    content_search:
+      placeholder: "Search in files (supports regex)..."
+      status: "Type to search in file contents (supports regex)"
+      literal_text: "literal text"
+      or_operator: "OR"
+      one_or_more: "one or more"
+      any_chars: "any chars"
+      start_of_line: "start of line"
+      end_of_line: "end of line"
+      digits: "digits"
+      whole_word: "whole word"
+
+  # Error messages
+  errors:
+    note_not_found: "Note not found"
+    note_already_exists: "Note already exists"
+    note_is_empty: "Note is empty"
+    folder_not_found: "Folder not found"
+    folder_already_exists: "Folder already exists"
+    file_not_found: "This file no longer exists or was deleted."
+    no_file_open: "No file open"
+    no_text_to_check: "No text to check"
+    no_file_provided: "No file path provided"
+    no_image_data: "No image data provided"
+    no_prompt_provided: "No prompt provided"
+    no_file_upload: "No file provided"
+    query_required: "Query is required"
+    url_required: "URL is required"
+    s3_not_configured: "S3 not configured"
+    images_not_configured: "Images not configured"
+    youtube_not_configured: "YouTube API key not configured"
+    google_not_configured: "Google Custom Search not configured"
+    no_valid_settings: "No valid settings provided"
+    upload_failed: "Upload failed"
+    search_failed: "Search failed"
+    failed_to_move: "Failed to move"
+    failed_to_load: "Failed to load note"
+    failed_to_save: "Failed to save"
+    failed_to_create: "Failed to create"
+    failed_to_rename: "Failed to rename"
+    failed_to_delete: "Failed to delete"
+    failed_to_upload: "Failed to upload"
+    failed_to_process_ai: "Failed to process text with AI"
+
+  # Confirm messages
+  confirm:
+    delete_note: "Are you sure you want to delete this note?"
+    delete_folder: "Are you sure you want to delete this folder and all its contents?"
+
+  # Success messages
+  success:
+    note_created: "Note created"
+    note_saved: "Note saved"
+    note_deleted: "Note deleted"
+    note_renamed: "Note renamed"
+    folder_created: "Folder created"
+    folder_deleted: "Folder deleted"
+    folder_renamed: "Folder renamed"
+    settings_saved: "Settings saved"

@@ -15,24 +15,24 @@
           data-app-target="contentSearchInput"
           data-action="input->app#onContentSearchInput keydown->app#onContentSearchKeydown"
           class="flex-1 bg-transparent border-0 text-[var(--theme-text-primary)] placeholder-[var(--theme-text-muted)] focus:outline-none text-sm font-mono"
-          placeholder="Search in files (supports regex)..."
+          placeholder="<%= t('dialogs.content_search.placeholder') %>"
           autocomplete="off"
           spellcheck="false"
         >
-        <span class="text-xs text-[var(--theme-text-faint)]">esc to close</span>
+        <span class="text-xs text-[var(--theme-text-faint)]"><%= t('dialogs.file_finder.esc_to_close') %></span>
       </div>
       <div class="mt-1 text-xs text-[var(--theme-text-muted)]" data-app-target="contentSearchStatus">
-        Type to search in file contents (supports regex)
+        <%= t('dialogs.content_search.status') %>
       </div>
       <div class="mt-2 text-xs text-[var(--theme-text-faint)] flex flex-wrap gap-x-4 gap-y-1">
-        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hello</code> literal text</span>
-        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hello|world</code> OR</span>
-        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hel+o</code> one or more</span>
-        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hel.*o</code> any chars</span>
-        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">^hello</code> start of line</span>
-        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hello$</code> end of line</span>
-        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">\d+</code> digits</span>
-        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">\bword\b</code> whole word</span>
+        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hello</code> <%= t('dialogs.content_search.literal_text') %></span>
+        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hello|world</code> <%= t('dialogs.content_search.or_operator') %></span>
+        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hel+o</code> <%= t('dialogs.content_search.one_or_more') %></span>
+        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hel.*o</code> <%= t('dialogs.content_search.any_chars') %></span>
+        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">^hello</code> <%= t('dialogs.content_search.start_of_line') %></span>
+        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">hello$</code> <%= t('dialogs.content_search.end_of_line') %></span>
+        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">\d+</code> <%= t('dialogs.content_search.digits') %></span>
+        <span><code class="bg-[var(--theme-bg-tertiary)] px-1 rounded">\bword\b</code> <%= t('dialogs.content_search.whole_word') %></span>
       </div>
     </div>
 

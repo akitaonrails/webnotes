@@ -6,7 +6,7 @@
   <div class="text-[var(--theme-text-primary)]">
     <!-- Header with close button -->
     <div class="flex items-center justify-between px-4 pt-4">
-      <h3 class="text-sm font-semibold">Insert Video</h3>
+      <h3 class="text-sm font-semibold"><%= t('dialogs.video.title') %></h3>
       <button
         type="button"
         data-action="click->app#closeVideoDialog"
@@ -27,7 +27,7 @@
         data-app-target="videoTabUrl"
         class="px-4 py-2 text-sm font-medium border-b-2 border-[var(--theme-accent)] text-[var(--theme-accent)]"
       >
-        URL / File
+        <%= t('dialogs.video.tab_url') %>
       </button>
       <button
         type="button"
@@ -36,31 +36,31 @@
         data-app-target="videoTabSearch"
         class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-[var(--theme-text-muted)] hover:text-[var(--theme-text-secondary)]"
       >
-        YouTube Search
+        <%= t('dialogs.video.tab_search') %>
       </button>
     </div>
 
     <!-- Tab Content: URL -->
     <div class="p-4" data-app-target="videoUrlPanel">
       <div class="mb-4">
-        <label class="block text-xs text-[var(--theme-text-muted)] mb-1">Video URL or Path</label>
+        <label class="block text-xs text-[var(--theme-text-muted)] mb-1"><%= t('dialogs.video.url_label') %></label>
         <input
           type="text"
           data-app-target="videoUrl"
           data-action="input->app#onVideoUrlInput keydown->app#onVideoUrlKeydown"
           class="w-full px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
-          placeholder="YouTube URL or video file path..."
+          placeholder="<%= t('dialogs.video.url_placeholder') %>"
           autocomplete="off"
           spellcheck="false"
         >
         <div class="mt-2 text-xs text-[var(--theme-text-muted)] space-y-1">
-          <p><strong>YouTube:</strong> https://youtube.com/watch?v=... or https://youtu.be/...</p>
-          <p><strong>Video file:</strong> /path/to/video.mp4, .webm, .mkv, .mov, .avi</p>
+          <p><strong>YouTube:</strong> <%= t('dialogs.video.url_hint_youtube') %></p>
+          <p><strong>Video file:</strong> <%= t('dialogs.video.url_hint_file') %></p>
         </div>
       </div>
 
       <div class="mb-4 p-3 bg-[var(--theme-bg-tertiary)] rounded-md text-sm" data-app-target="videoPreview">
-        <span class="text-[var(--theme-text-muted)]">Enter a URL to see preview</span>
+        <span class="text-[var(--theme-text-muted)]"><%= t('dialogs.video.preview_hint') %></span>
       </div>
 
       <div class="flex justify-end gap-2">
@@ -69,7 +69,7 @@
           data-action="click->app#closeVideoDialog"
           class="px-3 py-1.5 text-sm rounded-md hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-secondary)]"
         >
-          Cancel
+          <%= t('common.cancel') %>
         </button>
         <button
           type="button"
@@ -78,7 +78,7 @@
           class="px-3 py-1.5 text-sm rounded-md bg-[var(--theme-accent)] text-[var(--theme-accent-text)] hover:bg-[var(--theme-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
           disabled
         >
-          Insert Video
+          <%= t('dialogs.video.insert_video') %>
         </button>
       </div>
     </div>
@@ -91,15 +91,15 @@
           <svg class="w-10 h-10 mx-auto mb-3 text-[var(--theme-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
-          <h4 class="text-sm font-semibold mb-2">YouTube API Key Required</h4>
+          <h4 class="text-sm font-semibold mb-2"><%= t('dialogs.video.youtube_api_required') %></h4>
           <p class="text-xs text-[var(--theme-text-muted)] mb-3">
-            To search YouTube videos, you need to configure a YouTube Data API key.
+            <%= t('dialogs.video.youtube_api_description') %>
           </p>
           <div class="text-xs text-left bg-[var(--theme-bg-primary)] p-3 rounded border border-[var(--theme-border)] mb-3">
-            <p class="mb-2"><strong>Quick setup:</strong></p>
+            <p class="mb-2"><strong><%= t('dialogs.video.quick_setup') %></strong></p>
             <ol class="list-decimal list-inside space-y-1 text-[var(--theme-text-muted)]">
-              <li>Edit the <code class="bg-[var(--theme-code-bg)] px-1 rounded">.fed</code> file in your notes folder</li>
-              <li>Add: <code class="bg-[var(--theme-code-bg)] px-1 rounded">youtube_api_key = YOUR_KEY</code></li>
+              <li><%= t('dialogs.video.setup_step_1') %></li>
+              <li><%= t('dialogs.video.setup_step_2') %></li>
             </ol>
           </div>
           <a
@@ -111,7 +111,7 @@
             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
             </svg>
-            View full setup instructions on GitHub
+            <%= t('dialogs.video.view_setup_instructions') %>
           </a>
         </div>
         <div class="flex justify-end gap-2 mt-4">
@@ -120,7 +120,7 @@
             data-action="click->app#closeVideoDialog"
             class="px-3 py-1.5 text-sm rounded-md hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-secondary)]"
           >
-            Close
+            <%= t('common.close') %>
           </button>
         </div>
       </div>
@@ -128,14 +128,14 @@
       <!-- Search Form (shown when configured) -->
       <div data-app-target="youtubeSearchForm">
         <div class="mb-4">
-          <label class="block text-xs text-[var(--theme-text-muted)] mb-1">Search YouTube</label>
+          <label class="block text-xs text-[var(--theme-text-muted)] mb-1"><%= t('dialogs.video.search_youtube') %></label>
           <div class="flex gap-2">
             <input
               type="text"
               data-app-target="youtubeSearchInput"
               data-action="keydown->app#onYoutubeSearchKeydown"
               class="flex-1 px-3 py-2 text-sm border border-[var(--theme-border)] rounded-md bg-[var(--theme-bg-primary)] text-[var(--theme-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
-              placeholder="Enter keywords..."
+              placeholder="<%= t('dialogs.video.search_placeholder') %>"
               autocomplete="off"
               spellcheck="false"
             >
@@ -148,14 +148,14 @@
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              Search
+              <%= t('common.search') %>
             </button>
           </div>
         </div>
 
         <!-- Search Status -->
         <div class="mb-3 text-xs text-[var(--theme-text-muted)]" data-app-target="youtubeSearchStatus">
-          Enter keywords and click Search or press Enter
+          <%= t('dialogs.video.search_status') %>
         </div>
 
         <!-- Search Results Grid -->
@@ -169,7 +169,7 @@
             data-action="click->app#closeVideoDialog"
             class="px-3 py-1.5 text-sm rounded-md hover:bg-[var(--theme-bg-hover)] text-[var(--theme-text-secondary)]"
           >
-            Cancel
+            <%= t('common.cancel') %>
           </button>
         </div>
       </div>

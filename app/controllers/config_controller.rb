@@ -27,17 +27,17 @@ class ConfigController < ApplicationController
     updates = params.permit(*allowed_keys).to_h
 
     if updates.empty?
-      render json: { error: "No valid settings provided" }, status: :unprocessable_entity
+      render json: { error: t("errors.no_valid_settings") }, status: :unprocessable_entity
       return
     end
 
     if @config.update(updates)
       render json: {
         settings: @config.ui_settings,
-        message: "Settings saved"
+        message: t("success.settings_saved")
       }
     else
-      render json: { error: "Failed to save settings" }, status: :unprocessable_entity
+      render json: { error: t("errors.failed_to_save") }, status: :unprocessable_entity
     end
   end
 
