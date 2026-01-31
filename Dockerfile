@@ -69,11 +69,14 @@ RUN groupadd --system --gid ${GID} rails && \
     mkdir -p /rails/notes /rails/images && \
     chown -R rails:rails /rails
 
-USER ${UID}:${GID}
-
 # Copy built app
 COPY --chown=rails:rails --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --chown=rails:rails --from=build /rails /rails
+
+# Make tmp directories writable by any user (for runtime UID override)
+RUN chmod -R 777 /rails/tmp /rails/log /rails/notes /rails/images
+
+USER ${UID}:${GID}
 
 # Default paths (can be overridden)
 ENV NOTES_PATH="/rails/notes" \
